@@ -1,0 +1,8 @@
+C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/test1.dir
+C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/edit_cache.dir
+C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/rebuild_cache.dir
+C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/list_install_components.dir
+C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/install.dir
+C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/install/local.dir
+C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/test1_autogen_timestamp_deps.dir
+C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/test1_autogen.dir

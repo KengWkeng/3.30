@@ -1,0 +1,14 @@
+QMAKE_CXX.QT_COMPILER_STDCXX = 199711L
+QMAKE_CXX.QMAKE_MSC_VER = 1943
+QMAKE_CXX.QMAKE_MSC_FULL_VER = 194334809
+QMAKE_CXX.COMPILER_MACROS = \
+    QT_COMPILER_STDCXX \
+    QMAKE_MSC_VER \
+    QMAKE_MSC_FULL_VER
+QMAKE_CXX.INCDIRS = \
+    "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.26100.0\\ucrt" \
+    "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.26100.0\\um" \
+    "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.26100.0\\winrt"
+QMAKE_CXX.LIBDIRS = \
+    "C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\ucrt\\x86" \
+    "C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0\\um\\x86"
