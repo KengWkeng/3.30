@@ -296,7 +296,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 创建DAQ定时器，用于更新图表
     daqUpdateTimer = new QTimer(this);
-    connect(daqUpdateTimer, &QTimer::timeout, this, &MainWindow::updateDAQPlot);
+    connect(daqUpdateTimer, SIGNAL(timeout()), this, SLOT(updateDAQPlot()));
     
     // 创建仪表盘更新定时器
     setupDashboardUpdateTimer();
@@ -444,7 +444,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 创建数据快照定时器
     snapshotTimer = new QTimer(this);
     snapshotTimer->setInterval(100); // 设置100ms触发一次
-    connect(snapshotTimer, &QTimer::timeout, this, &MainWindow::processDataSnapshots);
+    connect(snapshotTimer, SIGNAL(timeout()), this, SLOT(processDataSnapshots()));
     snapshotTimer->start(); // 启动定时器
     
     // 初始化当前数据快照
@@ -564,16 +564,8 @@ MainWindow::MainWindow(QWidget *parent)
     snapshotTimer->setInterval(100); // 设置100ms触发一次
 
     // 确保所有数据成员都已初始化后再连接信号槽
-    connect(snapshotTimer, &QTimer::timeout, this, [this]() {
-        // 添加额外的安全保护
-        try {
-            if (this->isVisible()) { // 只有窗口可见时才处理快照
-                processDataSnapshots();
-            }
-        } catch (...) {
-            qDebug() << "处理数据快照时发生未知异常";
-        }
-    });
+    connect(snapshotTimer, SIGNAL(timeout()), this, SLOT(processDataSnapshots()));
+    snapshotTimer->start(); // 启动定时器
 
     // 初始化当前数据快照
     currentSnapshot = DataSnapshot();
@@ -681,10 +673,10 @@ void MainWindow::setupDAQPlot()
     qDebug() << "DAQ图表区域初始化完成";
 }
 
-void MainWindow::updateDAQPlot()
+void MainWindow::updateDAQPlot(const QVector<double> &timeData, const DataSnapshot &snapshot)
 {
-    // 如果没在采集中或没有数据，则不更新
-    if (!daqIsAcquiring || daqTimeData.isEmpty() || daqNumChannels <= 0) {
+    // 如果快照中无有效DAQ数据，则不更新
+    if (!snapshot.daqValid || snapshot.daqData.isEmpty() || !snapshot.daqRunning) {
         return;
     }
     
@@ -695,229 +687,203 @@ void MainWindow::updateDAQPlot()
     }
     
     try {
-    // 获取滚动区域和其内容
-    QScrollArea *scrollArea = qobject_cast<QScrollArea*>(ui->verticalLayout_7->itemAt(0)->widget());
-    if (!scrollArea) {
-        qDebug() << "错误: 无法找到DAQ滚动区域";
-        return;
-    }
-    
-    QWidget *scrollWidget = scrollArea->widget();
-    if (!scrollWidget) {
-        qDebug() << "错误: 无法找到DAQ滚动区域的内容部件";
-        return;
-    }
-    
-    QVBoxLayout *plotsLayout = qobject_cast<QVBoxLayout*>(scrollWidget->layout());
-    if (!plotsLayout) {
-        qDebug() << "错误: 无法找到DAQ图表的布局";
-        return;
-    }
-    
-    // 创建颜色列表
-    QStringList colorNames = {"blue", "red", "green", "magenta", "cyan", "darkGreen", "darkRed", "darkBlue"};
-    
-        // 初始化图表(如果通道数发生变化)
-    if (plotsLayout->count() != daqNumChannels) {
-        // 清除现有的图表
-        while (plotsLayout->count() > 0) {
-            QLayoutItem *item = plotsLayout->takeAt(0);
-            if (item->widget()) {
-                delete item->widget();
-            }
-            delete item;
+        // 获取滚动区域和其内容
+        QScrollArea *scrollArea = qobject_cast<QScrollArea*>(ui->verticalLayout_7->itemAt(0)->widget());
+        if (!scrollArea) {
+            qDebug() << "错误: 无法找到DAQ滚动区域";
+            return;
         }
         
-        // 为每个通道创建一个单独的图表
-        for (int i = 0; i < daqNumChannels; ++i) {
-            // 创建图表容器
-            QWidget *plotContainer = new QWidget(scrollWidget);
-            QHBoxLayout *containerLayout = new QHBoxLayout(plotContainer);
-            containerLayout->setContentsMargins(5, 5, 5, 5);
+        QWidget *scrollWidget = scrollArea->widget();
+        if (!scrollWidget) {
+            qDebug() << "错误: 无法找到DAQ滚动区域的内容部件";
+            return;
+        }
+        
+        QVBoxLayout *plotsLayout = qobject_cast<QVBoxLayout*>(scrollWidget->layout());
+        if (!plotsLayout) {
+            qDebug() << "错误: 无法找到DAQ图表的布局";
+            return;
+        }
+        
+        // 获取通道数
+        int numChannels = snapshot.daqData.size();
+        if (numChannels <= 0) {
+            return;
+        }
+        
+        // 创建颜色列表
+        QStringList colorNames = {"blue", "red", "green", "magenta", "cyan", "darkGreen", "darkRed", "darkBlue"};
+        
+        // 初始化图表(如果通道数发生变化)
+        if (plotsLayout->count() != numChannels) {
+            // 清除现有的图表
+            while (plotsLayout->count() > 0) {
+                QLayoutItem *item = plotsLayout->takeAt(0);
+                if (item->widget()) {
+                    delete item->widget();
+                }
+                delete item;
+            }
             
+            // 为每个通道创建一个单独的图表
+            for (int i = 0; i < numChannels; ++i) {
+                // 创建图表容器
+                QWidget *plotContainer = new QWidget(scrollWidget);
+                QHBoxLayout *containerLayout = new QHBoxLayout(plotContainer);
+                containerLayout->setContentsMargins(5, 5, 5, 5);
+                
                 // 创建QCustomPlot实例
-            QCustomPlot *plot = new QCustomPlot();
-            plot->setMinimumHeight(150);
+                QCustomPlot *plot = new QCustomPlot();
+                plot->setMinimumHeight(150);
                 plot->setObjectName(QString("daqPlot_%1").arg(i));
-            
-            // 设置轴标签
-            plot->xAxis->setLabel("时间 (秒)");
-            plot->yAxis->setLabel(QString("通道 %1").arg(i));
-            
-            // 添加图形
-            plot->addGraph();
-            plot->graph(0)->setPen(QPen(QColor(colorNames[i % colorNames.size()])));
-            
+                
+                // 设置轴标签
+                plot->xAxis->setLabel("时间 (秒)");
+                plot->yAxis->setLabel(QString("通道 %1").arg(i));
+                
+                // 添加图形
+                plot->addGraph();
+                plot->graph(0)->setPen(QPen(QColor(colorNames[i % colorNames.size()])));
+                
                 // 配置图表属性
-            plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-            plot->setNoAntialiasingOnDrag(true);
-            plot->setNotAntialiasedElements(QCP::aeAll);
-            
+                plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+                plot->setNoAntialiasingOnDrag(true);
+                plot->setNotAntialiasedElements(QCP::aeAll);
+                
                 // 添加值标签
-            QLabel *valueLabel = new QLabel("0.00", plotContainer);
-            valueLabel->setObjectName(QString("daqValueLabel_%1").arg(i));
+                QLabel *valueLabel = new QLabel("0.00", plotContainer);
+                valueLabel->setObjectName(QString("daqValueLabel_%1").arg(i));
                 valueLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 14px; background-color: rgba(255, 255, 255, 180);").arg(colorNames[i % colorNames.size()]));
                 valueLabel->setAlignment(Qt::AlignCenter);
                 valueLabel->setFixedSize(80, 25);
                 valueLabel->move(plot->width() - 90, 10);
                 
                 // 添加箭头标签
-            QLabel *arrowLabel = new QLabel("←", plotContainer);
+                QLabel *arrowLabel = new QLabel("←", plotContainer);
                 arrowLabel->setObjectName(QString("daqArrowLabel_%1").arg(i));
-            arrowLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 18px;").arg(colorNames[i % colorNames.size()]));
-            arrowLabel->setAlignment(Qt::AlignCenter);
+                arrowLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 18px;").arg(colorNames[i % colorNames.size()]));
+                arrowLabel->setAlignment(Qt::AlignCenter);
                 arrowLabel->setFixedSize(20, 20);
                 arrowLabel->move(plot->width() - 30, plot->height() / 2);
-            
+                
                 // 将图表添加到容器
-            containerLayout->addWidget(plot);
-            
+                containerLayout->addWidget(plot);
+                
                 // 将容器添加到布局
-            plotsLayout->addWidget(plotContainer);
+                plotsLayout->addWidget(plotContainer);
             }
         }
         
-        // 使用静态变量保存图表的基准时间
-        static qint64 graphBaseTimeMs = 0;
-        if (graphBaseTimeMs == 0) {
-            // 首次运行时初始化基准时间
-            graphBaseTimeMs = masterTimer->elapsed();
-        }
+        // 使用快照的时间戳
+        double currentTime = snapshot.timestamp;
         
-        // 使用快照的时间戳作为X轴最新时间点
-        double maxTimeWindow = 60.0; // 60秒数据窗口
+        // 设置时间窗口和显示范围
+        double maxTimeWindow = 30.0; // 30秒数据窗口
+        double startTime = currentTime - maxTimeWindow;
+        double endTime = currentTime;
         
-        // 创建固定的100ms间隔时间序列 (不基于实际时间，而是基于固定间隔)
-        QVector<double> mappedTimeData;
-        int pointCount = 600; // 固定显示600个点 (60秒，每秒10个点)
+        // 获取或创建时间数据
+        QVector<double> daqTimeWindow;
         
-        // 计算当前应显示的时间范围
-        static int timeIndex = 0; // 使用静态变量跟踪时间索引
-        timeIndex++; // 每次更新加1
-        
-        // 计算图表显示的时间范围
-        double lastTime = timeIndex * 0.1; // 当前最新的时间点
-        double startTime = lastTime - maxTimeWindow; // 起始时间点
-        
-        // 重置时间索引，防止数值过大
-        if (timeIndex > 1000000) {
-            timeIndex = (int)(lastTime / 0.1); // 重新根据时间计算索引
-        }
-        
-        // 生成严格的100ms间隔的时间点
-        for (int i = 0; i < pointCount; ++i) {
-            double timePoint = startTime + (i * 0.1); // 严格100ms间隔
-            if (timePoint >= 0) { // 只添加非负时间点
-                mappedTimeData.append(timePoint);
+        // 将快照时间点添加到时间窗口
+        // 如果队列中存在快照，则使用队列中的时间点
+        if (!snapshotQueue.isEmpty()) {
+            // 从队列中提取时间点
+            for (int i = 0; i < snapshotQueue.size(); ++i) {
+                const DataSnapshot &snap = snapshotQueue.at(i);
+                double snapTime = snap.timestamp;
+                
+                // 只添加在时间窗口内的点
+                if (snapTime >= startTime && snapTime <= endTime) {
+                    daqTimeWindow.append(snapTime);
+                }
             }
         }
         
-        // 获取所有快照的队列副本用于处理
-        QQueue<DataSnapshot> snapshots = snapshotQueue;
+        // 如果没有足够的时间点，则使用当前时间点
+        if (daqTimeWindow.isEmpty()) {
+            daqTimeWindow.append(currentTime);
+        }
         
         // 为每个通道更新图表
-    for (int i = 0; i < daqNumChannels && i < plotsLayout->count(); ++i) {
+        for (int i = 0; i < numChannels && i < plotsLayout->count(); ++i) {
             // 获取图表容器和控件
-        QWidget *plotContainer = plotsLayout->itemAt(i)->widget();
-        if (!plotContainer) continue;
-        
-        QCustomPlot *plot = plotContainer->findChild<QCustomPlot*>(QString("daqPlot_%1").arg(i));
-        QLabel *valueLabel = plotContainer->findChild<QLabel*>(QString("daqValueLabel_%1").arg(i));
-        QLabel *arrowLabel = plotContainer->findChild<QLabel*>(QString("daqArrowLabel_%1").arg(i));
-        
-        if (!plot) continue;
-        
-            // 创建重采样数据 - 基于静态100ms间隔的时间点
-            QVector<double> resampledData(mappedTimeData.size(), 0.0);
+            QWidget *plotContainer = plotsLayout->itemAt(i)->widget();
+            if (!plotContainer) continue;
             
-            // 填充重采样数据
-        if (!daqChannelData[i].isEmpty()) {
-                // 使用最新值填充显示数据
-                double lastValue = daqChannelData[i].last();
+            QCustomPlot *plot = plotContainer->findChild<QCustomPlot*>(QString("daqPlot_%1").arg(i));
+            QLabel *valueLabel = plotContainer->findChild<QLabel*>(QString("daqValueLabel_%1").arg(i));
+            QLabel *arrowLabel = plotContainer->findChild<QLabel*>(QString("daqArrowLabel_%1").arg(i));
+            
+            if (!plot) continue;
+            
+            // 收集此通道的数据
+            QVector<double> channelData;
+            
+            // 使用直接从快照队列中提取的数据
+            if (!snapshotQueue.isEmpty()) {
+                // 创建与时间点对应的数据点
+                channelData.resize(daqTimeWindow.size());
                 
-                // 初始化所有点为最新值
-                for (int j = 0; j < resampledData.size(); ++j) {
-                    resampledData[j] = lastValue;
-                }
-                
-                // 使用快照数据更新对应时间点的值
-                for (int j = 0; j < snapshots.size(); ++j) {
-                    const DataSnapshot &snapshot = snapshots[j];
-                    // 查找与快照时间戳最接近的时间点索引
-                    double snapshotTime = snapshot.timestamp;
+                // 填充数据点
+                for (int j = 0; j < snapshotQueue.size(); ++j) {
+                    const DataSnapshot &snap = snapshotQueue.at(j);
+                    double snapTime = snap.timestamp;
                     
-                    // 只处理有效的DAQ数据快照
-                    if (snapshot.daqValid && i < snapshot.daqData.size() && !snapshot.daqData[i].isEmpty()) {
-                        // 查找对应的时间点索引
-                        int timeIndex = -1;
-                        for (int k = 0; k < mappedTimeData.size(); ++k) {
-                            // 找到最接近的时间点
-                            if (qAbs(mappedTimeData[k] - snapshotTime) < 0.05) { // 50ms容差
-                                timeIndex = k;
-                                break;
-                            }
-                        }
-                        
-                        // 更新找到的时间点
-                        if (timeIndex >= 0 && timeIndex < resampledData.size()) {
-                            resampledData[timeIndex] = snapshot.daqData[i].first();
-                        }
-                    }
-                }
-                
-                // 平滑插值 - 填充未赋值的点
-                for (int j = 1; j < resampledData.size(); ++j) {
-                    if (resampledData[j] == 0.0) {
-                        resampledData[j] = resampledData[j-1];
+                    // 找到时间点在daqTimeWindow中的索引
+                    int timeIndex = daqTimeWindow.indexOf(snapTime);
+                    
+                    // 如果找到时间点，并且快照中有此通道的数据
+                    if (timeIndex >= 0 && snap.daqValid && i < snap.daqData.size() && !snap.daqData[i].isEmpty()) {
+                        channelData[timeIndex] = snap.daqData[i].first();
                     }
                 }
             }
             
-            // 设置图表数据
-            if (!mappedTimeData.isEmpty() && mappedTimeData.size() == resampledData.size()) {
-                plot->graph(0)->setData(mappedTimeData, resampledData, true);
+            // 如果直接从队列中没有足够的数据，使用当前快照
+            if (channelData.isEmpty() && i < snapshot.daqData.size() && !snapshot.daqData[i].isEmpty()) {
+                channelData.append(snapshot.daqData[i].first());
+                daqTimeWindow = timeData; // 使用传入的时间数据
+            }
+            
+            // 确保有数据可显示
+            if (!channelData.isEmpty() && channelData.size() == daqTimeWindow.size()) {
+                // 设置图表数据
+                plot->graph(0)->setData(daqTimeWindow, channelData, true);
                 
-                // 自动调整X轴范围，显示最新的数据
-                double xMin = startTime;
-                double xMax = lastTime;
-                plot->xAxis->setRange(xMin, xMax);
+                // 设置X轴范围，显示固定时间窗口的数据
+                plot->xAxis->setRange(startTime, endTime);
                 
                 // 更新值标签
-                if (valueLabel && !resampledData.isEmpty()) {
-                    double latestValue = resampledData.last();
+                if (valueLabel && !channelData.isEmpty()) {
+                    double latestValue = channelData.last();
                     valueLabel->setText(QString::number(latestValue, 'f', 3));
                 }
                 
                 // 更新游标位置
-                if (arrowLabel && !resampledData.isEmpty()) {
-                    double latestValue = resampledData.last();
+                if (arrowLabel && !channelData.isEmpty()) {
+                    double latestValue = channelData.last();
                     double pixelY = plot->yAxis->coordToPixel(latestValue);
                     pixelY = qBound(0.0, pixelY, (double)plot->height());
-                arrowLabel->move(plot->width() - 30, pixelY - arrowLabel->height()/2);
+                    arrowLabel->move(plot->width() - 30, pixelY - arrowLabel->height()/2);
                 }
                 
-                // 调整Y轴范围
-                if (!resampledData.isEmpty()) {
-                    double yMin = plot->yAxis->range().lower;
-                    double yMax = plot->yAxis->range().upper;
-                    double latestValue = resampledData.last();
+                // 自动调整Y轴范围
+                if (!channelData.isEmpty()) {
+                    double yMin = *std::min_element(channelData.begin(), channelData.end());
+                    double yMax = *std::max_element(channelData.begin(), channelData.end());
                     
-                    if (latestValue < yMin || latestValue > yMax) {
-                        // 计算数据范围
-                        double dataMin = *std::min_element(resampledData.begin(), resampledData.end());
-                        double dataMax = *std::max_element(resampledData.begin(), resampledData.end());
-                        
-                        // 确保范围不会太小
-                        double range = dataMax - dataMin;
-                        if (range < 0.1) range = 0.1;
-                        
-                        // 设置新的Y轴范围
-                        plot->yAxis->setRange(dataMin - range * 0.1, dataMax + range * 0.1);
-            }
-        }
-        
-        // 重绘图表
-        plot->replot(QCustomPlot::rpQueuedReplot);
+                    // 确保范围不会太小
+                    double range = yMax - yMin;
+                    if (range < 0.1) range = 0.1;
+                    
+                    // 设置Y轴范围，添加10%的边距
+                    plot->yAxis->setRange(yMin - range * 0.1, yMax + range * 0.1);
+                }
+                
+                // 立即重绘图表
+                plot->replot();
             }
         }
     } catch (const std::exception& e) {
@@ -2511,7 +2477,23 @@ void MainWindow::handleECUData(const ECUData &data)
         ecudataMap = ecuValues;
         ecuDataValid = true;
         
-        // 更新当前快照
+        // 强制初始化ECU表格和图表，如果它们尚未初始化
+        if (!ui->ECUCustomPlot->graphCount() || ecuData.isEmpty()) {
+            ECUPlotInit();
+        }
+        
+        if (!ecuDataModel || ecuDataModel->columnCount() == 0) {
+            setupECUDataTable();
+        }
+        
+        // 直接添加数据点到时间序列，不依赖于快照
+        double currentTime = masterTimer->elapsed() / 1000.0;
+        addECUDataPoint(currentTime, ecuValues);
+        
+        // 直接更新ECU图表和表格
+        updateECUPlot(data);
+        
+        // 添加到当前快照
         currentSnapshot.ecuValid = true;
         currentSnapshot.ecuData = ecuValues;
         
@@ -3812,6 +3794,8 @@ static QVBoxLayout* getVerticalLayout_8(Ui::MainWindow* ui) {
 
 void MainWindow::ECUPlotInit()
 {
+    qDebug() << "开始初始化ECU图表";
+    
     // 使用ui中定义的ECUCustomPlot控件
     QCustomPlot *ecuPlot = ui->ECUCustomPlot;
     if (!ecuPlot) {
@@ -3849,7 +3833,7 @@ void MainWindow::ECUPlotInit()
     // 为每个参数创建一个图表线条
     for (int i = 0; i < names.size(); i++) {
         ecuPlot->addGraph();
-        ecuPlot->graph(i)->setPen(QPen(QColor(colors[i % colors.size()])));
+        ecuPlot->graph(i)->setPen(QPen(QColor(colors[i % colors.size()]), 2)); // 增加线条宽度
         ecuPlot->graph(i)->setName(names[i]); // 设置图例名称
     }
     
@@ -3875,117 +3859,92 @@ void MainWindow::ECUPlotInit()
     ecuPlot->yAxis->setRange(0, 100); // 初始范围0-100
     ecuPlot->replot();
     
-    qDebug() << "ECU图表初始化完成";
+    qDebug() << "ECU图表初始化完成，通道数: " << ecuPlot->graphCount();
 }
 
 void MainWindow::updateECUPlot(const ECUData &data)
 {
-    // 使用ui中定义的ECUCustomPlot控件
-    QCustomPlot *ecuPlot = ui->ECUCustomPlot;
-    if (!ecuPlot) {
-        qDebug() << "错误: ECUCustomPlot控件不存在";
-        return;
-    }
-    
-    // 检查数据是否有效
-    if (!data.isValid) {
-        qDebug() << "跳过更新ECU图表: 数据无效";
-        return;
-    }
-    
-    // 确保主时间戳已初始化
-    if (!masterTimer) {
-        qDebug() << "警告: 主时间戳未初始化，无法更新ECU图表";
-        return;
-    }
-    
     try {
-        qDebug() << "更新ECU图表";
-        
-        // 准备数据值
-        QVector<double> values(9);
-        values[0] = data.throttle;     // 喷头
-        values[1] = data.engineSpeed;  // 发动机转速
-        values[2] = data.cylinderTemp; // 缸温
-        values[3] = data.exhaustTemp;  // 排温
-        values[4] = data.axleTemp;     // 轴温
-        values[5] = data.fuelPressure; // 燃油压力
-        values[6] = data.intakeTemp;   // 进气温度
-        values[7] = data.atmPressure;  // 大气压力
-        values[8] = data.flightTime;   // 飞行时间
-        
-        // 获取当前基于主时间戳的时间(秒)
-        double currentTime = (masterTimer->elapsed() / 1000.0);
-        
-        // 添加新的数据点
-        addECUDataPoint(currentTime, values);
-        
-        // 检查Y轴值范围
-        QVector<double> yRanges = {
-            100.0,  // 喷头 0-100%
-            10000.0, // 发动机转速 0-10000
-            300.0,  // 缸温 0-300
-            1000.0, // 排温 0-1000
-            200.0,  // 轴温 0-200
-            1000.0, // 燃油压力 0-1000
-            100.0,  // 进气温度 -40-100
-            120.0,  // 大气压力 0-120
-            60.0    // 飞行时间 0-60
-        };
-        
-        // 如果ecuTimeData为空，不继续更新图表
-        if (ecuTimeData.isEmpty()) {
-            qDebug() << "ECU时间数据为空，无法更新图表";
-            return;
+        // 确保图表已初始化 - 如果未初始化则强制初始化
+        QCustomPlot *ecuPlot = ui->ECUCustomPlot;
+        if (!ecuPlot || ecuPlot->graphCount() < 9) {
+            ECUPlotInit();
+            ecuPlot = ui->ECUCustomPlot; // 重新获取指针，以防初始化改变了它
+            if (!ecuPlot || ecuPlot->graphCount() < 9) {
+                qDebug() << "ECU图表未正确初始化";
+                return;
+            }
         }
         
-        // 获取最新的时间点
-        double latestTime = ecuTimeData.last();
-        
-        // 设置X轴固定显示最近60秒的数据
-        double xRangeSize = 60.0;
-        double xMin = qMax(0.0, latestTime - xRangeSize);
-        double xMax = latestTime;
-        
-        qDebug() << "ECU图表X轴范围: " << xMin << " - " << xMax;
-        ecuPlot->xAxis->setRange(xMin, xMax);
-        
-        // 自动调整Y轴范围 - 查找所有曲线的最大最小值
-        double globalMin = std::numeric_limits<double>::max();
-        double globalMax = std::numeric_limits<double>::lowest();
-        
-        // 更新各通道图表
-        for (int i = 0; i < qMin(ecuPlot->graphCount(), values.size()); i++) {
-            // 确保有数据
-            if (i >= ecuData.size() || ecuData[i].isEmpty()) {
-                qDebug() << "  跳过通道" << i << ": 数据为空或索引越界";
-                continue;
-            }
+        // 改变条件，即使没有数据也允许初始设置图表
+        // 这样可以保证图表框架是可见的，即使暂时没有数据点
+        if (ecuTimeData.isEmpty()) {
+            double currentTime = masterTimer ? (masterTimer->elapsed() / 1000.0) : 0.0;
+            ecuTimeData.append(currentTime);
             
-            // 更新图表数据
-            ecuPlot->graph(i)->setData(ecuTimeData, ecuData[i], true);
-            
-            // 查找通道在可见范围内的最大最小值
-            for (int j = 0; j < ecuTimeData.size(); j++) {
-                if (ecuTimeData[j] >= xMin && ecuTimeData[j] <= xMax) {
-                    globalMin = qMin(globalMin, ecuData[i][j]);
-                    globalMax = qMax(globalMax, ecuData[i][j]);
+            // 初始化数据向量，确保它们存在
+            if (ecuData.isEmpty()) {
+                for (int i = 0; i < 9; ++i) {
+                    QVector<double> dataVector;
+                    dataVector.append(0.0); // 添加初始0值
+                    ecuData.append(dataVector);
                 }
             }
         }
         
-        // 确保有有效的范围
-        if (globalMin <= globalMax) {
-            // 添加10%的边距
-            double range = globalMax - globalMin;
-            if (range < 1.0) range = 1.0; // 防止范围太小
-            double margin = range * 0.1;
-            ecuPlot->yAxis->setRange(globalMin - margin, globalMax + margin);
+        // 将新数据点添加到图表
+        QVector<double> values(9);
+        values[0] = data.throttle;
+        values[1] = data.engineSpeed;
+        values[2] = data.cylinderTemp;
+        values[3] = data.exhaustTemp;
+        values[4] = data.axleTemp;
+        values[5] = data.fuelPressure;
+        values[6] = data.intakeTemp;
+        values[7] = data.atmPressure;
+        values[8] = data.flightTime;
+        
+        // 获取最新的时间范围
+        double latestTime = ecuTimeData.last();
+        double timeRange = 30.0; // 显示最近30秒的数据
+        double minX = qMax(0.0, latestTime - timeRange);
+        
+        // 更新每个通道的数据
+        for (int i = 0; i < qMin(ecuData.size(), 9); ++i) {
+            if (i < ecuPlot->graphCount() && i < ecuData.size()) {
+                // 确保时间向量和数据向量长度一致
+                int dataSize = qMin(ecuTimeData.size(), ecuData[i].size());
+                if (dataSize > 0) {
+                    QVector<double> timeVector = ecuTimeData.mid(ecuTimeData.size() - dataSize);
+                    QVector<double> dataVector = ecuData[i].mid(ecuData[i].size() - dataSize);
+                    
+                    // 更新图表数据
+                    ecuPlot->graph(i)->setData(timeVector, dataVector);
+                    
+                    // 调试信息
+                    qDebug() << "ECU图表" << i << "更新: 时间点数=" << timeVector.size() 
+                             << " 数据点数=" << dataVector.size()
+                             << " 最新值=" << (dataVector.isEmpty() ? 0.0 : dataVector.last());
+                }
+            }
         }
         
-        // 重绘图表
-        ecuPlot->replot(QCustomPlot::rpQueuedReplot);
+        // 设置X轴范围以显示最近的数据
+        ecuPlot->xAxis->setRange(minX, latestTime);
         
+        // 自动调整Y轴范围以适应所有可见数据
+        ecuPlot->rescaleAxes();
+        
+        // 确保Y轴有合理的范围
+        double yMin = ecuPlot->yAxis->range().lower;
+        double yMax = ecuPlot->yAxis->range().upper;
+        if (qAbs(yMax - yMin) < 0.1) {
+            // 如果范围太小，设置一个默认范围
+            ecuPlot->yAxis->setRange(yMin - 1.0, yMax + 1.0);
+        }
+        
+        // 刷新图表 - 使用立即重绘，而不是队列化重绘
+        ecuPlot->replot(QCustomPlot::rpImmediateRefresh);
     } catch (const std::exception& e) {
         qDebug() << "更新ECU图表时出错: " << e.what();
     } catch (...) {
@@ -3994,63 +3953,68 @@ void MainWindow::updateECUPlot(const ECUData &data)
 }
 
 // 添加新的ECU数据点
-void MainWindow::addECUDataPoint(double time, const QVector<double> &values)
+void MainWindow::addECUDataPoint(double timePoint, const QVector<double> &values)
 {
-    try {
-        // 确保图表已初始化
-        QCustomPlot *ecuPlot = ui->ECUCustomPlot;
-        if (!ecuPlot || ecuPlot->graphCount() == 0) {
-            ECUPlotInit();
+    // 确保数据向量大小一致
+    if (values.size() != 9) {
+        qDebug() << "ECU数据点大小错误: " << values.size();
+        return;
+    }
+    
+    // 添加调试信息
+    qDebug() << "添加ECU数据点: 时间=" << timePoint << ", 数据点=" << values;
+    
+    // 使用统一的时间点，确保与masterTimer同步
+    ecuTimeData.append(timePoint);
+    
+    // 限制数据点数量，防止内存过大
+    const int maxDataPoints = 1000;
+    while (ecuTimeData.size() > maxDataPoints) {
+        ecuTimeData.removeFirst();
+    }
+    
+    // 确保所有ECU数据向量已初始化
+    if (ecuData.isEmpty()) {
+        for (int i = 0; i < 9; ++i) {
+            QVector<double> dataVector;
+            ecuData.append(dataVector);
         }
-        
-        // 记录函数调用信息
-        qDebug() << "添加ECU数据点: 时间=" << time << ", 数据点数量=" << values.size();
-        
-        // 保存时间数据
-        ecuTimeData.append(time);
-        
-        // 确保ecuData大小正确
-        if (ecuData.size() != values.size()) {
-            ecuData.resize(values.size());
-            qDebug() << "调整ecuData大小为" << values.size();
+    }
+    
+    // 确保ecuData大小正确 - 如果大小不一致，重置它
+    if (ecuData.size() != 9) {
+        ecuData.clear();
+        for (int i = 0; i < 9; ++i) {
+            QVector<double> dataVector;
+            ecuData.append(dataVector);
         }
+    }
+    
+    // 添加每个ECU数据点
+    for (int i = 0; i < values.size() && i < ecuData.size(); ++i) {
+        ecuData[i].append(values[i]);
         
-        // 保存各通道数据
-        for (int i = 0; i < values.size(); ++i) {
-            // 添加数据点
-            if (i < ecuData.size()) {
-                ecuData[i].append(values[i]);
-                qDebug() << "  通道" << i << "添加数据: " << values[i];
-            } else {
-                qDebug() << "警告: 通道索引" << i << "超出ecuData大小" << ecuData.size();
-            }
+        // 限制数据点数量
+        while (ecuData[i].size() > maxDataPoints) {
+            ecuData[i].removeFirst();
         }
-        
-        // 限制数据量，防止内存过大
-        const int maxDataPoints = 6000; // 保存最多10分钟的数据 (600秒，每秒10点)
-        if (ecuTimeData.size() > maxDataPoints) {
-            int pointsToRemove = ecuTimeData.size() - maxDataPoints;
-            ecuTimeData.remove(0, pointsToRemove);
-            
-            for (int i = 0; i < ecuData.size(); ++i) {
-                if (ecuData[i].size() > pointsToRemove) {
-                    ecuData[i].remove(0, pointsToRemove);
-                }
-            }
-        }
-    } catch (const std::exception& e) {
-        qDebug() << "添加ECU数据点时出错: " << e.what();
-    } catch (...) {
-        qDebug() << "添加ECU数据点时发生未知错误";
     }
 }
 
-// 更新ECU数据显示（从快照）
 void MainWindow::updateECUDataDisplay(const QVector<double> &timeData, const DataSnapshot &snapshot)
 {
     try {
         if (!snapshot.ecuValid || snapshot.ecuData.isEmpty() || snapshot.ecuData.size() < 9) {
             return;
+        }
+        
+        // 确保ECU表格已初始化
+        if (!ecuDataModel || ecuDataModel->columnCount() == 0) {
+            setupECUDataTable();
+            if (!ecuDataModel) {
+                qDebug() << "ECU表格初始化失败";
+                return;
+            }
         }
         
         // 转换为ECU数据结构
@@ -4066,64 +4030,45 @@ void MainWindow::updateECUDataDisplay(const QVector<double> &timeData, const Dat
         ecuData.atmPressure = snapshot.ecuData[7];
         ecuData.flightTime = snapshot.ecuData[8];
         
-        // 设置一个标准化的时间戳，使用快照的时间戳
-        double snapshotTime = snapshot.timestamp;
+        // 使用快照的时间戳确保与其他数据源同步
+        double snapshotTime = timeData.isEmpty() ? snapshot.timestamp : timeData.first();
+        
+        // 调试输出添加的数据
+        qDebug() << "更新ECU表格: 时间=" << snapshotTime 
+                 << ", 喷头=" << ecuData.throttle
+                 << ", 转速=" << ecuData.engineSpeed;
         
         // 更新ECU表格 - 使用横向表格格式(类似DAQ表格)
-        if (ecuDataModel && ecuDataModel->columnCount() > 0) {
-            // 列数已存在，添加新行
-            QList<QStandardItem*> rowItems;
-            
-            // 添加时间戳
-            rowItems.append(new QStandardItem(QString::number(snapshotTime, 'f', 3)));
-            
-            // 添加各项数据
-            rowItems.append(new QStandardItem(QString::number(ecuData.throttle, 'f', 1)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.engineSpeed, 'f', 0)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.cylinderTemp, 'f', 0)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.exhaustTemp, 'f', 0)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.axleTemp, 'f', 0)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.fuelPressure, 'f', 1)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.intakeTemp, 'f', 1)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.atmPressure, 'f', 1)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.flightTime, 'f', 1)));
-            
-            // 添加新行
-            ecuDataModel->appendRow(rowItems);
-            
-            // 限制行数，防止表格过大
-            while (ecuDataModel->rowCount() > 100) {
-                ecuDataModel->removeRow(0);
-            }
-        } else {
-            // 需要初始化表格
-            setupECUDataTable();
-            
-            // 创建新行
-            QList<QStandardItem*> rowItems;
-            
-            // 添加时间戳
-            rowItems.append(new QStandardItem(QString::number(snapshotTime, 'f', 3)));
-            
-            // 添加各项数据
-            rowItems.append(new QStandardItem(QString::number(ecuData.throttle, 'f', 1)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.engineSpeed, 'f', 0)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.cylinderTemp, 'f', 0)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.exhaustTemp, 'f', 0)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.axleTemp, 'f', 0)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.fuelPressure, 'f', 1)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.intakeTemp, 'f', 1)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.atmPressure, 'f', 1)));
-            rowItems.append(new QStandardItem(QString::number(ecuData.flightTime, 'f', 1)));
-            
-            // 添加新行
-            ecuDataModel->appendRow(rowItems);
+        QList<QStandardItem*> rowItems;
+        
+        // 添加时间戳 - 使用快照的统一时间戳
+        rowItems.append(new QStandardItem(QString::number(snapshotTime, 'f', 3)));
+        
+        // 添加各项数据
+        rowItems.append(new QStandardItem(QString::number(ecuData.throttle, 'f', 1)));
+        rowItems.append(new QStandardItem(QString::number(ecuData.engineSpeed, 'f', 0)));
+        rowItems.append(new QStandardItem(QString::number(ecuData.cylinderTemp, 'f', 0)));
+        rowItems.append(new QStandardItem(QString::number(ecuData.exhaustTemp, 'f', 0)));
+        rowItems.append(new QStandardItem(QString::number(ecuData.axleTemp, 'f', 0)));
+        rowItems.append(new QStandardItem(QString::number(ecuData.fuelPressure, 'f', 1)));
+        rowItems.append(new QStandardItem(QString::number(ecuData.intakeTemp, 'f', 1)));
+        rowItems.append(new QStandardItem(QString::number(ecuData.atmPressure, 'f', 1)));
+        rowItems.append(new QStandardItem(QString::number(ecuData.flightTime, 'f', 1)));
+        
+        // 添加新行
+        ecuDataModel->appendRow(rowItems);
+        
+        // 限制行数，防止表格过大
+        while (ecuDataModel->rowCount() > 100) {
+            ecuDataModel->removeRow(0);
         }
         
-        // 更新ECU图表 - 直接使用snapshot的时间戳
-        if (snapshot.timestamp > 0) {
-            updateECUPlot(ecuData);
-        }
+        // 直接将快照数据和时间戳添加到ecuData和ecuTimeData中
+        QVector<double> ecuValues = snapshot.ecuData;
+        addECUDataPoint(snapshotTime, ecuValues);
+        
+        // 更新ECU图表 - 使用快照的统一时间戳
+        updateECUPlot(ecuData);
     } catch (const std::exception& e) {
         qDebug() << "更新ECU数据显示时出错: " << e.what();
     } catch (...) {
@@ -4133,6 +4078,8 @@ void MainWindow::updateECUDataDisplay(const QVector<double> &timeData, const Dat
 
 void MainWindow::setupECUDataTable()
 {
+    qDebug() << "开始设置ECU数据表格";
+    
     // 初始化ECU数据模型
     if (ecuDataModel) {
         delete ecuDataModel;
@@ -4149,6 +4096,12 @@ void MainWindow::setupECUDataTable()
     
     ecuDataModel->setHorizontalHeaderLabels(columnLabels);
     
+    // 确保表格控件存在
+    if (!ui->tableViewECU) {
+        qDebug() << "错误: tableViewECU控件不存在";
+        return;
+    }
+    
     // 设置表格模型
     ui->tableViewECU->setModel(ecuDataModel);
     
@@ -4164,6 +4117,8 @@ void MainWindow::setupECUDataTable()
     
     // 自动调整列宽以适应内容
     ui->tableViewECU->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    
+    qDebug() << "ECU数据表格设置完成";
 }
 
 // 初始化dash1plot绘图区域
@@ -4599,126 +4554,114 @@ void MainWindow::handleDashForceSettingsChanged(const QString &dashboardName, co
 // 添加处理数据快照的槽函数实现
 void MainWindow::processDataSnapshots()
 {
-    // 检查主计时器是否已初始化
-    if (!masterTimer) {
-        qDebug() << "错误: 主计时器未初始化";
-        return;
-    }
-
-    // 使用静态变量跟踪上次快照时间和计数
-    static qint64 lastSnapshotTime = 0;
-    static qint64 baseTime = masterTimer->elapsed(); // 记录基准时间点
+    static double lastSnapshotTime = 0.0;
     static int snapshotCount = 0;
     
-    // 获取当前时间(相对于masterTimer启动)
-    qint64 currentTimeMs = masterTimer->elapsed();
-    
-    // 检查是否已经过去了100ms
-    if (currentTimeMs - lastSnapshotTime >= 100 || lastSnapshotTime == 0) {
-        // 更新上次快照时间为当前时间的100ms整数倍
-        lastSnapshotTime = (currentTimeMs / 100) * 100;
+    try {
+        // 确保主时间戳已初始化
+        if (!masterTimer) {
+            qDebug() << "警告: 主时间戳未初始化，无法处理数据快照";
+            setupMasterTimer();
+            return;
+        }
         
-        // 计算相对于基准时间的时间戳(秒)
-        double relativeTimeSec = (lastSnapshotTime - baseTime) / 1000.0;
-        // 使用绝对确定的间隔时间作为时间戳
-        double timestampSec = snapshotCount * 0.1; // 严格100ms间隔
+        // 获取当前基于主时间戳的时间(秒)
+        double currentTime = (masterTimer->elapsed() / 1000.0);
         
-        // 创建一个新的数据快照
+        // 创建当前快照
         DataSnapshot snapshot;
-        snapshot.timestamp = timestampSec; // 使用严格的100ms间隔时间作为时间戳
-        snapshot.snapshotIndex = snapshotCount++;
+        snapshot.timestamp = currentTime;
         
-        // 收集当前所有Modbus数据 - 一维向量
-        if (modbusDataValid) {
-            snapshot.modbusValid = true;
-            snapshot.modbusData.resize(modbusNumRegs, 0.0);
-            
-            // 复制Modbus数据到快照
+        // 获取当前的Modbus数据
+        snapshot.modbusValid = modbusDataValid;
+        if (modbusDataValid && !modbusData.isEmpty()) {
+            // 将二维数据转为一维，取每个通道的最后一个值
+            snapshot.modbusData.resize(modbusNumRegs);
             for (int i = 0; i < modbusNumRegs && i < modbusData.size(); ++i) {
-                if (i < modbusData.size() && !modbusData[i].isEmpty()) {
+                if (!modbusData[i].isEmpty()) {
                     snapshot.modbusData[i] = modbusData[i].last();
-                }
-            }
-        }
-        
-        // 收集当前所有DAQ数据
-        if (daqIsAcquiring && daqNumChannels > 0) {
-            snapshot.daqValid = true;
-            snapshot.daqData.resize(daqNumChannels);
-            
-            // 复制DAQ数据到快照
-            for (int i = 0; i < daqNumChannels && i < daqChannelData.size(); ++i) {
-                if (!daqChannelData[i].isEmpty()) {
-                    snapshot.daqData[i] = QVector<double>({daqChannelData[i].last()});
                 } else {
-                    snapshot.daqData[i] = QVector<double>();
+                    snapshot.modbusData[i] = 0.0;
                 }
             }
         }
         
-        // 收集当前所有ECU数据
-        if (ecuDataValid) {
-            snapshot.ecuValid = true;
-            // 确保ECU数据正确复制
-            if (ecudataMap.size() > 0) {
-                snapshot.ecuData = ecudataMap;  // 复制当前ECU数据到快照
+        // 获取当前的DAQ数据
+        snapshot.daqValid = daqIsAcquiring && daqNumChannels > 0;
+        snapshot.daqRunning = daqIsAcquiring;
+        
+        if (snapshot.daqValid && !daqChannelData.isEmpty()) {
+            snapshot.daqData = daqChannelData;  // 复制当前DAQ数据
+        }
+        
+        // 获取当前的ECU数据
+        snapshot.ecuValid = ecuDataValid;
+        if (ecuDataValid && !ecuData.isEmpty() && ecuData.size() == 9) {
+            snapshot.ecuData.resize(9);
+            for (int i = 0; i < 9; ++i) {
+                if (!ecuData[i].isEmpty()) {
+                    snapshot.ecuData[i] = ecuData[i].last();
+                } else {
+                    snapshot.ecuData[i] = 0.0;
+                }
             }
         }
         
-        // 将当前快照添加到队列
-        snapshotQueue.enqueue(snapshot);
-        
-        // 限制队列大小，保留最新的600个快照(约60秒数据)
-        while (snapshotQueue.size() > 600) {
-            snapshotQueue.dequeue();
-        }
-        
-        // 为显示数据准备一个统一的时间值 - 使用快照的时间作为显示时间点
-        QVector<double> displayTimeData = {timestampSec}; // 使用严格间隔的时间点
-
-        // 处理DAQ数据 - 使用快照时间
-        if (snapshot.daqValid && daqIsAcquiring && !snapshot.daqData.isEmpty()) {
-            try {
-                // 使用统一时间点更新DAQ相关UI
-                updateDAQTable(displayTimeData, snapshot.daqData, snapshot.daqData.size());
-                updateDAQPlot(); // 更新使用重采样数据
-            } catch (const std::exception& e) {
-                qDebug() << "处理DAQ快照时出错:" << e.what();
-            } catch (...) {
-                qDebug() << "处理DAQ快照时发生未知错误";
+        // 每100毫秒处理一次快照（强制时间戳间隔）
+        if (currentTime - lastSnapshotTime >= 0.1 || lastSnapshotTime == 0.0) {
+            // 更新最后快照时间
+            lastSnapshotTime = currentTime;
+            snapshotCount++;
+            
+            // 对快照进行四舍五入以确保显示的时间戳是100ms的整数倍
+            double roundedTime = round(currentTime * 10.0) / 10.0;
+            snapshot.timestamp = roundedTime;
+            
+            // 将当前快照添加到队列中
+            snapshotQueue.enqueue(snapshot);
+            
+            // 限制队列大小，保留最新的300个快照(约30秒数据)
+            while (snapshotQueue.size() > 300) {
+                snapshotQueue.dequeue();
             }
-        }
-
-        // 处理Modbus数据 - 使用快照时间
-        if (snapshot.modbusValid) {
-            try {
+            
+            // 创建时间向量 - 确保与snapshot.timestamp使用相同的四舍五入值
+            QVector<double> timeData;
+            timeData.append(roundedTime);
+            
+            // 更新数据表格
+            if (snapshot.daqValid) {
+                updateDAQTable(timeData, snapshot.daqData, daqNumChannels);
+            }
+            
+            if (snapshot.modbusValid) {
                 // 创建二维向量用于表格显示
                 QVector<QVector<double>> modbusDataForTable(modbusNumRegs);
                 for (int i = 0; i < modbusNumRegs && i < snapshot.modbusData.size(); ++i) {
                     modbusDataForTable[i] = QVector<double>({snapshot.modbusData[i]});
                 }
                 
-                // 更新仪表盘和表格数据
-                updateDashboardData(displayTimeData, snapshot);
-                updateModbusTable(displayTimeData, modbusDataForTable, modbusNumRegs);
-            } catch (const std::exception& e) {
-                qDebug() << "处理Modbus快照时出错:" << e.what();
-            } catch (...) {
-                qDebug() << "处理Modbus快照时发生未知错误";
+                updateModbusTable(timeData, modbusDataForTable, modbusNumRegs);
+            }
+            
+            if (snapshot.ecuValid) {
+                updateECUDataDisplay(timeData, snapshot);
+            }
+            
+            // 更新仪表盘数据
+            if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid) {
+                updateDashboardData(timeData, snapshot);
+            }
+            
+            // 更新图表 - 传递时间向量和快照
+            if (snapshot.daqValid) {
+                updateDAQPlot(timeData, snapshot);
             }
         }
-
-        // 处理ECU数据 - 使用快照时间
-        if (snapshot.ecuValid && !snapshot.ecuData.isEmpty()) {
-            try {
-                // 更新ECU数据显示
-                updateECUDataDisplay(displayTimeData, snapshot);
-            } catch (const std::exception& e) {
-                qDebug() << "处理ECU快照时出错:" << e.what();
-            } catch (...) {
-                qDebug() << "处理ECU快照时发生未知错误";
-            }
-        }
+    } catch (const std::exception& e) {
+        qDebug() << "处理数据快照时出错: " << e.what();
+    } catch (...) {
+        qDebug() << "处理数据快照时发生未知错误";
     }
 }
 
@@ -4752,10 +4695,10 @@ void MainWindow::updateDashboardData(const QVector<double> &timeData, const Data
             }
             
             // 更新仪表盘 - 使用当前映射关系
-            // modbusData已经是一维数组，可以直接使用
+            // 确保有数据可用
             updateDashboardByMapping(
                 snapshot.modbusData, 
-                snapshot.daqValid ? snapshot.daqData : QVector<QVector<double>>(), 
+                snapshot.daqData, 
                 ecuData);
         }
     } catch (const std::exception& e) {
@@ -4795,6 +4738,45 @@ void MainWindow::updateModbusTable(const QVector<double> &timeData, const QVecto
         qDebug() << "更新Modbus表格时发生未知错误";
     }
 }
+
+// 实现setupMasterTimer函数
+void MainWindow::setupMasterTimer()
+{
+    // 如果主计时器已经存在，则先删除
+    if (masterTimer) {
+        delete masterTimer;
+    }
+    
+    // 创建新的主计时器并立即启动
+    masterTimer = new QElapsedTimer();
+    masterTimer->start();
+    
+    qDebug() << "主计时器已初始化并启动";
+}
+
+// 保留原有的无参数版本的updateDAQPlot，调用新版本来确保向后兼容
+void MainWindow::updateDAQPlot()
+{
+    // 如果没在采集中或没有数据，则不更新
+    if (!daqIsAcquiring || daqChannelData.isEmpty() || daqNumChannels <= 0 || !masterTimer) {
+        return;
+    }
+    
+    // 创建一个基于当前时间的快照
+    DataSnapshot snapshot;
+    snapshot.timestamp = masterTimer->elapsed() / 1000.0;
+    snapshot.daqValid = true;
+    snapshot.daqRunning = daqIsAcquiring;
+    snapshot.daqData = daqChannelData;
+    
+    // 创建时间向量
+    QVector<double> timeData;
+    timeData.append(snapshot.timestamp);
+    
+    // 调用带参数的版本
+    updateDAQPlot(timeData, snapshot);
+}
+
 
 
 

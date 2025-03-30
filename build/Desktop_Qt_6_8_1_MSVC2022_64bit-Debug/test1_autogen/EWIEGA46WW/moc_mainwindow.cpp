@@ -165,7 +165,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      72,   14, // methods
+      73,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -173,80 +173,81 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
        7,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    3,  446,    2, 0x06,    1 /* Public */,
-       6,    5,  453,    2, 0x06,    5 /* Public */,
-      12,    0,  464,    2, 0x06,   11 /* Public */,
-      13,    0,  465,    2, 0x06,   12 /* Public */,
-      14,    1,  466,    2, 0x06,   13 /* Public */,
-      15,    0,  469,    2, 0x06,   15 /* Public */,
-      16,    2,  470,    2, 0x06,   16 /* Public */,
+       1,    3,  452,    2, 0x06,    1 /* Public */,
+       6,    5,  459,    2, 0x06,    5 /* Public */,
+      12,    0,  470,    2, 0x06,   11 /* Public */,
+      13,    0,  471,    2, 0x06,   12 /* Public */,
+      14,    1,  472,    2, 0x06,   13 /* Public */,
+      15,    0,  475,    2, 0x06,   15 /* Public */,
+      16,    2,  476,    2, 0x06,   16 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-      19,    0,  475,    2, 0x08,   19 /* Private */,
-      20,    0,  476,    2, 0x08,   20 /* Private */,
-      21,    0,  477,    2, 0x08,   21 /* Private */,
-      22,    0,  478,    2, 0x08,   22 /* Private */,
-      23,    0,  479,    2, 0x08,   23 /* Private */,
-      24,    2,  480,    2, 0x08,   24 /* Private */,
-      28,    0,  485,    2, 0x08,   27 /* Private */,
-      29,    0,  486,    2, 0x08,   28 /* Private */,
-      30,    0,  487,    2, 0x08,   29 /* Private */,
-      31,    0,  488,    2, 0x08,   30 /* Private */,
-      32,    0,  489,    2, 0x08,   31 /* Private */,
-      33,    0,  490,    2, 0x08,   32 /* Private */,
-      34,    0,  491,    2, 0x08,   33 /* Private */,
-      35,    0,  492,    2, 0x08,   34 /* Private */,
-      36,    0,  493,    2, 0x08,   35 /* Private */,
-      37,    1,  494,    2, 0x08,   36 /* Private */,
-      39,    1,  497,    2, 0x08,   38 /* Private */,
-      40,    0,  500,    2, 0x08,   40 /* Private */,
-      41,    0,  501,    2, 0x08,   41 /* Private */,
-      42,    2,  502,    2, 0x08,   42 /* Private */,
-      46,    2,  507,    2, 0x08,   45 /* Private */,
-      49,    1,  512,    2, 0x08,   48 /* Private */,
-      51,    1,  515,    2, 0x08,   50 /* Private */,
-      53,    0,  518,    2, 0x08,   52 /* Private */,
-      54,    0,  519,    2, 0x08,   53 /* Private */,
-      55,    1,  520,    2, 0x08,   54 /* Private */,
-      57,    2,  523,    2, 0x08,   56 /* Private */,
-      59,    1,  528,    2, 0x08,   59 /* Private */,
-      60,    0,  531,    2, 0x08,   61 /* Private */,
-      61,    1,  532,    2, 0x08,   62 /* Private */,
-      63,    1,  535,    2, 0x08,   64 /* Private */,
-      65,    2,  538,    2, 0x08,   66 /* Private */,
-      67,    1,  543,    2, 0x08,   69 /* Private */,
-      69,    1,  546,    2, 0x08,   71 /* Private */,
-      70,    1,  549,    2, 0x08,   73 /* Private */,
-      71,    0,  552,    2, 0x08,   75 /* Private */,
-      72,    0,  553,    2, 0x08,   76 /* Private */,
-      73,    0,  554,    2, 0x08,   77 /* Private */,
-      74,    0,  555,    2, 0x08,   78 /* Private */,
-      75,    0,  556,    2, 0x08,   79 /* Private */,
-      76,    0,  557,    2, 0x08,   80 /* Private */,
-      77,    2,  558,    2, 0x08,   81 /* Private */,
-      81,    2,  563,    2, 0x08,   84 /* Private */,
-      82,    0,  568,    2, 0x08,   87 /* Private */,
-      83,    0,  569,    2, 0x08,   88 /* Private */,
-      84,    0,  570,    2, 0x08,   89 /* Private */,
-      85,    1,  571,    2, 0x08,   90 /* Private */,
-      87,    1,  574,    2, 0x08,   92 /* Private */,
-      88,    0,  577,    2, 0x08,   94 /* Private */,
-      89,    1,  578,    2, 0x08,   95 /* Private */,
-      91,    0,  581,    2, 0x08,   97 /* Private */,
-      92,    3,  582,    2, 0x08,   98 /* Private */,
-      96,    2,  589,    2, 0x08,  102 /* Private */,
-      99,    2,  594,    2, 0x08,  105 /* Private */,
-     100,    3,  599,    2, 0x08,  108 /* Private */,
-     102,    0,  606,    2, 0x08,  112 /* Private */,
-     103,    0,  607,    2, 0x08,  113 /* Private */,
-     104,    0,  608,    2, 0x08,  114 /* Private */,
-     105,    3,  609,    2, 0x08,  115 /* Private */,
-     107,    0,  616,    2, 0x08,  119 /* Private */,
-     108,    0,  617,    2, 0x08,  120 /* Private */,
-     109,    0,  618,    2, 0x08,  121 /* Private */,
-     110,    0,  619,    2, 0x08,  122 /* Private */,
-     111,    1,  620,    2, 0x08,  123 /* Private */,
-     113,    0,  623,    2, 0x08,  125 /* Private */,
+      19,    0,  481,    2, 0x08,   19 /* Private */,
+      20,    0,  482,    2, 0x08,   20 /* Private */,
+      21,    0,  483,    2, 0x08,   21 /* Private */,
+      22,    0,  484,    2, 0x08,   22 /* Private */,
+      23,    0,  485,    2, 0x08,   23 /* Private */,
+      24,    2,  486,    2, 0x08,   24 /* Private */,
+      28,    0,  491,    2, 0x08,   27 /* Private */,
+      29,    0,  492,    2, 0x08,   28 /* Private */,
+      30,    0,  493,    2, 0x08,   29 /* Private */,
+      31,    0,  494,    2, 0x08,   30 /* Private */,
+      32,    0,  495,    2, 0x08,   31 /* Private */,
+      33,    0,  496,    2, 0x08,   32 /* Private */,
+      34,    0,  497,    2, 0x08,   33 /* Private */,
+      35,    0,  498,    2, 0x08,   34 /* Private */,
+      36,    0,  499,    2, 0x08,   35 /* Private */,
+      37,    1,  500,    2, 0x08,   36 /* Private */,
+      39,    1,  503,    2, 0x08,   38 /* Private */,
+      40,    0,  506,    2, 0x08,   40 /* Private */,
+      41,    0,  507,    2, 0x08,   41 /* Private */,
+      42,    2,  508,    2, 0x08,   42 /* Private */,
+      46,    2,  513,    2, 0x08,   45 /* Private */,
+      49,    1,  518,    2, 0x08,   48 /* Private */,
+      51,    1,  521,    2, 0x08,   50 /* Private */,
+      53,    0,  524,    2, 0x08,   52 /* Private */,
+      54,    0,  525,    2, 0x08,   53 /* Private */,
+      55,    1,  526,    2, 0x08,   54 /* Private */,
+      57,    2,  529,    2, 0x08,   56 /* Private */,
+      59,    1,  534,    2, 0x08,   59 /* Private */,
+      60,    0,  537,    2, 0x08,   61 /* Private */,
+      61,    1,  538,    2, 0x08,   62 /* Private */,
+      63,    1,  541,    2, 0x08,   64 /* Private */,
+      65,    2,  544,    2, 0x08,   66 /* Private */,
+      67,    1,  549,    2, 0x08,   69 /* Private */,
+      69,    1,  552,    2, 0x08,   71 /* Private */,
+      70,    1,  555,    2, 0x08,   73 /* Private */,
+      71,    0,  558,    2, 0x08,   75 /* Private */,
+      72,    0,  559,    2, 0x08,   76 /* Private */,
+      73,    0,  560,    2, 0x08,   77 /* Private */,
+      74,    0,  561,    2, 0x08,   78 /* Private */,
+      75,    0,  562,    2, 0x08,   79 /* Private */,
+      76,    0,  563,    2, 0x08,   80 /* Private */,
+      77,    2,  564,    2, 0x08,   81 /* Private */,
+      81,    2,  569,    2, 0x08,   84 /* Private */,
+      82,    0,  574,    2, 0x08,   87 /* Private */,
+      83,    0,  575,    2, 0x08,   88 /* Private */,
+      84,    0,  576,    2, 0x08,   89 /* Private */,
+      85,    1,  577,    2, 0x08,   90 /* Private */,
+      87,    1,  580,    2, 0x08,   92 /* Private */,
+      88,    0,  583,    2, 0x08,   94 /* Private */,
+      89,    1,  584,    2, 0x08,   95 /* Private */,
+      91,    0,  587,    2, 0x08,   97 /* Private */,
+      92,    3,  588,    2, 0x08,   98 /* Private */,
+      96,    2,  595,    2, 0x08,  102 /* Private */,
+      99,    2,  600,    2, 0x08,  105 /* Private */,
+     100,    3,  605,    2, 0x08,  108 /* Private */,
+     102,    0,  612,    2, 0x08,  112 /* Private */,
+     103,    0,  613,    2, 0x08,  113 /* Private */,
+     103,    2,  614,    2, 0x08,  114 /* Private */,
+     104,    0,  619,    2, 0x08,  117 /* Private */,
+     105,    3,  620,    2, 0x08,  118 /* Private */,
+     107,    0,  627,    2, 0x08,  122 /* Private */,
+     108,    0,  628,    2, 0x08,  123 /* Private */,
+     109,    0,  629,    2, 0x08,  124 /* Private */,
+     110,    0,  630,    2, 0x08,  125 /* Private */,
+     111,    1,  631,    2, 0x08,  126 /* Private */,
+     113,    0,  634,    2, 0x08,  128 /* Private */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::Int, QMetaType::Int, QMetaType::Int,    3,    4,    5,
@@ -315,6 +316,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
     QMetaType::Void, 0x80000000 | 25, 0x80000000 | 44, QMetaType::Int,   43,   93,  101,
     QMetaType::Void,
     QMetaType::Void,
+    QMetaType::Void, 0x80000000 | 25, 0x80000000 | 97,   43,   98,
     QMetaType::Void,
     QMetaType::Void, 0x80000000 | 25, 0x80000000 | 44, QMetaType::Int,   43,   45,  106,
     QMetaType::Void,
@@ -513,6 +515,10 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'updateDAQPlot'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'updateDAQPlot'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QVector<double> &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const DataSnapshot &, std::false_type>,
         // method 'setupDAQTable'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'updateDAQTable'
@@ -608,14 +614,15 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 61: _t->updateModbusTable((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<QList<double>>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[3]))); break;
         case 62: _t->setupDAQPlot(); break;
         case 63: _t->updateDAQPlot(); break;
-        case 64: _t->setupDAQTable(); break;
-        case 65: _t->updateDAQTable((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<QList<double>>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[3]))); break;
-        case 66: _t->setupDashboardUpdateTimer(); break;
-        case 67: _t->updateLayout(); break;
-        case 68: _t->ECUPlotInit(); break;
-        case 69: _t->setupDash1Plot(); break;
-        case 70: _t->updateDash1Plot((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
-        case 71: _t->processDataSnapshots(); break;
+        case 64: _t->updateDAQPlot((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[2]))); break;
+        case 65: _t->setupDAQTable(); break;
+        case 66: _t->updateDAQTable((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<QList<double>>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[3]))); break;
+        case 67: _t->setupDashboardUpdateTimer(); break;
+        case 68: _t->updateLayout(); break;
+        case 69: _t->ECUPlotInit(); break;
+        case 70: _t->setupDash1Plot(); break;
+        case 71: _t->updateDash1Plot((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
+        case 72: _t->processDataSnapshots(); break;
         default: ;
         }
     }
@@ -670,7 +677,14 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
                 *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<double> >(); break;
             }
             break;
-        case 65:
+        case 64:
+            switch (*reinterpret_cast<int*>(_a[1])) {
+            default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
+            case 0:
+                *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<double> >(); break;
+            }
+            break;
+        case 66:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 1:
@@ -754,14 +768,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 72)
+        if (_id < 73)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 72;
+        _id -= 73;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 72)
+        if (_id < 73)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 72;
+        _id -= 73;
     }
     return _id;
 }

@@ -78,6 +78,7 @@ struct DataSnapshot {
     bool modbusValid;                   // Modbus数据有效标志
     bool daqValid;                      // DAQ数据有效标志
     bool ecuValid;                      // ECU数据有效标志
+    bool daqRunning;                    // DAQ运行状态标志
     int snapshotIndex;                  // 快照索引（序号）
     
     // 构造函数，初始化所有数据
@@ -92,6 +93,7 @@ struct DataSnapshot {
         modbusValid = false;
         daqValid = false;
         ecuValid = false;
+        daqRunning = false;             // 初始化DAQ运行状态为false
         snapshotIndex = 0;              // 初始化索引为0
     }
 };
@@ -256,6 +258,7 @@ private slots:
     // DAQ相关函数
     void setupDAQPlot();
     void updateDAQPlot();
+    void updateDAQPlot(const QVector<double> &timeData, const DataSnapshot &snapshot);
     void setupDAQTable();
     void updateDAQTable(const QVector<double> &timeData, const QVector<QVector<double>> &channelData, int numChannels);
     void setupDashboardUpdateTimer(); // 设置仪表盘更新定时器
@@ -411,6 +414,9 @@ private:
     QTimer *snapshotTimer;                 // 数据快照定时器
     QElapsedTimer *masterTimer;            // 主计时器，用于同步数据
     int maxQueueSize = 1000;               // 最大队列长度，防止内存占用过多
+    
+    // 初始化主计时器
+    void setupMasterTimer();
 
 signals:
 
