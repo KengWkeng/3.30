@@ -19,6 +19,7 @@
 #include <QApplication>
 #include <QStatusBar>
 #include <QJsonObject>
+#include <QQueue>
 
 #include <qcustomplot.h>
 #include <modbusthread.h>
@@ -68,6 +69,33 @@ struct DashboardMapping {
     QString formula;            // 自定义变量公式
 };
 
+// 定义数据快照结构体
+struct DataSnapshot {
+    double timestamp;                   // 时间戳（秒）
+    QVector<double> modbusData;         // Modbus数据(一维) - 每个寄存器的值
+    QVector<QVector<double>> daqData;   // DAQ数据(16通道)
+    QVector<double> ecuData;            // ECU数据(9通道)
+    bool modbusValid;                   // Modbus数据有效标志
+    bool daqValid;                      // DAQ数据有效标志
+    bool ecuValid;                      // ECU数据有效标志
+    int snapshotIndex;                  // 快照索引（序号）
+    
+    // 构造函数，初始化所有数据
+    DataSnapshot() {
+        timestamp = 0.0;                // 初始化为0秒
+        modbusData.resize(16, 0.0);     // 16个Modbus寄存器
+        daqData.resize(16);             // 16个DAQ通道
+        for (auto &channel : daqData) {
+            channel.clear();
+        }
+        ecuData.resize(9, 0.0);         // 9个ECU通道
+        modbusValid = false;
+        daqValid = false;
+        ecuValid = false;
+        snapshotIndex = 0;              // 初始化索引为0
+    }
+};
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -84,6 +112,10 @@ public:
 
     // 添加公开函数，供Dashboard类获取当前仪表盘映射
     QMap<QString, DashboardMapping>* getDashboardMappings() { return &dashboardMappings; }
+
+    void updateECUPlot(const ECUData &data);
+    void addECUDataPoint(double time, const QVector<double> &values);
+    void setupECUDataTable();
 
 protected:
     // 添加窗口尺寸调整事件处理函数
@@ -142,7 +174,7 @@ private slots:
     // 添加DAQ相关槽函数
     void on_startDAQButton_clicked();
     void on_stopDAQButton_clicked();
-    void handleDAQData(QVector<double> timeData, QVector<QVector<double>> channelData, int numChannels);
+    void handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData);
     void handleDAQStatus(bool isRunning, QString message);
     void handleDAQError(QString errorMessage);
 
@@ -216,6 +248,11 @@ private slots:
                                  const QVector<QVector<double>> &daqData, 
                                  const ECUData &ecuData);
 
+    // 添加从数据快照更新各种UI的函数
+    void updateDashboardData(const QVector<double> &timeData, const DataSnapshot &snapshot);
+    void updateECUDataDisplay(const QVector<double> &timeData, const DataSnapshot &snapshot);
+    void updateModbusTable(const QVector<double> &timeData, const QVector<QVector<double>> &modbusData, int numRegs);
+
     // DAQ相关函数
     void setupDAQPlot();
     void updateDAQPlot();
@@ -228,12 +265,13 @@ private slots:
 
     // ECU相关
     void ECUPlotInit();
-    void updateECUPlot(const ECUData &data);
-    void addECUDataPoint(double time, const QVector<double> &values);
     
     // dash1plot相关方法
     void setupDash1Plot();                 // 初始化dash1plot
     void updateDash1Plot(double value);    // 更新dash1plot数据
+    
+    // 新增：数据快照相关槽函数
+    void processDataSnapshots();           // 处理数据快照队列的槽函数
 
 private:
 
@@ -246,6 +284,15 @@ private:
     CANThread *canTh;
 
     QTimer *ModbusTimer;
+
+    // 添加Modbus数据相关变量
+    bool modbusDataValid = false;      // Modbus数据有效标志
+    int modbusNumRegs = 16;            // Modbus寄存器数量
+    QVector<QVector<double>> modbusData;  // Modbus数据缓冲区
+    
+    // 添加ECU数据相关变量
+    bool ecuDataValid = false;         // ECU数据有效标志
+    QVector<double> ecudataMap;        // ECU数据映射
 
     //绘图控件指针
     QCustomPlot *myPlot;
@@ -357,6 +404,13 @@ private:
     QLabel *dashForceValueLabel;           // 右上角值显示标签
     QLabel *dashForceArrowLabel;           // 右侧游标标签
     double dashPlotTimeCounter;            // 时间计数器
+    
+    // 新增：数据快照相关成员
+    DataSnapshot currentSnapshot;          // 当前数据快照
+    QQueue<DataSnapshot> snapshotQueue;    // 数据快照队列
+    QTimer *snapshotTimer;                 // 数据快照定时器
+    QElapsedTimer *masterTimer;            // 主计时器，用于同步数据
+    int maxQueueSize = 1000;               // 最大队列长度，防止内存占用过多
 
 signals:
 

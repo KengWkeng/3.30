@@ -747,6 +747,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/mainwindow.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointF
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointer
+ mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QQueue
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRect
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRegularExpression
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QScopedPointer

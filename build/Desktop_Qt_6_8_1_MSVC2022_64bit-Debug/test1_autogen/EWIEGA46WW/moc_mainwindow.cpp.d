@@ -31,6 +31,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointF \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointer \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QQueue \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRect \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRegularExpression \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QScopedPointer \
