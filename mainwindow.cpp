@@ -436,19 +436,19 @@ MainWindow::MainWindow(QWidget *parent)
         ui->btnSaveData->setEnabled(false);
     });
 
-    // 初始化数据快照相关成员
-    // 创建主计时器
-    masterTimer = new QElapsedTimer();
-    masterTimer->start();
+    // // 初始化数据快照相关成员
+    // // 创建主计时器
+    // masterTimer = new QElapsedTimer();
+    // masterTimer->start();
     
-    // 创建数据快照定时器
-    snapshotTimer = new QTimer(this);
-    snapshotTimer->setInterval(100); // 设置100ms触发一次
-    connect(snapshotTimer, SIGNAL(timeout()), this, SLOT(processDataSnapshots()));
-    snapshotTimer->start(); // 启动定时器
+    // // 创建数据快照定时器
+    // snapshotTimer = new QTimer(this);
+    // snapshotTimer->setInterval(100); // 设置100ms触发一次
+    // connect(snapshotTimer, SIGNAL(timeout()), this, SLOT(processDataSnapshots()));
+    // snapshotTimer->start(); // 启动定时器
     
-    // 初始化当前数据快照
-    currentSnapshot = DataSnapshot();
+    // // 初始化当前数据快照
+    // currentSnapshot = DataSnapshot();
     
     // 添加定时器信号槽连接
     connect(ModbusTimer, &QTimer::timeout, [=]() {
@@ -687,91 +687,91 @@ void MainWindow::updateDAQPlot(const QVector<double> &timeData, const DataSnapsh
     }
     
     try {
-        // 获取滚动区域和其内容
-        QScrollArea *scrollArea = qobject_cast<QScrollArea*>(ui->verticalLayout_7->itemAt(0)->widget());
-        if (!scrollArea) {
-            qDebug() << "错误: 无法找到DAQ滚动区域";
-            return;
-        }
-        
-        QWidget *scrollWidget = scrollArea->widget();
-        if (!scrollWidget) {
-            qDebug() << "错误: 无法找到DAQ滚动区域的内容部件";
-            return;
-        }
-        
-        QVBoxLayout *plotsLayout = qobject_cast<QVBoxLayout*>(scrollWidget->layout());
-        if (!plotsLayout) {
-            qDebug() << "错误: 无法找到DAQ图表的布局";
-            return;
-        }
+    // 获取滚动区域和其内容
+    QScrollArea *scrollArea = qobject_cast<QScrollArea*>(ui->verticalLayout_7->itemAt(0)->widget());
+    if (!scrollArea) {
+        qDebug() << "错误: 无法找到DAQ滚动区域";
+        return;
+    }
+    
+    QWidget *scrollWidget = scrollArea->widget();
+    if (!scrollWidget) {
+        qDebug() << "错误: 无法找到DAQ滚动区域的内容部件";
+        return;
+    }
+    
+    QVBoxLayout *plotsLayout = qobject_cast<QVBoxLayout*>(scrollWidget->layout());
+    if (!plotsLayout) {
+        qDebug() << "错误: 无法找到DAQ图表的布局";
+        return;
+    }
         
         // 获取通道数
         int numChannels = snapshot.daqData.size();
         if (numChannels <= 0) {
             return;
         }
-        
-        // 创建颜色列表
-        QStringList colorNames = {"blue", "red", "green", "magenta", "cyan", "darkGreen", "darkRed", "darkBlue"};
-        
+    
+    // 创建颜色列表
+    QStringList colorNames = {"blue", "red", "green", "magenta", "cyan", "darkGreen", "darkRed", "darkBlue"};
+    
         // 初始化图表(如果通道数发生变化)
         if (plotsLayout->count() != numChannels) {
-            // 清除现有的图表
-            while (plotsLayout->count() > 0) {
-                QLayoutItem *item = plotsLayout->takeAt(0);
-                if (item->widget()) {
-                    delete item->widget();
-                }
-                delete item;
+        // 清除现有的图表
+        while (plotsLayout->count() > 0) {
+            QLayoutItem *item = plotsLayout->takeAt(0);
+            if (item->widget()) {
+                delete item->widget();
             }
-            
-            // 为每个通道创建一个单独的图表
+            delete item;
+        }
+        
+        // 为每个通道创建一个单独的图表
             for (int i = 0; i < numChannels; ++i) {
-                // 创建图表容器
-                QWidget *plotContainer = new QWidget(scrollWidget);
-                QHBoxLayout *containerLayout = new QHBoxLayout(plotContainer);
-                containerLayout->setContentsMargins(5, 5, 5, 5);
-                
+            // 创建图表容器
+            QWidget *plotContainer = new QWidget(scrollWidget);
+            QHBoxLayout *containerLayout = new QHBoxLayout(plotContainer);
+            containerLayout->setContentsMargins(5, 5, 5, 5);
+            
                 // 创建QCustomPlot实例
-                QCustomPlot *plot = new QCustomPlot();
-                plot->setMinimumHeight(150);
+            QCustomPlot *plot = new QCustomPlot();
+            plot->setMinimumHeight(150);
                 plot->setObjectName(QString("daqPlot_%1").arg(i));
-                
-                // 设置轴标签
-                plot->xAxis->setLabel("时间 (秒)");
-                plot->yAxis->setLabel(QString("通道 %1").arg(i));
-                
-                // 添加图形
-                plot->addGraph();
-                plot->graph(0)->setPen(QPen(QColor(colorNames[i % colorNames.size()])));
-                
+            
+            // 设置轴标签
+            plot->xAxis->setLabel("时间 (秒)");
+            plot->yAxis->setLabel(QString("通道 %1").arg(i));
+            
+            // 添加图形
+            plot->addGraph();
+            plot->graph(0)->setPen(QPen(QColor(colorNames[i % colorNames.size()])));
+            
                 // 配置图表属性
-                plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-                plot->setNoAntialiasingOnDrag(true);
-                plot->setNotAntialiasedElements(QCP::aeAll);
-                
+            plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+            plot->setNoAntialiasingOnDrag(true);
+            plot->setNotAntialiasedElements(QCP::aeAll);
+            
                 // 添加值标签
-                QLabel *valueLabel = new QLabel("0.00", plotContainer);
-                valueLabel->setObjectName(QString("daqValueLabel_%1").arg(i));
+            QLabel *valueLabel = new QLabel("0.00", plotContainer);
+            valueLabel->setObjectName(QString("daqValueLabel_%1").arg(i));
                 valueLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 14px; background-color: rgba(255, 255, 255, 180);").arg(colorNames[i % colorNames.size()]));
                 valueLabel->setAlignment(Qt::AlignCenter);
                 valueLabel->setFixedSize(80, 25);
                 valueLabel->move(plot->width() - 90, 10);
                 
                 // 添加箭头标签
-                QLabel *arrowLabel = new QLabel("←", plotContainer);
+            QLabel *arrowLabel = new QLabel("←", plotContainer);
                 arrowLabel->setObjectName(QString("daqArrowLabel_%1").arg(i));
-                arrowLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 18px;").arg(colorNames[i % colorNames.size()]));
-                arrowLabel->setAlignment(Qt::AlignCenter);
+            arrowLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 18px;").arg(colorNames[i % colorNames.size()]));
+            arrowLabel->setAlignment(Qt::AlignCenter);
                 arrowLabel->setFixedSize(20, 20);
                 arrowLabel->move(plot->width() - 30, plot->height() / 2);
-                
+            
                 // 将图表添加到容器
-                containerLayout->addWidget(plot);
-                
+            containerLayout->addWidget(plot);
+            
                 // 将容器添加到布局
-                plotsLayout->addWidget(plotContainer);
+            plotsLayout->addWidget(plotContainer);
             }
         }
         
@@ -809,15 +809,15 @@ void MainWindow::updateDAQPlot(const QVector<double> &timeData, const DataSnapsh
         // 为每个通道更新图表
         for (int i = 0; i < numChannels && i < plotsLayout->count(); ++i) {
             // 获取图表容器和控件
-            QWidget *plotContainer = plotsLayout->itemAt(i)->widget();
-            if (!plotContainer) continue;
-            
-            QCustomPlot *plot = plotContainer->findChild<QCustomPlot*>(QString("daqPlot_%1").arg(i));
-            QLabel *valueLabel = plotContainer->findChild<QLabel*>(QString("daqValueLabel_%1").arg(i));
-            QLabel *arrowLabel = plotContainer->findChild<QLabel*>(QString("daqArrowLabel_%1").arg(i));
-            
-            if (!plot) continue;
-            
+        QWidget *plotContainer = plotsLayout->itemAt(i)->widget();
+        if (!plotContainer) continue;
+        
+        QCustomPlot *plot = plotContainer->findChild<QCustomPlot*>(QString("daqPlot_%1").arg(i));
+        QLabel *valueLabel = plotContainer->findChild<QLabel*>(QString("daqValueLabel_%1").arg(i));
+        QLabel *arrowLabel = plotContainer->findChild<QLabel*>(QString("daqArrowLabel_%1").arg(i));
+        
+        if (!plot) continue;
+        
             // 收集此通道的数据
             QVector<double> channelData;
             
@@ -965,37 +965,41 @@ void MainWindow::updateDAQTable(const QVector<double> &timeData, const QVector<Q
     // 获取当前列数
     int currentColumn = daqDataModel->columnCount();
     
-    // 添加新列
-    daqDataModel->insertColumn(currentColumn);
+    // 优化：一次性预分配列，避免多次单独的setItem调用
+    QList<QStandardItem*> columnItems;
+    columnItems.reserve(numChannels + 1);
     
-    // 添加时间值
+    // 添加时间值（移除背景色设置）
     QStandardItem *timeItem = new QStandardItem(QString::number(timeData[lastIndex], 'f', 3));
-    timeItem->setBackground(QBrush(QColor(240, 240, 255))); // 时间行使用浅蓝色背景
-    daqDataModel->setItem(0, currentColumn - 1, timeItem);
+    columnItems.append(timeItem);
     
-    // 添加各通道数据
+    // 添加各通道数据（移除背景色设置）
     for (int i = 0; i < numChannels; ++i) {
         if (i < channelData.size() && lastIndex < channelData[i].size()) {
             QStandardItem *dataItem = new QStandardItem(QString::number(channelData[i][lastIndex], 'f', 3));
-            // 根据数据范围设置背景色
-            if (channelData[i][lastIndex] > 100.0) {
-                dataItem->setBackground(QBrush(QColor(255, 220, 220))); // 高值使用浅红色
-            } else if (channelData[i][lastIndex] < 0.0) {
-                dataItem->setBackground(QBrush(QColor(220, 255, 220))); // 负值使用浅绿色
-            }
-            daqDataModel->setItem(i + 1, currentColumn - 1, dataItem);
+            columnItems.append(dataItem);
+        } else {
+            QStandardItem *emptyItem = new QStandardItem("N/A");
+            columnItems.append(emptyItem);
         }
     }
     
+    // 一次性添加新列
+    daqDataModel->insertColumn(currentColumn, columnItems);
+    
     // 如果超出最大列数，删除最旧的列
-    const int maxColumns = 100;
+    const int maxColumns = 100; // 限制为100列，防止表格过大
     if (currentColumn > maxColumns) {
         daqDataModel->removeColumn(0);
     }
     
-    // 滚动到最新列
-    if (daqDataModel->columnCount() > 0) {
-        ui->daqDataTableView->scrollTo(daqDataModel->index(0, daqDataModel->columnCount() - 1), QAbstractItemView::EnsureVisible);
+    // 优化：减少滚动频率，避免频繁UI更新
+    static int scrollCounter = 0;
+    if (++scrollCounter % 5 == 0) { // 每5次更新才滚动一次
+        if (daqDataModel->columnCount() > 0) {
+            ui->daqDataTableView->scrollTo(daqDataModel->index(0, daqDataModel->columnCount() - 1), QAbstractItemView::EnsureVisible);
+        }
+        scrollCounter = 0;
     }
 }
 
@@ -1027,7 +1031,30 @@ void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QV
             daqTimeData.clear();
             daqChannelData.clear();
             daqChannelData.resize(numChannels);
-    daqNumChannels = numChannels;
+            daqNumChannels = numChannels;
+        }
+        
+        // 限制缓冲区大小常量 - 显著减小为1万个数据点
+        const int maxDataPoints = 10000; // 减小为1万个数据点，足够显示而不会占用过多内存
+        
+        // 计算保留的数据点数量，确保足够空间添加新数据
+        int newPointsCount = timeData.size();
+        int currentSize = daqTimeData.size();
+        
+        // 预先检查并清理数据 - 如果添加新数据后会超出最大限制，先删除旧数据腾出空间
+        if (currentSize + newPointsCount > maxDataPoints) {
+            int pointsToRemove = (currentSize + newPointsCount) - maxDataPoints;
+            
+            // 从缓冲区开头删除多余数据点
+            if (pointsToRemove > 0 && pointsToRemove <= daqTimeData.size()) {
+                daqTimeData.remove(0, pointsToRemove);
+                
+                for (int ch = 0; ch < daqChannelData.size(); ++ch) {
+                    if (daqChannelData[ch].size() > pointsToRemove) {
+                        daqChannelData[ch].remove(0, pointsToRemove);
+                    }
+                }
+            }
         }
         
         // 将新数据添加到缓冲区
@@ -1044,19 +1071,6 @@ void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QV
                     // 如果没有数据，填充最后一个值或0
                     double lastValue = daqChannelData[ch].isEmpty() ? 0.0 : daqChannelData[ch].last();
                     daqChannelData[ch].append(lastValue);
-                }
-            }
-        }
-        
-        // 限制数据量，防止内存占用过大
-        int maxDataPoints = 100000; // 保留最后10万个数据点
-        if (daqTimeData.size() > maxDataPoints) {
-            int pointsToRemove = daqTimeData.size() - maxDataPoints;
-            daqTimeData.remove(0, pointsToRemove);
-            
-            for (int ch = 0; ch < daqChannelData.size(); ++ch) {
-                if (daqChannelData[ch].size() > pointsToRemove) {
-                    daqChannelData[ch].remove(0, pointsToRemove);
                 }
             }
         }
@@ -1856,34 +1870,36 @@ void MainWindow::updateTableData(double time, const QVector<double> &data)
     // 获取当前列数
     int currentColumn = tableModel->columnCount();
     
-    // 添加新列
-    tableModel->insertColumn(currentColumn);
+    // 优化：一次性预分配列，避免多次单独的setItem调用
+    QList<QStandardItem*> columnItems;
+    columnItems.reserve(data.size() + 1);
     
-    // 添加时间值
+    // 添加时间值（移除背景色设置）
     QStandardItem *timeItem = new QStandardItem(QString::number(time, 'f', 1));
-    timeItem->setBackground(QBrush(QColor(240, 240, 255))); // 时间行使用浅蓝色背景
-    tableModel->setItem(0, currentColumn - 1, timeItem);
+    columnItems.append(timeItem);
     
-    // 添加各通道数据
+    // 添加各通道数据（移除背景色设置）
     for (int i = 0; i < data.size(); ++i) {
         QStandardItem *dataItem = new QStandardItem(QString::number(data[i], 'f', 1));
-        // 根据数据范围设置背景色
-        if (data[i] > 100.0) {
-            dataItem->setBackground(QBrush(QColor(255, 220, 220))); // 高值使用浅红色
-        } else if (data[i] < 0.0) {
-            dataItem->setBackground(QBrush(QColor(220, 255, 220))); // 负值使用浅绿色
-        }
-        tableModel->setItem(i + 1, currentColumn - 1, dataItem);
+        columnItems.append(dataItem);
     }
     
+    // 一次性添加新列
+    tableModel->insertColumn(currentColumn, columnItems);
+    
     // 如果超出最大列数，删除最旧的列
+    int maxColumns = 1000; // 设置合理的最大列数
     if (currentColumn > maxColumns) {
         tableModel->removeColumn(0);
     }
     
-    // 滚动到最新列
-    if (tableModel->columnCount() > 0) {
-        ui->tableView->scrollTo(tableModel->index(0, tableModel->columnCount() - 1), QAbstractItemView::EnsureVisible);
+    // 仅在新列被添加到视图末尾时滚动到最新列
+    static int scrollCounter = 0;
+    if (++scrollCounter % 10 == 0) { // 每10次更新才滚动一次，减少UI重绘
+        if (tableModel->columnCount() > 0) {
+            ui->tableView->scrollTo(tableModel->index(0, tableModel->columnCount() - 1), QAbstractItemView::EnsureVisible);
+        }
+        scrollCounter = 0;
     }
 }
 
@@ -3026,7 +3042,7 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
         }
     }
     
-    // 3. ECU数据 (C_x)
+    // 3. ECU数据 (C_x) 
     currentVarMap["C_0"] = ecuData.throttle;
     currentVarMap["C_1"] = ecuData.engineSpeed;
     currentVarMap["C_2"] = ecuData.cylinderTemp;
@@ -3996,11 +4012,11 @@ void MainWindow::addECUDataPoint(double timePoint, const QVector<double> &values
         
         // 限制数据点数量
         while (ecuData[i].size() > maxDataPoints) {
-            ecuData[i].removeFirst();
+                ecuData[i].removeFirst();
+            }
         }
     }
-}
-
+    
 void MainWindow::updateECUDataDisplay(const QVector<double> &timeData, const DataSnapshot &snapshot)
 {
     try {
@@ -4717,11 +4733,26 @@ void MainWindow::updateModbusTable(const QVector<double> &timeData, const QVecto
             return;
         }
         
+        // 性能优化：限制更新频率，避免频繁更新UI
+        static QElapsedTimer updateTimer;
+        static bool timerInitialized = false;
+        
+        if (!timerInitialized) {
+            updateTimer.start();
+            timerInitialized = true;
+        } else if (updateTimer.elapsed() < 100) { // 限制为100ms更新一次
+            return; // 如果距离上次更新不到100ms，则跳过此次更新
+        }
+        
+        updateTimer.restart(); // 重置计时器
+        
         // 获取最新的时间点 - 使用DAQ相同的时间格式
         double latestTime = timeData.last();
         
         // 创建要插入的数据列
         QVector<double> dataColumn;
+        dataColumn.reserve(numRegs); // 预分配空间避免多次内存分配
+        
         for (int i = 0; i < numRegs && i < modbusData.size(); ++i) {
             if (!modbusData[i].isEmpty()) {
                 dataColumn.append(modbusData[i].first());
