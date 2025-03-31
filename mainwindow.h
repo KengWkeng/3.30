@@ -117,7 +117,6 @@ public:
 
     void updateECUPlot(const ECUData &data);
     void addECUDataPoint(double time, const QVector<double> &values);
-    void setupECUDataTable();
 
 protected:
     // 添加窗口尺寸调整事件处理函数
@@ -139,8 +138,6 @@ private slots:
 
     void showModbusResult(QVector<double> result, qint64 readTimeInterval);
 
-    //void getPortInfo(QVariant portName);
-
     void on_btnCanOpenDevice_clicked();
 
     void on_btnCanSend_clicked();
@@ -150,10 +147,6 @@ private slots:
     void on_btnCanReset_clicked();
 
     void on_btnCanInit_clicked();
-
-    // void on_btnPageModbus_clicked();
-
-    // void on_btnPageCan_clicked();
 
     void on_btnPagePlot_clicked();
 
@@ -165,14 +158,6 @@ private slots:
     // 添加读取数据按钮槽函数
     void on_btnReadData_clicked();
     
-    // 导出表格数据到CSV文件
-    bool exportTableToCSV(const QString &filePath);
-    
-    // 从CSV文件导入数据到表格和曲线
-    bool importDataFromCSV(const QString &filePath);
-
-    // void on_btnPageDaq_clicked();
-    
     // 添加DAQ相关槽函数
     void on_startDAQButton_clicked();
     void on_stopDAQButton_clicked();
@@ -182,8 +167,6 @@ private slots:
 
     // 滤波开关状态改变槽函数
     void on_filterEnabledCheckBox_stateChanged(int state);
-
-    // void on_btnPageECU_clicked();
 
     // ECU相关槽函数
     void on_btnECUScan_clicked();
@@ -226,9 +209,6 @@ private slots:
     // 专门处理dashForce仪表盘设置变更
     void handleDashForceSettingsChanged(const QString &dashboardName, const QMap<QString, QVariant> &settings);
 
-    // 新增：数据监控表格相关函数
-    void initMonitorTable();
-    void updateMonitorTable();
 
     // 新增：应用仪表盘设置到界面
     void applyDashboardMappings();
@@ -254,16 +234,12 @@ private slots:
     // 添加从数据快照更新各种UI的函数
     void updateDashboardData(const QVector<double> &timeData, const DataSnapshot &snapshot);
     void updateECUDataDisplay(const QVector<double> &timeData, const DataSnapshot &snapshot);
-    void updateModbusTable(const QVector<double> &timeData, const QVector<QVector<double>> &modbusData, int numRegs);
+   
 
     // DAQ相关函数
     void setupDAQPlot();
     void updateDAQPlot();
     void updateDAQPlot(const QVector<double> &timeData, const DataSnapshot &snapshot);
-    void setupDAQTable();
-    void updateDAQTable(const QVector<double> &timeData, const QVector<QVector<double>> &channelData, int numChannels);
-    // void setupDashboardUpdateTimer(); // 设置仪表盘更新定时器
-
     // 添加用于更新布局的函数
     void updateLayout();
 
@@ -320,20 +296,10 @@ private:
 
     int channelNum;
 
-    // 表格模型
-    QStandardItemModel *tableModel;
+
     // 最大列数（保留最新的数据列）
     const int maxColumns = 100;
-    // 初始化表格
-    void initTableView();
-    // 更新表格数据
-    void updateTableData(double time, const QVector<double> &data);
 
-    // 解析CSV行（处理引号内的逗号等）
-    QStringList parseCSVLine(const QString &line);
-    
-    // 根据表格数据重绘曲线
-    void redrawPlotsFromTableData();
 
     // 添加DAQ相关成员
     QThread *daqThread;
@@ -371,11 +337,8 @@ private:
     // ECU相关变量
     QThread *ecuThread;
     ECUThread *ecuTh;
-    QStandardItemModel *ecuDataModel;
+    QStandardItemModel *ecuDataModel = nullptr;  // 添加默认初始化为nullptr
     bool ecuIsConnected;
-    
-    // 设置ECU表格模型
-    void setupECUTable();
 
     // 修改WebSocket相关成员
     QThread *webSocketThread;

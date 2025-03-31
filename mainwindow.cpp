@@ -296,10 +296,6 @@ MainWindow::MainWindow(QWidget *parent)
     // 初始化其他变量
     realPlotTime=0;
     
-    // 初始化表格模型为空指针，这样setupXXXTable函数会正确创建它们
-    tableModel = nullptr;
-    daqDataModel = nullptr;
-    ecuDataModel = nullptr;
     
     // 初始化DAQ相关参数
     daqIsAcquiring = false;
@@ -391,13 +387,6 @@ MainWindow::MainWindow(QWidget *parent)
     
     // 设置DAQ界面
     setupDAQPlot();
-    
-    // 在UI完全初始化后再设置表格
-    // 避免在构造函数中过早初始化表格
-    QTimer::singleShot(0, this, [this]() {
-        setupDAQTable();
-        setupECUTable();
-    });
 
     // 添加滤波器控件的信号连接
     connect(ui->filterEnabledCheckBox, &QCheckBox::stateChanged, 
@@ -495,9 +484,6 @@ MainWindow::MainWindow(QWidget *parent)
         initDefaultDashboardMappings();
     }
 
-    // 初始化监控表格
-    initMonitorTable();
-
     // 连接DAQ通道编辑框的信号
     connect(ui->channelsEdit, &QLineEdit::textChanged, this, &MainWindow::updateDashboardDAQChannels);
     
@@ -547,6 +533,11 @@ MainWindow::MainWindow(QWidget *parent)
     // 初始化当前数据快照
     currentSnapshot = DataSnapshot();
 
+    // 初始化ECU相关
+    ecuThread = nullptr;
+    ecuTh = nullptr;
+    ecuDataModel = nullptr;  // 明确初始化为nullptr
+    ecuIsConnected = false;
 }
 
 MainWindow::~MainWindow()
@@ -878,120 +869,6 @@ void MainWindow::updateDAQPlot(const QVector<double> &timeData, const DataSnapsh
     }
 }
 
-void MainWindow::setupDAQTable()
-{
-    /*
-    // 初始化数据模型
-    if (daqDataModel) {
-        delete daqDataModel;
-    }
-    
-    // 创建新模型
-    daqDataModel = new QStandardItemModel(this);
-    
-    // 设置行标签 - 不依赖于UI元素的具体值
-    QStringList rowLabels;
-    rowLabels << "时间(秒)";
-    
-    // DAQ通道通常有固定数量，这里使用2个通道作为默认值
-    // 后续在真正添加数据时会根据实际通道数调整
-    rowLabels << "通道 0" << "通道 1";
-    
-    daqDataModel->setVerticalHeaderLabels(rowLabels);
-    
-    // 设置表格模型
-    ui->daqDataTableView->setModel(daqDataModel);
-    
-    // 调整表格外观
-    ui->daqDataTableView->horizontalHeader()->setVisible(false); // 隐藏列头
-    ui->daqDataTableView->verticalHeader()->setDefaultSectionSize(30); // 行高
-    ui->daqDataTableView->horizontalHeader()->setDefaultSectionSize(60); // 设置默认列宽
-    ui->daqDataTableView->setAlternatingRowColors(true); // 交替行颜色
-    ui->daqDataTableView->setSelectionMode(QAbstractItemView::SingleSelection); // 单选模式
-    
-    // 设置表格为只读
-    ui->daqDataTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    */
-}
-
-void MainWindow::updateDAQTable(const QVector<double> &timeData, const QVector<QVector<double>> &channelData, int numChannels)
-{
-    /*
-    // 检查数据有效性
-    if (numChannels <= 0 || timeData.isEmpty() || channelData.isEmpty()) {
-        return;
-    }
-    
-    // 如果表格模型为空，则初始化它
-    if (!daqDataModel) {
-        setupDAQTable();
-    }
-    
-    // 检查并调整行数是否与通道数匹配
-    if (daqDataModel->rowCount() != numChannels + 1) {
-        // 保留当前列数据
-        int currentColumns = daqDataModel->columnCount();
-        
-        // 重新设置行数
-        daqDataModel->setRowCount(numChannels + 1);
-        
-        // 设置行标签
-        QStringList rowLabels;
-        rowLabels << "时间(秒)";
-        for (int i = 0; i < numChannels; ++i) {
-            rowLabels << QString("通道 %1").arg(i);
-        }
-        daqDataModel->setVerticalHeaderLabels(rowLabels);
-    }
-    
-    // 获取最新的数据点
-    int lastIndex = timeData.size() - 1;
-    if (lastIndex < 0) {
-        return;
-    }
-    
-    // 获取当前列数
-    int currentColumn = daqDataModel->columnCount();
-    
-    // 优化：一次性预分配列，避免多次单独的setItem调用
-    QList<QStandardItem*> columnItems;
-    columnItems.reserve(numChannels + 1);
-    
-    // 添加时间值（移除背景色设置）
-    QStandardItem *timeItem = new QStandardItem(QString::number(timeData[lastIndex], 'f', 3));
-    columnItems.append(timeItem);
-    
-    // 添加各通道数据（移除背景色设置）
-    for (int i = 0; i < numChannels; ++i) {
-        if (i < channelData.size() && lastIndex < channelData[i].size()) {
-            QStandardItem *dataItem = new QStandardItem(QString::number(channelData[i][lastIndex], 'f', 3));
-            columnItems.append(dataItem);
-        } else {
-            QStandardItem *emptyItem = new QStandardItem("N/A");
-            columnItems.append(emptyItem);
-        }
-    }
-    
-    // 一次性添加新列
-    daqDataModel->insertColumn(currentColumn, columnItems);
-    
-    // 如果超出最大列数，删除最旧的列
-    const int maxColumns = 100; // 限制为100列，防止表格过大
-    if (currentColumn > maxColumns) {
-        daqDataModel->removeColumn(0);
-    }
-    
-    // 优化：减少滚动频率，避免频繁UI更新
-    static int scrollCounter = 0;
-    if (++scrollCounter % 5 == 0) { // 每5次更新才滚动一次
-        if (daqDataModel->columnCount() > 0) {
-            ui->daqDataTableView->scrollTo(daqDataModel->index(0, daqDataModel->columnCount() - 1), QAbstractItemView::EnsureVisible);
-        }
-        scrollCounter = 0;
-    }
-    */
-}
-
 void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData)
 {
     // 检查数据有效性
@@ -1179,11 +1056,6 @@ void MainWindow::on_stopDAQButton_clicked()
 {
     daqTh->stopAcquisition();
 }
-
-// void MainWindow::on_btnPageDaq_clicked()
-// {
-//     switchPage();
-// }
 
 //切换页面
 void MainWindow::switchPage(){
@@ -1768,395 +1640,20 @@ void MainWindow::on_btnPageData_clicked()
 {
     // 切换到数据页
     switchPage();
-    
-    // 确保表格已初始化
-    if (!tableModel && channelNum > 0) {
-        initTableView();
-    }
-}
-
-// 初始化表格视图
-void MainWindow::initTableView()
-{
-    /*
-    // 如果模型已存在则删除
-    if (tableModel) {
-        delete tableModel;
-    }
-    
-    // 创建新模型
-    tableModel = new QStandardItemModel(this);
-    
-    // 获取寄存器起始地址
-    int startAddress = ui->lineSegAddress->text().toInt();
-    
-    // 设置行标签
-    QStringList rowLabels;
-    rowLabels << "时间(秒)";
-    
-    // 添加每个通道的行标签
-    for (int i = 0; i < channelNum; ++i) {
-        int registerAddress = i + startAddress;
-        rowLabels << QString("通道 %1").arg(registerAddress);
-    }
-    
-    tableModel->setVerticalHeaderLabels(rowLabels);
-    
-    // 设置表格模型
-    ui->tableView->setModel(tableModel);
-    
-    // 调整表格外观
-    ui->tableView->horizontalHeader()->setVisible(false); // 隐藏列头
-    ui->tableView->verticalHeader()->setDefaultSectionSize(30); // 行高
-    ui->tableView->horizontalHeader()->setDefaultSectionSize(60); // 设置默认列宽
-    ui->tableView->setAlternatingRowColors(true); // 交替行颜色
-    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection); // 单选模式
-    
-    // 设置表格为只读
-    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    */
-}
-
-// 更新表格数据
-void MainWindow::updateTableData(double time, const QVector<double> &data)
-{
-    // 如果表格模型为空，则初始化它
-    if (!tableModel) {
-        initTableView();
-    }
-    
-    // 如果通道数不匹配，重新初始化表格
-    if (tableModel->rowCount() != data.size() + 1) {
-        initTableView();
-    }
-    
-    // 获取当前列数
-    int currentColumn = tableModel->columnCount();
-    
-    // 优化：一次性预分配列，避免多次单独的setItem调用
-    QList<QStandardItem*> columnItems;
-    columnItems.reserve(data.size() + 1);
-    
-    // 添加时间值（移除背景色设置）
-    QStandardItem *timeItem = new QStandardItem(QString::number(time, 'f', 1));
-    columnItems.append(timeItem);
-    
-    // 添加各通道数据（移除背景色设置）
-    for (int i = 0; i < data.size(); ++i) {
-        QStandardItem *dataItem = new QStandardItem(QString::number(data[i], 'f', 1));
-        columnItems.append(dataItem);
-    }
-    
-    // 一次性添加新列
-    tableModel->insertColumn(currentColumn, columnItems);
-    
-    // 如果超出最大列数，删除最旧的列
-    int maxColumns = 1000; // 设置合理的最大列数
-    if (currentColumn > maxColumns) {
-        tableModel->removeColumn(0);
-    }
-    
-    // 仅在新列被添加到视图末尾时滚动到最新列
-    static int scrollCounter = 0;
-    if (++scrollCounter % 10 == 0) { // 每10次更新才滚动一次，减少UI重绘
-        if (tableModel->columnCount() > 0) {
-            ui->tableView->scrollTo(tableModel->index(0, tableModel->columnCount() - 1), QAbstractItemView::EnsureVisible);
-        }
-        scrollCounter = 0;
-    }
 }
 
 // 保存数据按钮点击事件
 void MainWindow::on_btnSaveData_clicked()
 {
-    // 检查是否有数据可保存
-    if (!tableModel || tableModel->columnCount() == 0) {
-        QMessageBox::warning(this, "保存失败", "没有数据可以保存！");
-        return;
-    }
     
-    // 打开文件对话框选择保存路径
-    QString folderPath = QFileDialog::getExistingDirectory(this, "选择保存目录", QDir::homePath());
-    if (folderPath.isEmpty()) {
-        return; // 用户取消了选择
-    }
-    
-    // 生成文件名（使用当前时间）
-    QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
-    
-    // 使用QDir对象正确处理路径，避免路径分隔符问题
-    QDir dir(folderPath);
-    QString csvFilePath = dir.absoluteFilePath("数据_" + timestamp + ".csv");  // 改为.csv扩展名
-    QString imagePath = dir.absoluteFilePath("曲线图_" + timestamp + ".png");
-    
-    qDebug() << "准备保存CSV文件到：" << csvFilePath;
-    
-    // 保存表格数据到CSV
-    bool success = exportTableToCSV(csvFilePath);
-    
-    if (!success) {
-        QMessageBox::warning(this, "保存失败", "无法保存表格数据！");
-        return;
-    }
-    
-    // 保存曲线图为PNG
-    qDebug() << "准备保存PNG图片到：" << imagePath;
-    success = myPlot->savePng(imagePath, 0, 0, 1.0, -1);
-    
-    // 显示结果
-    if (success) {
-        QMessageBox::information(this, "保存成功", 
-            QString("数据已保存到：\n表格(CSV): %1\n曲线图: %2").arg(csvFilePath).arg(imagePath));
-    } else {
-        QMessageBox::warning(this, "保存失败", "保存曲线图时发生错误！");
-    }
 }
 
 // 读取数据按钮点击事件
 void MainWindow::on_btnReadData_clicked()
 {
-    // 打开文件对话框选择要读取的CSV文件
-    QString filePath = QFileDialog::getOpenFileName(this, "选择CSV文件", 
-                                                   QDir::homePath(), 
-                                                   "CSV文件 (*.csv)");
-    if (filePath.isEmpty()) {
-        return; // 用户取消了选择
-    }
     
-    qDebug() << "准备读取CSV文件：" << filePath;
-    
-    // 从CSV文件导入数据
-    bool success = importDataFromCSV(filePath);
-    
-    // 显示结果
-    if (success) {
-        QMessageBox::information(this, "读取成功", "数据已成功读取并显示！");
-    } else {
-        QMessageBox::warning(this, "读取失败", "读取数据时发生错误！");
-    }
 }
 
-// 导出表格数据到CSV文件
-bool MainWindow::exportTableToCSV(const QString &filePath)
-{
-    if (!tableModel || tableModel->columnCount() == 0) {
-        return false;
-    }
-    
-    // 创建CSV文件
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qDebug() << "无法创建文件：" << filePath << "，错误：" << file.errorString();
-        return false;
-    }
-    
-    // 写入UTF-8 BOM，帮助Excel正确识别中文
-    file.write("\xEF\xBB\xBF");
-    
-    QTextStream stream(&file);
-    
-    // 写入表头
-    for (int col = 0; col < tableModel->columnCount(); ++col) {
-        if (col > 0) stream << ",";
-        stream << QString("列%1").arg(col + 1);
-    }
-    stream << "\r\n";  // 使用CRLF换行符，兼容Windows
-    
-    // 写入行标签和数据
-    for (int row = 0; row < tableModel->rowCount(); ++row) {
-        // 添加行标签
-        QStandardItem* headerItem = tableModel->verticalHeaderItem(row);
-        if (headerItem) {
-            stream << headerItem->text();
-        } else {
-            stream << QString("行%1").arg(row + 1);
-        }
-        
-        // 添加各列数据
-        for (int col = 0; col < tableModel->columnCount(); ++col) {
-            stream << ",";
-            QStandardItem *item = tableModel->item(row, col);
-            if (item) {
-                // 处理可能包含逗号的文本
-                QString text = item->text();
-                if (text.contains(",") || text.contains("\"") || text.contains("\n")) {
-                    text.replace("\"", "\"\""); // 转义双引号
-                    stream << "\"" << text << "\"";
-                } else {
-                    stream << text;
-                }
-            }
-        }
-        stream << "\r\n";  // 使用CRLF换行符，兼容Windows
-    }
-    
-    file.close();
-    
-    return true; // 如果能执行到这里，说明文件操作成功
-}
-
-// 从CSV文件导入数据
-bool MainWindow::importDataFromCSV(const QString &filePath)
-{
-    // 直接尝试打开源文件
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << "无法打开文件：" << filePath << "，错误：" << file.errorString();
-        return false;
-    }
-    
-    // 检测并跳过UTF-8 BOM（如果存在）
-    QByteArray possibleBOM = file.peek(3);
-    if (possibleBOM.startsWith("\xEF\xBB\xBF")) {
-        file.read(3); // 跳过BOM
-    }
-    
-    QTextStream stream(&file);
-    
-    // 读取表头行（忽略）
-    QString headerLine = stream.readLine();
-    
-    // 清除现有数据
-    if (tableModel) {
-        tableModel->clear();
-    } else {
-        tableModel = new QStandardItemModel(this);
-    }
-    
-    // 预处理数据，获取行数和列数
-    QList<QStringList> allData;
-    QStringList rowLabels;
-    
-    while (!stream.atEnd()) {
-        QString line = stream.readLine();
-        QStringList fields = parseCSVLine(line);
-        
-        if (!fields.isEmpty()) {
-            rowLabels.append(fields.first());
-            fields.removeFirst(); // 移除行标签
-            allData.append(fields);
-        }
-    }
-    
-    // 设置行标签
-    tableModel->setVerticalHeaderLabels(rowLabels);
-    
-    // 设置表格大小
-    if (!allData.isEmpty()) {
-        int rows = allData.size();
-        int cols = 0;
-        for (const QStringList &row : allData) {
-            cols = qMax(cols, row.size());
-        }
-        
-        // 确保表格有足够的行列
-        tableModel->setRowCount(rows);
-        tableModel->setColumnCount(cols);
-        
-        // 填充数据
-        for (int row = 0; row < rows; ++row) {
-            const QStringList &rowData = allData[row];
-            for (int col = 0; col < rowData.size(); ++col) {
-                tableModel->setItem(row, col, new QStandardItem(rowData[col]));
-            }
-        }
-    }
-    
-    file.close();
-    
-    // 应用表格模型到视图
-    ui->tableView->setModel(tableModel);
-    ui->tableView->horizontalHeader()->setVisible(false);
-    ui->tableView->verticalHeader()->setDefaultSectionSize(30);
-    ui->tableView->horizontalHeader()->setDefaultSectionSize(60);
-    ui->tableView->setAlternatingRowColors(true);
-    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    
-    // 根据导入的数据重绘曲线
-    redrawPlotsFromTableData();
-    
-    return true;
-}
-
-// 解析CSV行（处理引号内的逗号等）
-QStringList MainWindow::parseCSVLine(const QString &line)
-{
-    QStringList result;
-    bool inQuotes = false;
-    QString field;
-    
-    for (int i = 0; i < line.length(); ++i) {
-        QChar c = line[i];
-        
-        if (c == '\"') {
-            if (i < line.length() - 1 && line[i+1] == '\"') {
-                // 处理两个连续的双引号
-                field += '\"';
-                ++i; // 跳过下一个引号
-            } else {
-                // 切换引号状态
-                inQuotes = !inQuotes;
-            }
-        } else if (c == ',' && !inQuotes) {
-            // 字段结束
-            result.append(field);
-            field.clear();
-        } else {
-            field += c;
-        }
-    }
-    
-    // 添加最后一个字段
-    result.append(field);
-    
-    return result;
-}
-
-// 根据表格数据重绘曲线
-void MainWindow::redrawPlotsFromTableData()
-{
-    if (!tableModel || tableModel->rowCount() < 2) {
-        return; // 至少需要一行时间和一行数据
-    }
-    
-    // 清除现有曲线
-    myPlot->clearGraphs();
-    
-    // 获取通道数（行数-1，第一行是时间）
-    channelNum = tableModel->rowCount() - 1;
-    graphs.resize(channelNum);
-    
-    // 创建通道曲线
-    for (int i = 0; i < channelNum; ++i) {
-        graphs[i] = myPlot->addGraph();
-        graphs[i]->setPen(QPen(QColor::fromHsv((i * 255) / channelNum, 255, 200)));
-        graphs[i]->setName(tableModel->verticalHeaderItem(i + 1)->text());
-    }
-    
-    // 添加数据点
-    for (int col = 0; col < tableModel->columnCount(); ++col) {
-        // 获取时间值
-        double time = 0.0;
-        QStandardItem *timeItem = tableModel->item(0, col);
-        if (timeItem) {
-            time = timeItem->text().toDouble();
-        }
-        
-        // 获取各通道数据
-        for (int i = 0; i < channelNum; ++i) {
-            double value = 0.0;
-            QStandardItem *dataItem = tableModel->item(i + 1, col);
-            if (dataItem) {
-                value = dataItem->text().toDouble();
-            }
-            graphs[i]->addData(time, value);
-        }
-    }
-    
-    // 重新设置坐标轴范围
-    myPlot->rescaleAxes();
-    myPlot->replot();
-}
 
 // 添加resizeEvent实现
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -2324,53 +1821,7 @@ void MainWindow::on_filterEnabledCheckBox_stateChanged(int state)
              << "，时间常数: " << ui->lineTimeLoop->text().toDouble() << "ms";
 }
 
-// 设置ECU表格模型
-void MainWindow::setupECUTable()
-{
-    /*
-    // 检查表格对象是否存在
-    if (!ui->tableViewECU) {
-        qDebug() << "错误: ECU表格控件不存在";
-        return;
-    }
-    
-    // 创建表格模型
-    ecuDataModel = new QStandardItemModel(this);
-    
-    // 设置水平表头（时间和各个参数）
-    QStringList headers;
-    headers << "时间(秒)"
-            << "喷头(%)" 
-              << "发动机转速(rpm)"
-            << "缸温(℃)" 
-            << "排温(℃)" 
-            << "轴温(℃)" 
-              << "燃油压力(kPa)"
-            << "进气温度(℃)" 
-              << "大气压力(kPa)"
-            << "飞行时间(s)";
-    
-    ecuDataModel->setHorizontalHeaderLabels(headers);
-    
-    // 设置表格模型
-    ui->tableViewECU->setModel(ecuDataModel);
-    
-    // 设置表格属性
-    ui->tableViewECU->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableViewECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->tableViewECU->setAlternatingRowColors(true);
-    ui->tableViewECU->horizontalHeader()->setStretchLastSection(true);
-    ui->tableViewECU->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    
-    // 设置表格列宽
-    for (int i = 0; i < headers.size(); ++i) {
-        ui->tableViewECU->setColumnWidth(i, 120);
-    }
-    
-    // 设置时间列宽度小一些
-    ui->tableViewECU->setColumnWidth(0, 80);
-    */
-}
+
 
 void MainWindow::on_btnECUScan_clicked()
 {
@@ -2406,11 +1857,6 @@ void MainWindow::on_btnECUStart_clicked()
         if (ui->comboSerialECU->currentText().isEmpty()) {
             QMessageBox::warning(this, "错误", "请先选择串口!");
             return;
-        }
-        
-        // 清空表格 - 先检查表格模型是否初始化
-        if (ecuDataModel && ecuDataModel->rowCount() > 0) {
-            ecuDataModel->removeRows(0, ecuDataModel->rowCount());
         }
         
         // 打开选中的串口
@@ -2455,20 +1901,16 @@ void MainWindow::handleECUData(const ECUData &data)
         ecudataMap = ecuValues;
         ecuDataValid = true;
         
-        // 强制初始化ECU表格和图表，如果它们尚未初始化
+        // 强制初始化ECU图表，如果它尚未初始化
         if (!ui->ECUCustomPlot->graphCount() || ecuData.isEmpty()) {
             ECUPlotInit();
-        }
-        
-        if (!ecuDataModel || ecuDataModel->columnCount() == 0) {
-            setupECUDataTable();
         }
         
         // 直接添加数据点到时间序列，不依赖于快照
         double currentTime = masterTimer->elapsed() / 1000.0;
         addECUDataPoint(currentTime, ecuValues);
         
-        // 直接更新ECU图表和表格
+        // 直接更新ECU图表
         updateECUPlot(data);
         
         // 添加到当前快照
@@ -2786,9 +2228,6 @@ bool MainWindow::loadInitialSettings(const QString &filename)
     
     // 加载仪表盘映射关系
     loadDashboardMappings(settings);
-    
-    // 更新监控表格
-    updateMonitorTable();
     
     return true;
 }
@@ -3311,18 +2750,6 @@ void MainWindow::initDefaultDashboardMappings()
     
     // 应用初始映射设置到仪表盘
     applyDashboardMappings();
-}
-
-// 修改数据监控表格初始化和更新的函数
-void MainWindow::initMonitorTable()
-{
-    // 监控表格已被删除，保留空实现
-}
-
-// 更新监控表格数据
-void MainWindow::updateMonitorTable()
-{
-    // 监控表格已被删除，保留空实现
 }
 
 // 应用加载的仪表盘映射关系到UI
@@ -3948,123 +3375,52 @@ void MainWindow::addECUDataPoint(double timePoint, const QVector<double> &values
 void MainWindow::updateECUDataDisplay(const QVector<double> &timeData, const DataSnapshot &snapshot)
 {
     try {
-        if (!snapshot.ecuValid || snapshot.ecuData.isEmpty() || snapshot.ecuData.size() < 9) {
+        // 检查数据是否有效
+        if (!snapshot.ecuValid) {
+            return; // 如果ECU数据无效，直接返回
+        }
+        
+        // 获取ECU数据向量
+        const QVector<double> &ecuData = snapshot.ecuData;
+        
+        // 确保有足够的数据
+        if (ecuData.size() < 9) {
+            qDebug() << "ECU数据格式错误: 期望9个值，实际得到" << ecuData.size();
             return;
         }
         
-        // 确保ECU表格已初始化
-        if (!ecuDataModel || ecuDataModel->columnCount() == 0) {
-            setupECUDataTable();
-            if (!ecuDataModel) {
-                qDebug() << "ECU表格初始化失败";
-                return;
-            }
-        }
+        // 准备ECU数据结构
+        ECUData data;
+        data.throttle = ecuData[0];
+        data.engineSpeed = ecuData[1];
+        data.cylinderTemp = ecuData[2];
+        data.exhaustTemp = ecuData[3];
+        data.axleTemp = ecuData[4];
+        data.fuelPressure = ecuData[5];
+        data.intakeTemp = ecuData[6];
+        data.atmPressure = ecuData[7];
+        data.flightTime = ecuData[8];
+        data.isValid = true;
         
-        // 转换为ECU数据结构
-        ECUData ecuData;
-        ecuData.isValid = true;
-        ecuData.throttle = snapshot.ecuData[0];
-        ecuData.engineSpeed = snapshot.ecuData[1];
-        ecuData.cylinderTemp = snapshot.ecuData[2];
-        ecuData.exhaustTemp = snapshot.ecuData[3];
-        ecuData.axleTemp = snapshot.ecuData[4];
-        ecuData.fuelPressure = snapshot.ecuData[5];
-        ecuData.intakeTemp = snapshot.ecuData[6];
-        ecuData.atmPressure = snapshot.ecuData[7];
-        ecuData.flightTime = snapshot.ecuData[8];
-        
-        // 使用快照的时间戳确保与其他数据源同步
+        // 获取时间戳
         double snapshotTime = timeData.isEmpty() ? snapshot.timestamp : timeData.first();
         
-        // 调试输出添加的数据
-        qDebug() << "更新ECU表格: 时间=" << snapshotTime 
-                 << ", 喷头=" << ecuData.throttle
-                 << ", 转速=" << ecuData.engineSpeed;
-        
-        // 更新ECU表格 - 使用横向表格格式(类似DAQ表格)
-        QList<QStandardItem*> rowItems;
-        
-        // 添加时间戳 - 使用快照的统一时间戳
-        rowItems.append(new QStandardItem(QString::number(snapshotTime, 'f', 3)));
-        
-        // 添加各项数据
-        rowItems.append(new QStandardItem(QString::number(ecuData.throttle, 'f', 1)));
-        rowItems.append(new QStandardItem(QString::number(ecuData.engineSpeed, 'f', 0)));
-        rowItems.append(new QStandardItem(QString::number(ecuData.cylinderTemp, 'f', 0)));
-        rowItems.append(new QStandardItem(QString::number(ecuData.exhaustTemp, 'f', 0)));
-        rowItems.append(new QStandardItem(QString::number(ecuData.axleTemp, 'f', 0)));
-        rowItems.append(new QStandardItem(QString::number(ecuData.fuelPressure, 'f', 1)));
-        rowItems.append(new QStandardItem(QString::number(ecuData.intakeTemp, 'f', 1)));
-        rowItems.append(new QStandardItem(QString::number(ecuData.atmPressure, 'f', 1)));
-        rowItems.append(new QStandardItem(QString::number(ecuData.flightTime, 'f', 1)));
-        
-        // 添加新行
-        ecuDataModel->appendRow(rowItems);
-        
-        // 限制行数，防止表格过大
-        while (ecuDataModel->rowCount() > 100) {
-            ecuDataModel->removeRow(0);
+        // 使用向量形式更新ECU图表
+        QVector<double> values(9);
+        for (int i = 0; i < 9; ++i) {
+            values[i] = ecuData[i];
         }
         
-        // 直接将快照数据和时间戳添加到ecuData和ecuTimeData中
-        QVector<double> ecuValues = snapshot.ecuData;
-        addECUDataPoint(snapshotTime, ecuValues);
+        // 添加到ECU图表
+        addECUDataPoint(snapshotTime, values);
         
-        // 更新ECU图表 - 使用快照的统一时间戳
-        updateECUPlot(ecuData);
+        // 更新ECU显示
+        updateECUPlot(data);
     } catch (const std::exception& e) {
         qDebug() << "更新ECU数据显示时出错: " << e.what();
     } catch (...) {
         qDebug() << "更新ECU数据显示时发生未知错误";
     }
-}
-
-void MainWindow::setupECUDataTable()
-{
-    /*
-    qDebug() << "开始设置ECU数据表格";
-    
-    // 初始化ECU数据模型
-    if (ecuDataModel) {
-        delete ecuDataModel;
-    }
-    
-    // 创建新模型
-    ecuDataModel = new QStandardItemModel(this);
-    
-    // 设置列标签
-    QStringList columnLabels;
-    columnLabels << "时间(秒)" << "喷头(%)" << "发动机转速(rpm)" << "缸温(℃)" 
-                 << "排温(℃)" << "轴温(℃)" << "燃油压力(kPa)" << "进气温度(℃)" 
-                 << "大气压力(kPa)" << "飞行时间(s)";
-    
-    ecuDataModel->setHorizontalHeaderLabels(columnLabels);
-    
-    // 确保表格控件存在
-    if (!ui->tableViewECU) {
-        qDebug() << "错误: tableViewECU控件不存在";
-        return;
-    }
-    
-    // 设置表格模型
-    ui->tableViewECU->setModel(ecuDataModel);
-    
-    // 调整表格外观
-    ui->tableViewECU->verticalHeader()->setVisible(false); // 隐藏行头
-    ui->tableViewECU->verticalHeader()->setDefaultSectionSize(25); // 行高
-    ui->tableViewECU->horizontalHeader()->setDefaultSectionSize(80); // 设置默认列宽
-    ui->tableViewECU->setAlternatingRowColors(true); // 交替行颜色
-    ui->tableViewECU->setSelectionMode(QAbstractItemView::SingleSelection); // 单选模式
-    
-    // 设置表格为只读
-    ui->tableViewECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    
-    // 自动调整列宽以适应内容
-    ui->tableViewECU->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    
-    qDebug() << "ECU数据表格设置完成";
-    */
 }
 
 // 初始化dash1plot绘图区域
@@ -4670,53 +4026,6 @@ void MainWindow::updateDashboardData(const QVector<double> &timeData, const Data
     }
 }
 
-// 更新Modbus数据表格（从快照）
-void MainWindow::updateModbusTable(const QVector<double> &timeData, const QVector<QVector<double>> &modbusData, int numRegs)
-{
-    /*
-    try {
-        // 确保表格模型和数据有效
-        if (!tableModel || modbusData.isEmpty() || timeData.isEmpty() || numRegs <= 0) {
-            return;
-        }
-        
-        // 性能优化：限制更新频率，避免频繁更新UI
-        static QElapsedTimer updateTimer;
-        static bool timerInitialized = false;
-        
-        if (!timerInitialized) {
-            updateTimer.start();
-            timerInitialized = true;
-        } else if (updateTimer.elapsed() < 100) { // 限制为100ms更新一次
-            return; // 如果距离上次更新不到100ms，则跳过此次更新
-        }
-        
-        updateTimer.restart(); // 重置计时器
-        
-        // 获取最新的时间点 - 使用DAQ相同的时间格式
-        double latestTime = timeData.last();
-        
-        // 创建要插入的数据列
-        QVector<double> dataColumn;
-        dataColumn.reserve(numRegs); // 预分配空间避免多次内存分配
-        
-        for (int i = 0; i < numRegs && i < modbusData.size(); ++i) {
-            if (!modbusData[i].isEmpty()) {
-                dataColumn.append(modbusData[i].first());
-            } else {
-                dataColumn.append(0.0); // 如果没有数据，则填充0
-            }
-        }
-        
-        // 更新表格数据 - 使用与DAQ相同的时间基准
-        updateTableData(latestTime, dataColumn);
-    } catch (const std::exception& e) {
-        qDebug() << "更新Modbus表格时出错:" << e.what();
-    } catch (...) {
-        qDebug() << "更新Modbus表格时发生未知错误";
-    }
-    */
-}
 
 // 实现setupMasterTimer函数
 void MainWindow::setupMasterTimer()
