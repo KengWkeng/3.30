@@ -313,7 +313,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
     QMetaType::Void,
     QMetaType::Void, QMetaType::QString,   91,
     QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 25, 0x80000000 | 44, 0x80000000 | 56,   94,   95,   96,
+    QMetaType::Void, 0x80000000 | 25, 0x80000000 | 25, 0x80000000 | 56,   94,   95,   96,
     QMetaType::Void, 0x80000000 | 25, 0x80000000 | 98,   43,   99,
     QMetaType::Void, 0x80000000 | 25, 0x80000000 | 98,   43,   99,
     QMetaType::Void, 0x80000000 | 25, 0x80000000 | 44, QMetaType::Int,   43,   94,  102,
@@ -501,7 +501,7 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         // method 'updateDashboardByMapping'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QVector<double> &, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const QVector<QVector<double>> &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QVector<double> &, std::false_type>,
         QtPrivate::TypeAndForceComplete<const ECUData &, std::false_type>,
         // method 'updateDashboardData'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
@@ -614,7 +614,7 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 56: _t->initDefaultDashboardMappings(); break;
         case 57: _t->updateDashboardDAQChannels((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         case 58: _t->updateModbusChannels(); break;
-        case 59: _t->updateDashboardByMapping((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<QList<double>>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<ECUData>>(_a[3]))); break;
+        case 59: _t->updateDashboardByMapping((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<ECUData>>(_a[3]))); break;
         case 60: _t->updateDashboardData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[2]))); break;
         case 61: _t->updateECUDataDisplay((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[2]))); break;
         case 62: _t->updateModbusTable((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<QList<double>>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[3]))); break;
@@ -655,7 +655,6 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 1:
-                *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<QList<double>> >(); break;
             case 0:
                 *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<double> >(); break;
             }

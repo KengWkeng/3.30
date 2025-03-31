@@ -246,9 +246,7 @@ MainWindow::MainWindow(QWidget *parent)
     lastTimestamp = 0;
     filteredValues.clear();
 
-    // 删除ModbusTimer，使用统一的主定时器
-    // ModbusTimer = new QTimer;
-    // ModbusTimer->setInterval(ui->lineTimeLoop->text().toInt());
+
 
     // 初始化主定时器
     masterTimer = new QElapsedTimer();
@@ -279,9 +277,7 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "WebSocket错误: " + errorMsg;
     });
     
-    // 添加测试WebSocket按钮
-    // QPushButton* testWebSocketBtn = new QPushButton("测试WebSocket", this);
-    // ui->statusbar->addPermanentWidget(testWebSocketBtn);
+
     connect(ui->btnTestWebSocket, &QPushButton::clicked, this, &MainWindow::testWebSocketConnection);
 
     //状态栏指针
@@ -307,12 +303,6 @@ MainWindow::MainWindow(QWidget *parent)
     daqNumChannels = 0;
     daqSampleRate = 10000;
 
-    // 创建DAQ定时器，用于更新图表
-    // daqUpdateTimer = new QTimer(this);
-    // connect(daqUpdateTimer, SIGNAL(timeout()), this, SLOT(updateDAQPlot()));
-    
-    // 创建仪表盘更新定时器
-    // setupDashboardUpdateTimer();
     
     //发送modbus命令
     connect(this,&MainWindow::sendModbusCommand,mbTh,&modbusThread::getModbusResult);
@@ -449,19 +439,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->btnSaveData->setEnabled(false);
     });
 
-    // // 初始化数据快照相关成员
-    // // 创建主计时器
-    // masterTimer = new QElapsedTimer();
-    // masterTimer->start();
-    
-    // // 创建数据快照定时器
-    // snapshotTimer = new QTimer(this);
-    // snapshotTimer->setInterval(100); // 设置100ms触发一次
-    // connect(snapshotTimer, SIGNAL(timeout()), this, SLOT(processDataSnapshots()));
-    // snapshotTimer->start(); // 启动定时器
-    
-    // // 初始化当前数据快照
-    // currentSnapshot = DataSnapshot();
+
     
     // 添加定时器信号槽连接
     connect(mainTimer, &QTimer::timeout, [=]() {
@@ -557,41 +535,15 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
     
-    // 在MainWindow构造函数合适位置查找并修改snapshotTimer初始化部分
-    // 确保在最后才启动数据快照定时器
-    // 添加异常保护
 
-    // 寻找类似如下代码:
-    // snapshotTimer = new QTimer(this);
-    // snapshotTimer->setInterval(100); // 设置100ms触发一次
-    // connect(snapshotTimer, &QTimer::timeout, this, &MainWindow::processDataSnapshots);
-    // snapshotTimer->start(); // 启动定时器
 
-    // 替换为:
     // 初始化数据快照相关成员
     masterTimer = new QElapsedTimer();
     masterTimer->start();
 
-    // // 创建数据快照定时器
-    // snapshotTimer = new QTimer(this);
-    // snapshotTimer->setInterval(100); // 设置100ms触发一次
-
-    // // 确保所有数据成员都已初始化后再连接信号槽
-    // connect(snapshotTimer, SIGNAL(timeout()), this, SLOT(processDataSnapshots()));
-    // snapshotTimer->start(); // 启动定时器
-
     // 初始化当前数据快照
     currentSnapshot = DataSnapshot();
 
-    // // 将定时器启动放在构造函数的最后，确保所有初始化工作完成
-    // // 在构造函数的最后一行添加:
-    // QTimer::singleShot(1000, this, [this]() {
-    //     // 延迟启动快照定时器，确保所有组件都已完全初始化
-    //     if (snapshotTimer) {
-    //         snapshotTimer->start();
-    //         qDebug() << "数据快照定时器已启动";
-    //     }
-    // });
 }
 
 MainWindow::~MainWindow()
@@ -1123,11 +1075,7 @@ void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QV
                 }
             }
         }
-        
-        // // 自动启动主定时器（如果还未启动）
-        // if (masterTimer && !snapshotTimer->isActive()) {
-        //     snapshotTimer->start(100); // 设置为100ms间隔
-        // }
+
     } catch (const std::exception& e) {
         qDebug() << "处理DAQ数据时出错:" << e.what();
     } catch (...) {
@@ -1297,9 +1245,6 @@ void MainWindow::on_btnOpenPort_clicked()
     {
         // 检查是否正在读取数据，如果是，先停止读取
         if (ui->btnSend->text() == "结束") {
-            // 停止定时器
-            // ModbusTimer->stop();
-            
             // 改变按钮文字为"读取"
             ui->btnSend->setText("读取");
             ui->plainReceive->appendPlainText("数据采集已停止");
@@ -1308,8 +1253,6 @@ void MainWindow::on_btnOpenPort_clicked()
         // 通过信号在子线程中关闭串口，而不是直接调用
         emit closeModbusConnection();
         
-        // 注意：不在这里设置UI状态，而是在收到modbusConnectionStatus信号后设置
-        // UI状态会通过modbusConnectionStatus信号更新
     }
 }
 
@@ -1360,9 +1303,7 @@ void MainWindow::on_btnSend_clicked()
         filteredValues.clear();
         lastTimestamp = 0;
         realTimer->restart();
-        
-        // // 重置ModBus线程中的计时器，确保时间同步
-        // emit resetModbusTimer();
+
         
         // 读取滤波器状态并更新UI
         filterEnabled = ui->filterEnabledCheckBox->isChecked();
@@ -1673,11 +1614,6 @@ void MainWindow::showModbusResult(QVector<double> resultdata, qint64 readTimeInt
             ui->plainReceive->setPlainText(debugText);
         }
         
-        // 确保主时间戳定时器已启动
-        // if (!snapshotTimer->isActive()) {
-        //     // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
-        //     snapshotTimer->start(100);
-        // }
     } catch (const std::exception& e) {
         qDebug() << "处理Modbus数据时出错: " << e.what();
     } catch (...) {
@@ -1817,19 +1753,6 @@ void MainWindow::on_btnCanInit_clicked()
     else
         QMessageBox::warning(this,"警告","CAN初始化失败！");
 }
-
-
-
-// void MainWindow::on_btnPageModbus_clicked()
-// {
-//     switchPage();
-// }
-
-
-// void MainWindow::on_btnPageCan_clicked()
-// {
-//     switchPage();
-// }
 
 
 void MainWindow::on_btnPagePlot_clicked()
@@ -2398,14 +2321,6 @@ void MainWindow::on_filterEnabledCheckBox_stateChanged(int state)
              << "，时间常数: " << ui->lineTimeLoop->text().toDouble() << "ms";
 }
 
-
-
-
-// void MainWindow::on_btnPageECU_clicked()
-// {
-//       switchPage();
-// }
-
 // 设置ECU表格模型
 void MainWindow::setupECUTable()
 {
@@ -2552,11 +2467,6 @@ void MainWindow::handleECUData(const ECUData &data)
         currentSnapshot.ecuValid = true;
         currentSnapshot.ecuData = ecuValues;
         
-        // // 确保主时间戳定时器已启动
-        // if (!snapshotTimer->isActive()) {
-        //     // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
-        //     snapshotTimer->start(100);
-        // }
     } catch (const std::exception& e) {
         qDebug() << "处理ECU数据时出错: " << e.what();
     } catch (...) {
@@ -2771,9 +2681,6 @@ bool MainWindow::saveInitialSettings(const QString &filename)
     
     // 保存仪表盘映射关系
     saveDashboardMappings(settings);
-    
-    // 保存其他通信设置
-    // ...可以根据需要添加其他配置项
     
     settings.sync();
     return (settings.status() == QSettings::NoError);
@@ -3039,12 +2946,6 @@ void MainWindow::onRandomNumberGenerated(int number)
     // 简单的实现，仅记录收到的随机数
     qDebug() << "收到随机数: " << number;
 }
-
-// 更新仪表盘的方法
-// void MainWindow::updateDashboards(const QVector<double> &data)
-// {
-//     // 不再使用此方法，已被updateDashboardByMapping替代
-// }
 
 // 根据映射关系更新仪表盘显示
 void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData, 
@@ -3737,23 +3638,6 @@ QList<Dashboard*> MainWindow::getAllDashboards()
     return this->findChildren<Dashboard*>();
 }
 
-// // 设置仪表盘更新定时器
-// void MainWindow::setupDashboardUpdateTimer()
-// {
-//     // 仪表盘更新现在完全依赖于数据快照机制
-//     // 不需要单独的定时器，由processDataSnapshots统一处理
-    
-//     // 如果旧的定时器存在，停止并删除
-//     if (dashboardUpdateTimer) {
-//         dashboardUpdateTimer->stop();
-//         disconnect(dashboardUpdateTimer, nullptr, this, nullptr);
-//         delete dashboardUpdateTimer;
-//         dashboardUpdateTimer = nullptr;
-//     }
-    
-//     // 显示日志
-//     qDebug() << "仪表盘更新已由数据快照机制接管，定时间隔为100ms";
-// }
 
 // 新增：根据Modbus寄存器地址和数量更新Modbus通道
 void MainWindow::updateModbusChannels()
