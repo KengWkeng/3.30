@@ -355,7 +355,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mbTh, &modbusThread::sendModbusResult, wsTh, &WebSocketThread::handleModbusRawData);
     
     // 连接重置计时器的信号与槽
-    // connect(this, &MainWindow::resetModbusTimer, mbTh, &modbusThread::resetTimer);
+    connect(this, &MainWindow::resetModbusTimer, mbTh, &modbusThread::resetTimer);
 
     // 连接DAQ信号与槽
     connect(daqTh, &DAQThread::dataReady, this, &MainWindow::handleDAQData);
@@ -585,13 +585,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 将定时器启动放在构造函数的最后，确保所有初始化工作完成
     // 在构造函数的最后一行添加:
-    // QTimer::singleShot(1000, this, [this]() {
-    //     // 延迟启动快照定时器，确保所有组件都已完全初始化
-    //     if (snapshotTimer) {
-    //         snapshotTimer->start();
-    //         qDebug() << "数据快照定时器已启动";
-    //     }
-    // });
+    QTimer::singleShot(1000, this, [this]() {
+        // 延迟启动快照定时器，确保所有组件都已完全初始化
+        if (snapshotTimer) {
+            snapshotTimer->start();
+            qDebug() << "数据快照定时器已启动";
+        }
+    });
 }
 
 MainWindow::~MainWindow()
@@ -730,50 +730,65 @@ void MainWindow::updateDAQPlot(const QVector<double> &timeData, const DataSnapsh
     
         // 初始化图表(如果通道数发生变化)
         if (plotsLayout->count() != numChannels) {
-        // 清除现有的图表
-        while (plotsLayout->count() > 0) {
-            QLayoutItem *item = plotsLayout->takeAt(0);
-            if (item->widget()) {
-                delete item->widget();
+            // 清空现有布局内容
+            QLayoutItem *item;
+            while ((item = plotsLayout->takeAt(0)) != nullptr) {
+                if (item->widget()) {
+                    delete item->widget();
+                }
+                delete item;
             }
-            delete item;
-        }
-        
-        // 为每个通道创建一个单独的图表
+            
+            // 为每个通道创建图表
             for (int i = 0; i < numChannels; ++i) {
-            // 创建图表容器
-            QWidget *plotContainer = new QWidget(scrollWidget);
-            QHBoxLayout *containerLayout = new QHBoxLayout(plotContainer);
-            containerLayout->setContentsMargins(5, 5, 5, 5);
-            
-                // 创建QCustomPlot实例
-            QCustomPlot *plot = new QCustomPlot();
-            plot->setMinimumHeight(150);
-                plot->setObjectName(QString("daqPlot_%1").arg(i));
-            
-            // 设置轴标签
-            plot->xAxis->setLabel("时间 (秒)");
-            plot->yAxis->setLabel(QString("通道 %1").arg(i));
-            
-            // 添加图形
-            plot->addGraph();
-            plot->graph(0)->setPen(QPen(QColor(colorNames[i % colorNames.size()])));
-            
-                // 配置图表属性
-            plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-            plot->setNoAntialiasingOnDrag(true);
-            plot->setNotAntialiasedElements(QCP::aeAll);
-            
-                // 添加值标签
-            QLabel *valueLabel = new QLabel("0.00", plotContainer);
-            valueLabel->setObjectName(QString("daqValueLabel_%1").arg(i));
-                valueLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 14px; background-color: rgba(255, 255, 255, 180);").arg(colorNames[i % colorNames.size()]));
-                valueLabel->setAlignment(Qt::AlignCenter);
-                valueLabel->setFixedSize(80, 25);
-                valueLabel->move(plot->width() - 90, 10);
+                // 创建图表容器，以支持标签和游标
+                QWidget *plotContainer = new QWidget();
+                plotContainer->setObjectName(QString("daqPlotContainer_%1").arg(i));
+                QHBoxLayout *containerLayout = new QHBoxLayout(plotContainer);
+                containerLayout->setContentsMargins(2, 2, 2, 2);
                 
-                // 添加箭头标签
-            QLabel *arrowLabel = new QLabel("←", plotContainer);
+                // 创建图表
+                QCustomPlot *plot = new QCustomPlot();
+                plot->setObjectName(QString("daqPlot_%1").arg(i));
+                plot->setMinimumHeight(100);
+                plot->setInteraction(QCP::iRangeDrag, true);
+                plot->setInteraction(QCP::iRangeZoom, true);
+                
+                // 设置图表样式
+                plot->setBackground(QBrush(QColor(240, 240, 240)));
+                
+                // 设置时间轴
+                plot->xAxis->setLabel("时间(秒)");
+                plot->xAxis->setLabelFont(QFont("Arial", 9));
+                
+                // 设置数据轴
+                plot->yAxis->setLabel(QString("通道 %1").arg(i));
+                plot->yAxis->setLabelFont(QFont("Arial", 9));
+                
+                // 禁用图例
+                plot->legend->setVisible(false);
+                
+                // 添加通道曲线
+                plot->addGraph();
+                
+                // 设置曲线样式
+                QPen pen;
+                pen.setColor(QColor(colorNames[i % colorNames.size()]));
+                pen.setWidth(1);
+                plot->graph(0)->setPen(pen);
+                
+                // 启用抗锯齿
+                plot->graph(0)->setAntialiased(true);
+                
+                // 创建数值标签
+                QLabel *valueLabel = new QLabel("0.000", plotContainer);
+                valueLabel->setObjectName(QString("daqValueLabel_%1").arg(i));
+                valueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                valueLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 10pt;").arg(colorNames[i % colorNames.size()]));
+                valueLabel->setFixedWidth(60);
+                
+                // 创建游标箭头
+                QLabel *arrowLabel = new QLabel("←", plotContainer);
                 arrowLabel->setObjectName(QString("daqArrowLabel_%1").arg(i));
             arrowLabel->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 18px;").arg(colorNames[i % colorNames.size()]));
             arrowLabel->setAlignment(Qt::AlignCenter);
@@ -848,15 +863,17 @@ void MainWindow::updateDAQPlot(const QVector<double> &timeData, const DataSnapsh
                     int timeIndex = daqTimeWindow.indexOf(snapTime);
                     
                     // 如果找到时间点，并且快照中有此通道的数据
-                    if (timeIndex >= 0 && snap.daqValid && i < snap.daqData.size() && !snap.daqData[i].isEmpty()) {
-                        channelData[timeIndex] = snap.daqData[i].first();
+                    if (timeIndex >= 0 && snap.daqValid && i < snap.daqData.size()) {
+                        // 从一维数组中直接获取值
+                        channelData[timeIndex] = snap.daqData[i];
                     }
                 }
             }
             
             // 如果直接从队列中没有足够的数据，使用当前快照
-            if (channelData.isEmpty() && i < snapshot.daqData.size() && !snapshot.daqData[i].isEmpty()) {
-                channelData.append(snapshot.daqData[i].first());
+            if (channelData.isEmpty() && i < snapshot.daqData.size()) {
+                // 从一维数组中直接获取当前值
+                channelData.append(snapshot.daqData[i]);
                 daqTimeWindow = timeData; // 使用传入的时间数据
             }
             
@@ -1037,9 +1054,6 @@ void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QV
         // 计算相对于主时间戳的时间
         static qint64 baseTimeMs = masterTimer->elapsed(); // 记录第一次数据到达时的时间
         
-        // 更新数据缓冲区 - 使用主时间戳作为时间基准
-        // 注意：这里只是存储原始数据，实际显示时将使用严格的100ms间隔
-        
         // 获取实际通道数量
         int numChannels = channelData.size();
         
@@ -1096,23 +1110,24 @@ void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QV
         if (!daqChannelData.isEmpty() && !daqChannelData[0].isEmpty()) {
             currentSnapshot.daqValid = true;
             
-            // 清空并重置daqData的大小
-            currentSnapshot.daqData.clear();
+            // 修改：使用一维数组保存每个通道的最新数据点
             currentSnapshot.daqData.resize(daqNumChannels);
             
             // 添加每个通道的最新数据点
             for (int ch = 0; ch < daqNumChannels && ch < daqChannelData.size(); ++ch) {
                 if (!daqChannelData[ch].isEmpty()) {
-                    // 只添加最新的一个数据点
-                    currentSnapshot.daqData[ch] = QVector<double>({daqChannelData[ch].last()});
+                    // 直接保存最新的数据点
+                    currentSnapshot.daqData[ch] = daqChannelData[ch].last();
+                } else {
+                    currentSnapshot.daqData[ch] = 0.0;
                 }
             }
         }
         
-        // // 自动启动主定时器（如果还未启动）
-        // if (masterTimer && !snapshotTimer->isActive()) {
-        //     snapshotTimer->start(100); // 设置为100ms间隔
-        // }
+        // 自动启动主定时器（如果还未启动）
+        if (masterTimer && !snapshotTimer->isActive()) {
+            snapshotTimer->start(100); // 设置为100ms间隔
+        }
     } catch (const std::exception& e) {
         qDebug() << "处理DAQ数据时出错:" << e.what();
     } catch (...) {
@@ -1347,7 +1362,7 @@ void MainWindow::on_btnSend_clicked()
         realTimer->restart();
         
         // 重置ModBus线程中的计时器，确保时间同步
-        // emit resetModbusTimer();
+        emit resetModbusTimer();
         
         // 读取滤波器状态并更新UI
         filterEnabled = ui->filterEnabledCheckBox->isChecked();
@@ -1658,11 +1673,11 @@ void MainWindow::showModbusResult(QVector<double> resultdata, qint64 readTimeInt
             ui->plainReceive->setPlainText(debugText);
         }
         
-        // // 确保主时间戳定时器已启动
-        // if (!snapshotTimer->isActive()) {
-        //     // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
-        //     snapshotTimer->start(100);
-        // }
+        // 确保主时间戳定时器已启动
+        if (!snapshotTimer->isActive()) {
+            // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
+            snapshotTimer->start(100);
+        }
     } catch (const std::exception& e) {
         qDebug() << "处理Modbus数据时出错: " << e.what();
     } catch (...) {
@@ -2537,11 +2552,11 @@ void MainWindow::handleECUData(const ECUData &data)
         currentSnapshot.ecuValid = true;
         currentSnapshot.ecuData = ecuValues;
         
-        // // 确保主时间戳定时器已启动
-        // if (!snapshotTimer->isActive()) {
-        //     // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
-        //     snapshotTimer->start(100);
-        // }
+        // 确保主时间戳定时器已启动
+        if (!snapshotTimer->isActive()) {
+            // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
+            snapshotTimer->start(100);
+        }
     } catch (const std::exception& e) {
         qDebug() << "处理ECU数据时出错: " << e.what();
     } catch (...) {
@@ -3033,7 +3048,7 @@ void MainWindow::onRandomNumberGenerated(int number)
 
 // 根据映射关系更新仪表盘显示
 void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData, 
-                                       const QVector<QVector<double>> &daqData, 
+                                       const QVector<double> &daqData, 
                                        const ECUData &ecuData)
 {
     // 遍历所有仪表盘
@@ -3054,15 +3069,12 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
         updatedVars.insert(varName);
     }
     
-    // 2. DAQ数据 (B_x)
+    // 2. DAQ数据 (B_x) - 修改为使用一维数组
     if (!daqData.isEmpty()) {
         for (int i = 0; i < daqData.size(); i++) {
-            if (!daqData[i].isEmpty()) {
-                // 使用最新的值
-                QString varName = QString("B_%1").arg(i);
-                currentVarMap[varName] = daqData[i].last();
-                updatedVars.insert(varName);
-            }
+            QString varName = QString("B_%1").arg(i);
+            currentVarMap[varName] = daqData[i];
+            updatedVars.insert(varName);
         }
     }
     
@@ -3127,8 +3139,8 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
                     
                 case DataSource_DAQ:
                     // 只有当提供了DAQ数据且数据源类型为DAQ时才更新
-                    if (!daqData.isEmpty() && mapping.channelIndex < daqData.size() && !daqData[mapping.channelIndex].isEmpty()) {
-                        currentValue = daqData[mapping.channelIndex].last();
+                    if (!daqData.isEmpty() && mapping.channelIndex < daqData.size()) {
+                        currentValue = daqData[mapping.channelIndex];
                         dashboard->setValue(currentValue);
                         valueUpdated = true;
                     }
@@ -4635,9 +4647,17 @@ void MainWindow::processDataSnapshots()
         snapshot.daqRunning = daqIsAcquiring;
         
         if (snapshot.daqValid && !daqChannelData.isEmpty()) {
-            snapshot.daqData = daqChannelData;  // 复制当前DAQ数据
+            // 修改：为每个通道保存最新的数据点
+            snapshot.daqData.resize(daqNumChannels);
+            for (int i = 0; i < daqNumChannels && i < daqChannelData.size(); ++i) {
+                if (!daqChannelData[i].isEmpty()) {
+                    // 只保存最新的数据点
+                    snapshot.daqData[i] = daqChannelData[i].last();
+                } else {
+                    snapshot.daqData[i] = 0.0;
+                }
+            }
         }
-
         
         // 获取当前的ECU数据
         snapshot.ecuValid = ecuDataValid;
@@ -4798,7 +4818,17 @@ void MainWindow::updateDAQPlot()
     snapshot.timestamp = masterTimer->elapsed() / 1000.0;
     snapshot.daqValid = true;
     snapshot.daqRunning = daqIsAcquiring;
-    snapshot.daqData = daqChannelData;
+    
+    // 修改：从二维数组中只保存每个通道的最新数据点
+    snapshot.daqData.resize(daqNumChannels);
+    for (int ch = 0; ch < daqNumChannels && ch < daqChannelData.size(); ++ch) {
+        if (!daqChannelData[ch].isEmpty()) {
+            // 只保存最新的一个数据点
+            snapshot.daqData[ch] = daqChannelData[ch].last();
+        } else {
+            snapshot.daqData[ch] = 0.0;
+        }
+    }
     
     // 创建时间向量
     QVector<double> timeData;

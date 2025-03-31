@@ -73,7 +73,7 @@ struct DashboardMapping {
 struct DataSnapshot {
     double timestamp;                   // 时间戳（秒）
     QVector<double> modbusData;         // Modbus数据(一维) - 每个寄存器的值
-    QVector<QVector<double>> daqData;   // DAQ数据(16通道)
+    QVector<double> daqData;            // DAQ数据(一维) - 修改为一维，每个通道只保留最新值
     QVector<double> ecuData;            // ECU数据(9通道)
     bool modbusValid;                   // Modbus数据有效标志
     bool daqValid;                      // DAQ数据有效标志
@@ -85,10 +85,7 @@ struct DataSnapshot {
     DataSnapshot() {
         timestamp = 0.0;                // 初始化为0秒
         modbusData.resize(16, 0.0);     // 16个Modbus寄存器
-        daqData.resize(16);             // 16个DAQ通道
-        for (auto &channel : daqData) {
-            channel.clear();
-        }
+        daqData.resize(16, 0.0);        // 16个DAQ通道，每个通道只保存最新值
         ecuData.resize(9, 0.0);         // 9个ECU通道
         modbusValid = false;
         daqValid = false;
@@ -248,7 +245,7 @@ private slots:
 
     // 新增：根据映射关系更新仪表盘显示
     void updateDashboardByMapping(const QVector<double> &modbusData, 
-                                 const QVector<QVector<double>> &daqData, 
+                                 const QVector<double> &daqData, 
                                  const ECUData &ecuData);
 
     // 添加从数据快照更新各种UI的函数
