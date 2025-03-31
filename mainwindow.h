@@ -2,11 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-// #include <QSerialPort>
-// #include <QSerialPortInfo>
-// #include <QModbusRtuSerialClient>
-// #include <QModbusDataUnit>
-// #include <QModbusReply>
+#include <QSerialPort>
+#include <QSerialPortInfo>
+#include <QModbusRtuSerialClient>
+#include <QModbusDataUnit>
+#include <QModbusReply>
 
 #include <QThread>
 #include <QTimer>
@@ -25,7 +25,7 @@
 #include <modbusthread.h>
 #include <canthread.h>
 #include <daqthread.h>
-//#include <plotthread.h>
+#include <plotthread.h>
 #include <QCoreApplication>
 #include <QHBoxLayout>
 #include <QList>
@@ -33,6 +33,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDateTime>
+#include <QTime>
+#include <QMutex>
 
 // 引入仪表盘控件
 #include "dashboard.h"
@@ -94,6 +96,7 @@ struct DataSnapshot {
         snapshotIndex = 0;              // 初始化索引为0
     }
 };
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -421,6 +424,9 @@ private:
     qint64 lastModbusReadTime;  // 上次Modbus读取时间
     qint64 lastSnapshotTime;    // 上次快照时间
     qint64 lastPlotUpdateTime;  // 上次绘图更新时间
+
+    // 新增：互斥锁成员变量
+    QMutex latestECUDataMutex;
 
 signals:
 

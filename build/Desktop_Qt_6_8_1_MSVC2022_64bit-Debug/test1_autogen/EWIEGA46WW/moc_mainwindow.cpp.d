@@ -7,6 +7,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   C:/Users/80911/Documents/QT/vs_test/test1/dashboardcalculator.h \
   C:/Users/80911/Documents/QT/vs_test/test1/ecuthread.h \
   C:/Users/80911/Documents/QT/vs_test/test1/modbusthread.h \
+  C:/Users/80911/Documents/QT/vs_test/test1/plotthread.h \
   C:/Users/80911/Documents/QT/vs_test/test1/qcustomplot.h \
   C:/Users/80911/Documents/QT/vs_test/test1/websocketthread.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QCache \
@@ -44,6 +45,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QString \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QStringList \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QThread \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTime \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTimeZone \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTimer \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QUrl \
