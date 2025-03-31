@@ -72,3 +72,11 @@
 864	5905	7651462068046833	CMakeFiles/test1.dir/mainwindow.cpp.obj	5984c6929457b2e8
 859	6965	7651462067996842	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	44f150fac0faaa69
 6965	7274	7651462129057362	test1.exe	61dfe32cd7ec6859
+25	858	7651473431413757	test1_autogen/timestamp	3ccc2c62dc7625e1
+25	858	7651473431413757	test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+25	858	7651473431413757	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/timestamp	3ccc2c62dc7625e1
+25	858	7651473431413757	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+862	5114	7651473432093728	CMakeFiles/test1.dir/main.cpp.obj	619fb63be5222925
+865	5846	7651473432123732	CMakeFiles/test1.dir/mainwindow.cpp.obj	5984c6929457b2e8
+859	6979	7651473432073715	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	44f150fac0faaa69
+6979	7270	7651473493268831	test1.exe	61dfe32cd7ec6859

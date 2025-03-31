@@ -337,7 +337,6 @@ private:
     // ECU相关变量
     QThread *ecuThread;
     ECUThread *ecuTh;
-    QStandardItemModel *ecuDataModel = nullptr;  // 添加默认初始化为nullptr
     bool ecuIsConnected;
 
     // 修改WebSocket相关成员

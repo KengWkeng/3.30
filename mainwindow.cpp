@@ -536,7 +536,6 @@ MainWindow::MainWindow(QWidget *parent)
     // 初始化ECU相关
     ecuThread = nullptr;
     ecuTh = nullptr;
-    ecuDataModel = nullptr;  // 明确初始化为nullptr
     ecuIsConnected = false;
 }
 
@@ -1397,79 +1396,14 @@ void MainWindow::showModbusResult(QVector<double> resultdata, qint64 readTimeInt
         // 获取当前时间作为X轴值
         double currentTime = masterTimer->elapsed() / 1000.0; // 转换为秒
         
-        // 将新数据添加到数据缓冲区并更新图表
-        for (int i = 0; i < resultdata.size() && i < myPlots.size(); i++) {
+        // 将新数据添加到数据缓冲区
+        for (int i = 0; i < resultdata.size(); i++) {
             // 添加数据到存储
             modbusData[i].append(resultdata[i]);
             
             // 限制数据点数量，避免内存占用过多
             while (modbusData[i].size() > 10000) {
                 modbusData[i].removeFirst();
-            }
-            
-            // 更新图表
-            if (i < graphs.size() && graphs[i]) {
-                // 添加数据点到图表
-                graphs[i]->addData(currentTime, resultdata[i]);
-                
-                // 找到对应的值标签和箭头标签
-                if (i < myPlots.size() && myPlots[i]) {
-                    QCustomPlot *plot = myPlots[i];
-                    
-                    // 更新箭头位置
-                    QList<QLabel*> labels = plot->parentWidget()->findChildren<QLabel*>();
-                    if (labels.size() >= 2) {
-                        // 假设第一个是值标签，第二个是箭头标签
-                        QLabel *valueLabel = labels.at(0);
-                        QLabel *arrowLabel = labels.at(1);
-                        
-                        // 更新值
-                        valueLabel->setText(QString::number(resultdata[i], 'f', 2));
-                        
-                        // 更新箭头位置
-                        double yCoord = plot->yAxis->coordToPixel(resultdata[i]);
-                        arrowLabel->move(plot->width() - 30, qRound(yCoord) - arrowLabel->height() / 2);
-                    }
-                    
-                    // 设置X轴范围为最近60秒
-                    double xMin = qMax(0.0, currentTime - 60.0);
-                    plot->xAxis->setRange(xMin, currentTime);
-                    
-                    // 自动设置Y轴范围
-                    if (graphs[i]->dataCount() > 0) {
-                        // 查找可见范围内的最大最小值
-                        double yMin = resultdata[i];
-                        double yMax = resultdata[i];
-                        
-                        // 遍历最近添加的数据点
-                        // 由于QCustomPlot数据结构的限制，使用简单的方法查找可见范围内的数据
-                        const int visiblePointCount = qMin(graphs[i]->dataCount(), 600); // 最多查看最近600个点
-                        for (int j = 0; j < visiblePointCount; j++) {
-                            double key = graphs[i]->data()->at(graphs[i]->dataCount() - 1 - j)->key;
-                            double value = graphs[i]->data()->at(graphs[i]->dataCount() - 1 - j)->value;
-                            
-                            if (key >= xMin && key <= currentTime) {
-                                yMin = qMin(yMin, value);
-                                yMax = qMax(yMax, value);
-                            }
-                        }
-                        
-                        // 添加一些边距
-                        double range = yMax - yMin;
-                        if (range < 0.1) range = 0.1; // 防止范围太小
-                        yMin -= range * 0.1;
-                        yMax += range * 0.1;
-                        
-                        // 设置Y轴范围
-                        plot->yAxis->setRange(yMin, yMax);
-        } else {
-                        // 如果没有数据点，设置默认范围
-                        plot->yAxis->setRange(0, 5);
-                    }
-                    
-                    // 重绘图表
-                    plot->replot(QCustomPlot::rpQueuedReplot);
-                }
             }
         }
         
@@ -1479,15 +1413,6 @@ void MainWindow::showModbusResult(QVector<double> resultdata, qint64 readTimeInt
         // 更新数据快照
         currentSnapshot.modbusValid = true;
         currentSnapshot.modbusData = resultdata;
-        
-        // 直接在UI上显示最新值（用于调试）
-        if (ui->plainReceive) {
-            QString debugText = "Modbus最新值:\n";
-            for (int i = 0; i < resultdata.size(); i++) {
-                debugText += QString("通道 %1: %2\n").arg(i).arg(resultdata[i], 0, 'f', 2);
-            }
-            ui->plainReceive->setPlainText(debugText);
-        }
         
     } catch (const std::exception& e) {
         qDebug() << "处理Modbus数据时出错: " << e.what();
@@ -3931,8 +3856,6 @@ void MainWindow::processDataSnapshots()
                 snapshot.ecuData[6] = latestECUData.intakeTemp;
                 snapshot.ecuData[7] = latestECUData.atmPressure;
                 snapshot.ecuData[8] = latestECUData.flightTime;
-                
-                // ECU数据表格将在创建timeData后更新
             }
         } else if (latestECUData.isValid && ecuIsConnected) {
             // 如果ecuData为空但有最新的ECU数据，直接使用latestECUData
@@ -3947,8 +3870,6 @@ void MainWindow::processDataSnapshots()
             snapshot.ecuData[6] = latestECUData.intakeTemp;
             snapshot.ecuData[7] = latestECUData.atmPressure;
             snapshot.ecuData[8] = latestECUData.flightTime;
-            
-            // ECU数据表格将在创建timeData后更新
         }
         
         // 增加快照计数
@@ -3967,15 +3888,98 @@ void MainWindow::processDataSnapshots()
         QVector<double> timeData;
         timeData.append(roundedTime);
         
-        // ECU数据表格更新 - 确保在timeData创建后执行
+        // ===== 统一处理所有数据源的图表更新 =====
+        
+        // 1. 更新ECU数据图表
         if (snapshot.ecuValid) {
             updateECUDataDisplay(timeData, snapshot);
         }
         
-        // 仅更新仪表盘数据，绘图会在main timer的50ms点进行
+        // 2. 更新Modbus数据图表
+        if (snapshot.modbusValid) {
+            // 更新Modbus图表
+            for (int i = 0; i < snapshot.modbusData.size() && i < myPlots.size(); i++) {
+                if (i < graphs.size() && graphs[i] && i < myPlots.size() && myPlots[i]) {
+                    // 添加数据点到图表
+                    graphs[i]->addData(roundedTime, snapshot.modbusData[i]);
+                    
+                    QCustomPlot *plot = myPlots[i];
+                    
+                    // 更新标签和箭头
+                    QList<QLabel*> labels = plot->parentWidget()->findChildren<QLabel*>();
+                    if (labels.size() >= 2) {
+                        // 假设第一个是值标签，第二个是箭头标签
+                        QLabel *valueLabel = labels.at(0);
+                        QLabel *arrowLabel = labels.at(1);
+                        
+                        // 更新值
+                        valueLabel->setText(QString::number(snapshot.modbusData[i], 'f', 2));
+                        
+                        // 更新箭头位置
+                        double yCoord = plot->yAxis->coordToPixel(snapshot.modbusData[i]);
+                        arrowLabel->move(plot->width() - 30, qRound(yCoord) - arrowLabel->height() / 2);
+                    }
+                    
+                    // 设置X轴范围为最近60秒
+                    double xMin = qMax(0.0, roundedTime - 60.0);
+                    plot->xAxis->setRange(xMin, roundedTime);
+                    
+                    // 自动设置Y轴范围
+                    if (graphs[i]->dataCount() > 0) {
+                        // 查找可见范围内的最大最小值
+                        double yMin = snapshot.modbusData[i];
+                        double yMax = snapshot.modbusData[i];
+                        
+                        // 遍历最近添加的数据点
+                        const int visiblePointCount = qMin(graphs[i]->dataCount(), 600); // 最多查看最近600个点
+                        for (int j = 0; j < visiblePointCount; j++) {
+                            double key = graphs[i]->data()->at(graphs[i]->dataCount() - 1 - j)->key;
+                            double value = graphs[i]->data()->at(graphs[i]->dataCount() - 1 - j)->value;
+                            
+                            if (key >= xMin && key <= roundedTime) {
+                                yMin = qMin(yMin, value);
+                                yMax = qMax(yMax, value);
+                            }
+                        }
+                        
+                        // 添加一些边距
+                        double range = yMax - yMin;
+                        if (range < 0.1) range = 0.1; // 防止范围太小
+                        yMin -= range * 0.1;
+                        yMax += range * 0.1;
+                        
+                        // 设置Y轴范围
+                        plot->yAxis->setRange(yMin, yMax);
+                    } else {
+                        // 如果没有数据点，设置默认范围
+                        plot->yAxis->setRange(0, 5);
+                    }
+                    
+                    // 重绘图表
+                    plot->replot(QCustomPlot::rpQueuedReplot);
+                }
+            }
+            
+            // 直接在UI上显示最新值（用于调试）
+            if (ui->plainReceive) {
+                QString debugText = "Modbus最新值:\n";
+                for (int i = 0; i < snapshot.modbusData.size(); i++) {
+                    debugText += QString("通道 %1: %2\n").arg(i).arg(snapshot.modbusData[i], 0, 'f', 2);
+                }
+                ui->plainReceive->setPlainText(debugText);
+            }
+        }
+        
+        // 3. 更新DAQ数据图表 - 已在updateDAQPlot方法中实现
+        if (snapshot.daqValid) {
+            updateDAQPlot(timeData, snapshot);
+        }
+        
+        // 4. 更新仪表盘数据
         if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid) {
             updateDashboardData(timeData, snapshot);
         }
+        
     } catch (const std::exception& e) {
         qDebug() << "处理数据快照时出错: " << e.what();
     } catch (...) {
@@ -4091,6 +4095,7 @@ void MainWindow::onMainTimerTimeout()
         lastSnapshotTime = currentHundred;
         
         // 创建和处理数据快照 - 在整百毫秒触发
+        // 所有数据的图表更新都将在processDataSnapshots方法中完成
         processDataSnapshots();
     }
     
@@ -4130,18 +4135,12 @@ void MainWindow::onMainTimerTimeout()
                 ecudataMap = ecuValues;
                 ecuDataValid = true;
                 
-                // 获取当前时间作为时间戳
-                double currentTimeInSeconds = currentTime / 1000.0;
-                
-                // 直接添加数据点到时间序列，确保与主线程时间同步
-                addECUDataPoint(currentTimeInSeconds, ecuValues);
-                
                 // 添加到当前快照
                 currentSnapshot.ecuValid = true;
                 currentSnapshot.ecuData = ecuValues;
                 
                 // 记录处理的信息
-                qDebug() << "在时间点" << currentTimeInSeconds << "处理ECU数据: 节气门=" 
+                qDebug() << "在时间点" << (currentTime / 1000.0) << "处理ECU数据: 节气门=" 
                          << latestECUData.throttle << "%, 转速=" << latestECUData.engineSpeed << "rpm";
             } else {
                 qDebug() << "ECU数据无效，跳过处理";
@@ -4149,47 +4148,6 @@ void MainWindow::onMainTimerTimeout()
         }
     }
     
-    // 检查是否需要更新绘图 - 在快照时间之后的50ms触发
-    if (currentTime >= currentHundredPlus50 && lastPlotUpdateTime < currentHundredPlus50) {
-        // 更新上次绘图更新时间
-        lastPlotUpdateTime = currentHundredPlus50;
-        
-        // 如果队列中有快照数据，更新绘图
-        if (!snapshotQueue.isEmpty()) {
-            // 获取队列中的最新快照
-            DataSnapshot latestSnapshot = snapshotQueue.last();
-            
-            // 创建时间向量
-            QVector<double> timeData;
-            timeData.append(latestSnapshot.timestamp);
-            
-            // 更新DAQ图表
-            if (latestSnapshot.daqValid) {
-                updateDAQPlot(timeData, latestSnapshot);
-            }
-            
-            // 更新ECU图表
-            if (latestSnapshot.ecuValid) {
-                // 转换为ECU数据结构以便显示
-                ECUData ecuData;
-                ecuData.isValid = true;
-                ecuData.throttle = latestSnapshot.ecuData[0];
-                ecuData.engineSpeed = latestSnapshot.ecuData[1];
-                ecuData.cylinderTemp = latestSnapshot.ecuData[2];
-                ecuData.exhaustTemp = latestSnapshot.ecuData[3];
-                ecuData.axleTemp = latestSnapshot.ecuData[4];
-                ecuData.fuelPressure = latestSnapshot.ecuData[5];
-                ecuData.intakeTemp = latestSnapshot.ecuData[6];
-                ecuData.atmPressure = latestSnapshot.ecuData[7];
-                ecuData.flightTime = latestSnapshot.ecuData[8];
-                
-                // 更新ECU图表
-                updateECUPlot(ecuData);
-                
-                // 更新调试信息
-                qDebug() << "绘图更新 - ECU数据: 时间=" << latestSnapshot.timestamp
-                         << "节气门=" << ecuData.throttle << "%, 转速=" << ecuData.engineSpeed << "rpm";
-            }
-        }
-    }
+    // 注意：图表更新已移至processDataSnapshots方法中
+    // 不再需要额外的绘图更新代码
 }
