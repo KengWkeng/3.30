@@ -199,13 +199,11 @@ private slots:
 
     void onRandomNumberGenerated(int number);
     
-    // 修改WebSocket相关成员
+    // WebSocket相关槽函数
     void handleWebSocketServerStarted(bool success, QString message);
     void handleWebSocketClientConnected(const QString &clientInfo);
     void handleWebSocketClientDisconnected(const QString &clientInfo);
     void handleWebSocketMessage(QString message);
-    
-    // 新增：测试WebSocket功能
     void testWebSocketConnection();
     
     // 添加WebSocket控制按钮的槽函数
@@ -213,7 +211,10 @@ private slots:
 
     // WebSocket相关槽函数
     void on_btnWebSocketTest_clicked();
-
+    
+    // 主计时器超时槽函数
+    void onMainTimerTimeout();
+    
     // 新增菜单项槽函数
     void on_actionSetupInitial_triggered();
     void on_actionLoadInitial_triggered();
@@ -261,7 +262,7 @@ private slots:
     void updateDAQPlot(const QVector<double> &timeData, const DataSnapshot &snapshot);
     void setupDAQTable();
     void updateDAQTable(const QVector<double> &timeData, const QVector<QVector<double>> &channelData, int numChannels);
-    void setupDashboardUpdateTimer(); // 设置仪表盘更新定时器
+    // void setupDashboardUpdateTimer(); // 设置仪表盘更新定时器
 
     // 添加用于更新布局的函数
     void updateLayout();
@@ -276,6 +277,9 @@ private slots:
     // 新增：数据快照相关槽函数
     void processDataSnapshots();           // 处理数据快照队列的槽函数
 
+    // 添加setupMasterTimer函数声明
+    void setupMasterTimer();
+
 private:
 
     Ui::MainWindow *ui;
@@ -285,8 +289,6 @@ private:
     //采集线程
     modbusThread *mbTh;
     CANThread *canTh;
-
-    QTimer *ModbusTimer;
 
     // 添加Modbus数据相关变量
     bool modbusDataValid = false;      // Modbus数据有效标志
@@ -336,8 +338,8 @@ private:
     // 添加DAQ相关成员
     QThread *daqThread;
     DAQThread *daqTh;
-    QTimer *daqUpdateTimer;
-    QTimer *dashboardUpdateTimer = nullptr; // 用于低频率更新仪表盘
+    // QTimer *daqUpdateTimer;
+    // QTimer *dashboardUpdateTimer = nullptr; // 用于低频率更新仪表盘
     
     // 数据缓冲区
     QVector<QVector<double>> daqChannelData;
@@ -414,9 +416,14 @@ private:
     QTimer *snapshotTimer;                 // 数据快照定时器
     QElapsedTimer *masterTimer;            // 主计时器，用于同步数据
     int maxQueueSize = 1000;               // 最大队列长度，防止内存占用过多
-    
-    // 初始化主计时器
-    void setupMasterTimer();
+
+    // 添加统一定时器相关变量
+    QTimer *mainTimer;          // 主定时器
+    bool modbusReadRequested;   // 是否请求了Modbus读取
+    bool modbusReading;         // 是否正在读取Modbus数据
+    qint64 lastModbusReadTime;  // 上次Modbus读取时间
+    qint64 lastSnapshotTime;    // 上次快照时间
+    qint64 lastPlotUpdateTime;  // 上次绘图更新时间
 
 signals:
 

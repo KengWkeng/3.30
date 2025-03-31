@@ -240,23 +240,36 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "WebSocket服务器启动状态:" << (success ? "成功" : "失败") << message;
     });
     
-    ModbusTimer = new QTimer;
-    ModbusTimer->setInterval(ui->lineTimeLoop->text().toInt());
-
     // 初始化滤波器相关变量
     realTimer = new QElapsedTimer();
     realTimer->start();
     lastTimestamp = 0;
     filteredValues.clear();
 
-    // 修改计时器超时处理，直接发送数据采集命令，而不是触发按钮点击
-    // 注释掉此处的连接，使用下面的连接代替
-    /*connect(ModbusTimer, &QTimer::timeout, this, [=](){
-        emit sendModbusCommand(ui->lineServerAddress->text().toInt(),
-                               ui->lineSegAddress->text().toInt(),
-                               ui->lineSegNum->text().toInt());
-    });*/
+    // 删除ModbusTimer，使用统一的主定时器
+    // ModbusTimer = new QTimer;
+    // ModbusTimer->setInterval(ui->lineTimeLoop->text().toInt());
 
+    // 初始化主定时器
+    masterTimer = new QElapsedTimer();
+    masterTimer->start();
+    
+    // 创建统一主定时器，取代之前的snapshotTimer和ModbusTimer
+    mainTimer = new QTimer(this);
+    mainTimer->setInterval(10); // 设置基本间隔为10ms
+    connect(mainTimer, &QTimer::timeout, this, &MainWindow::onMainTimerTimeout);
+    mainTimer->start();
+    
+    // 初始化定时器相关变量
+    modbusReadRequested = false;
+    modbusReading = false;
+    lastModbusReadTime = 0;
+    lastSnapshotTime = 0;
+    lastPlotUpdateTime = 0;
+    
+    // 初始化当前数据快照
+    currentSnapshot = DataSnapshot();
+    
     // 添加WebSocket消息接收处理连接
     connect(wsTh, &WebSocketThread::messageReceived, this, &MainWindow::handleWebSocketMessage);
     
@@ -295,11 +308,11 @@ MainWindow::MainWindow(QWidget *parent)
     daqSampleRate = 10000;
 
     // 创建DAQ定时器，用于更新图表
-    daqUpdateTimer = new QTimer(this);
-    connect(daqUpdateTimer, SIGNAL(timeout()), this, SLOT(updateDAQPlot()));
+    // daqUpdateTimer = new QTimer(this);
+    // connect(daqUpdateTimer, SIGNAL(timeout()), this, SLOT(updateDAQPlot()));
     
     // 创建仪表盘更新定时器
-    setupDashboardUpdateTimer();
+    // setupDashboardUpdateTimer();
     
     //发送modbus命令
     connect(this,&MainWindow::sendModbusCommand,mbTh,&modbusThread::getModbusResult);
@@ -328,7 +341,7 @@ MainWindow::MainWindow(QWidget *parent)
             // 如果正在读取数据，设置为"读取"状态
             if (ui->btnSend->text() == "结束") {
                 // 停止定时器
-                ModbusTimer->stop();
+                // ModbusTimer->stop();
                 ui->btnSend->setText("读取");
             }
         }
@@ -342,7 +355,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mbTh, &modbusThread::sendModbusResult, wsTh, &WebSocketThread::handleModbusRawData);
     
     // 连接重置计时器的信号与槽
-    connect(this, &MainWindow::resetModbusTimer, mbTh, &modbusThread::resetTimer);
+    // connect(this, &MainWindow::resetModbusTimer, mbTh, &modbusThread::resetTimer);
 
     // 连接DAQ信号与槽
     connect(daqTh, &DAQThread::dataReady, this, &MainWindow::handleDAQData);
@@ -451,7 +464,7 @@ MainWindow::MainWindow(QWidget *parent)
     // currentSnapshot = DataSnapshot();
     
     // 添加定时器信号槽连接
-    connect(ModbusTimer, &QTimer::timeout, [=]() {
+    connect(mainTimer, &QTimer::timeout, [=]() {
         // 确保只在"结束"状态下发送命令（即正在循环读取状态）
         if (ui->btnSend->text() == "结束") {
             emit sendModbusCommand(ui->lineServerAddress->text().toInt(),
@@ -559,26 +572,26 @@ MainWindow::MainWindow(QWidget *parent)
     masterTimer = new QElapsedTimer();
     masterTimer->start();
 
-    // 创建数据快照定时器
-    snapshotTimer = new QTimer(this);
-    snapshotTimer->setInterval(100); // 设置100ms触发一次
+    // // 创建数据快照定时器
+    // snapshotTimer = new QTimer(this);
+    // snapshotTimer->setInterval(100); // 设置100ms触发一次
 
-    // 确保所有数据成员都已初始化后再连接信号槽
-    connect(snapshotTimer, SIGNAL(timeout()), this, SLOT(processDataSnapshots()));
-    snapshotTimer->start(); // 启动定时器
+    // // 确保所有数据成员都已初始化后再连接信号槽
+    // connect(snapshotTimer, SIGNAL(timeout()), this, SLOT(processDataSnapshots()));
+    // snapshotTimer->start(); // 启动定时器
 
     // 初始化当前数据快照
     currentSnapshot = DataSnapshot();
 
     // 将定时器启动放在构造函数的最后，确保所有初始化工作完成
     // 在构造函数的最后一行添加:
-    QTimer::singleShot(1000, this, [this]() {
-        // 延迟启动快照定时器，确保所有组件都已完全初始化
-        if (snapshotTimer) {
-            snapshotTimer->start();
-            qDebug() << "数据快照定时器已启动";
-        }
-    });
+    // QTimer::singleShot(1000, this, [this]() {
+    //     // 延迟启动快照定时器，确保所有组件都已完全初始化
+    //     if (snapshotTimer) {
+    //         snapshotTimer->start();
+    //         qDebug() << "数据快照定时器已启动";
+    //     }
+    // });
 }
 
 MainWindow::~MainWindow()
@@ -588,6 +601,13 @@ MainWindow::~MainWindow()
     QSettings settings(settingsFile, QSettings::IniFormat);
     saveDashboardMappings(settings);
     qDebug() << "已保存仪表盘设置到:" << settingsFile;
+    
+    // 停止主定时器
+    if (mainTimer) {
+        mainTimer->stop();
+        delete mainTimer;
+        mainTimer = nullptr;
+    }
     
     delete ui;
     //析构时结束子线程
@@ -608,18 +628,11 @@ MainWindow::~MainWindow()
         delete realTimer;
         realTimer = nullptr;
     }
-
-    // 清理定时器资源
-    if (daqUpdateTimer) {
-        daqUpdateTimer->stop();
-        delete daqUpdateTimer;
-        daqUpdateTimer = nullptr;
-    }
     
-    if (dashboardUpdateTimer) {
-        dashboardUpdateTimer->stop();
-        delete dashboardUpdateTimer;
-        dashboardUpdateTimer = nullptr;
+    // 清理主计时器资源
+    if (masterTimer) {
+        delete masterTimer;
+        masterTimer = nullptr;
     }
 
     // 停止WebSocket服务器
@@ -895,6 +908,7 @@ void MainWindow::updateDAQPlot(const QVector<double> &timeData, const DataSnapsh
 
 void MainWindow::setupDAQTable()
 {
+    /*
     // 初始化数据模型
     if (daqDataModel) {
         delete daqDataModel;
@@ -925,10 +939,12 @@ void MainWindow::setupDAQTable()
     
     // 设置表格为只读
     ui->daqDataTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    */
 }
 
 void MainWindow::updateDAQTable(const QVector<double> &timeData, const QVector<QVector<double>> &channelData, int numChannels)
 {
+    /*
     // 检查数据有效性
     if (numChannels <= 0 || timeData.isEmpty() || channelData.isEmpty()) {
         return;
@@ -1001,6 +1017,7 @@ void MainWindow::updateDAQTable(const QVector<double> &timeData, const QVector<Q
         }
         scrollCounter = 0;
     }
+    */
 }
 
 void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData)
@@ -1092,10 +1109,10 @@ void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QV
             }
         }
         
-        // 自动启动主定时器（如果还未启动）
-        if (masterTimer && !snapshotTimer->isActive()) {
-            snapshotTimer->start(100); // 设置为100ms间隔
-        }
+        // // 自动启动主定时器（如果还未启动）
+        // if (masterTimer && !snapshotTimer->isActive()) {
+        //     snapshotTimer->start(100); // 设置为100ms间隔
+        // }
     } catch (const std::exception& e) {
         qDebug() << "处理DAQ数据时出错:" << e.what();
     } catch (...) {
@@ -1266,7 +1283,7 @@ void MainWindow::on_btnOpenPort_clicked()
         // 检查是否正在读取数据，如果是，先停止读取
         if (ui->btnSend->text() == "结束") {
             // 停止定时器
-            ModbusTimer->stop();
+            // ModbusTimer->stop();
             
             // 改变按钮文字为"读取"
             ui->btnSend->setText("读取");
@@ -1330,18 +1347,20 @@ void MainWindow::on_btnSend_clicked()
         realTimer->restart();
         
         // 重置ModBus线程中的计时器，确保时间同步
-        emit resetModbusTimer();
+        // emit resetModbusTimer();
         
         // 读取滤波器状态并更新UI
         filterEnabled = ui->filterEnabledCheckBox->isChecked();
         qDebug() << "滤波器状态: " << (filterEnabled ? "开启" : "关闭") 
                  << "，时间常数: " << ui->lineTimeLoop->text().toDouble() << "ms";
         
-        // 设置定时器并发送命令
-        ModbusTimer->start(ui->lineTimeLoop->text().toInt());
-        emit sendModbusCommand(ui->lineServerAddress->text().toInt(),
-                              ui->lineSegAddress->text().toInt(),
-                              ui->lineSegNum->text().toInt());
+        // 设置Modbus读取标志，之后的读取将由主定时器触发
+        modbusReadRequested = true;
+        
+        // 计算下一个整百+50的时间点，等待第一次触发
+        qint64 currentTime = masterTimer->elapsed();
+        qint64 nextReadTime = ((currentTime / 100) * 100) + 150; // 下一个整百+50
+        qDebug() << "Modbus读取将在下一个整百+50毫秒时间点触发: " << nextReadTime << "ms";
         
         // 改变按钮文字为"结束"
         ui->btnSend->setText("结束");
@@ -1356,8 +1375,9 @@ void MainWindow::on_btnSend_clicked()
     } else {
         // 当前状态为"结束"，要停止数据采集
         
-        // 停止定时器
-        ModbusTimer->stop();
+        // 清除Modbus读取标志
+        modbusReadRequested = false;
+        modbusReading = false;
         
         // 改变按钮文字为"读取"
         ui->btnSend->setText("读取");
@@ -1638,11 +1658,11 @@ void MainWindow::showModbusResult(QVector<double> resultdata, qint64 readTimeInt
             ui->plainReceive->setPlainText(debugText);
         }
         
-        // 确保主时间戳定时器已启动
-        if (!snapshotTimer->isActive()) {
-            // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
-            snapshotTimer->start(100);
-        }
+        // // 确保主时间戳定时器已启动
+        // if (!snapshotTimer->isActive()) {
+        //     // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
+        //     snapshotTimer->start(100);
+        // }
     } catch (const std::exception& e) {
         qDebug() << "处理Modbus数据时出错: " << e.what();
     } catch (...) {
@@ -1817,6 +1837,7 @@ void MainWindow::on_btnPageData_clicked()
 // 初始化表格视图
 void MainWindow::initTableView()
 {
+    /*
     // 如果模型已存在则删除
     if (tableModel) {
         delete tableModel;
@@ -1852,6 +1873,7 @@ void MainWindow::initTableView()
     
     // 设置表格为只读
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    */
 }
 
 // 更新表格数据
@@ -2372,6 +2394,7 @@ void MainWindow::on_filterEnabledCheckBox_stateChanged(int state)
 // 设置ECU表格模型
 void MainWindow::setupECUTable()
 {
+    /*
     // 检查表格对象是否存在
     if (!ui->tableViewECU) {
         qDebug() << "错误: ECU表格控件不存在";
@@ -2413,6 +2436,7 @@ void MainWindow::setupECUTable()
     
     // 设置时间列宽度小一些
     ui->tableViewECU->setColumnWidth(0, 80);
+    */
 }
 
 void MainWindow::on_btnECUScan_clicked()
@@ -2513,11 +2537,11 @@ void MainWindow::handleECUData(const ECUData &data)
         currentSnapshot.ecuValid = true;
         currentSnapshot.ecuData = ecuValues;
         
-        // 确保主时间戳定时器已启动
-        if (!snapshotTimer->isActive()) {
-            // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
-            snapshotTimer->start(100);
-        }
+        // // 确保主时间戳定时器已启动
+        // if (!snapshotTimer->isActive()) {
+        //     // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
+        //     snapshotTimer->start(100);
+        // }
     } catch (const std::exception& e) {
         qDebug() << "处理ECU数据时出错: " << e.what();
     } catch (...) {
@@ -3701,23 +3725,23 @@ QList<Dashboard*> MainWindow::getAllDashboards()
     return this->findChildren<Dashboard*>();
 }
 
-// 设置仪表盘更新定时器
-void MainWindow::setupDashboardUpdateTimer()
-{
-    // 仪表盘更新现在完全依赖于数据快照机制
-    // 不需要单独的定时器，由processDataSnapshots统一处理
+// // 设置仪表盘更新定时器
+// void MainWindow::setupDashboardUpdateTimer()
+// {
+//     // 仪表盘更新现在完全依赖于数据快照机制
+//     // 不需要单独的定时器，由processDataSnapshots统一处理
     
-    // 如果旧的定时器存在，停止并删除
-    if (dashboardUpdateTimer) {
-        dashboardUpdateTimer->stop();
-        disconnect(dashboardUpdateTimer, nullptr, this, nullptr);
-        delete dashboardUpdateTimer;
-        dashboardUpdateTimer = nullptr;
-    }
+//     // 如果旧的定时器存在，停止并删除
+//     if (dashboardUpdateTimer) {
+//         dashboardUpdateTimer->stop();
+//         disconnect(dashboardUpdateTimer, nullptr, this, nullptr);
+//         delete dashboardUpdateTimer;
+//         dashboardUpdateTimer = nullptr;
+//     }
     
-    // 显示日志
-    qDebug() << "仪表盘更新已由数据快照机制接管，定时间隔为100ms";
-}
+//     // 显示日志
+//     qDebug() << "仪表盘更新已由数据快照机制接管，定时间隔为100ms";
+// }
 
 // 新增：根据Modbus寄存器地址和数量更新Modbus通道
 void MainWindow::updateModbusChannels()
@@ -4094,6 +4118,7 @@ void MainWindow::updateECUDataDisplay(const QVector<double> &timeData, const Dat
 
 void MainWindow::setupECUDataTable()
 {
+    /*
     qDebug() << "开始设置ECU数据表格";
     
     // 初始化ECU数据模型
@@ -4135,6 +4160,7 @@ void MainWindow::setupECUDataTable()
     ui->tableViewECU->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     
     qDebug() << "ECU数据表格设置完成";
+    */
 }
 
 // 初始化dash1plot绘图区域
@@ -4570,23 +4596,25 @@ void MainWindow::handleDashForceSettingsChanged(const QString &dashboardName, co
 // 添加处理数据快照的槽函数实现
 void MainWindow::processDataSnapshots()
 {
-    static double lastSnapshotTime = 0.0;
     static int snapshotCount = 0;
     
     try {
         // 确保主时间戳已初始化
         if (!masterTimer) {
             qDebug() << "警告: 主时间戳未初始化，无法处理数据快照";
-            setupMasterTimer();
+            // 创建主时间戳
+            masterTimer = new QElapsedTimer();
+            masterTimer->start();
             return;
         }
         
-        // 获取当前基于主时间戳的时间(秒)
+        // 获取当前基于主时间戳的时间(秒)及精确到整百毫秒的时间
         double currentTime = (masterTimer->elapsed() / 1000.0);
+        double roundedTime = round(currentTime * 10.0) / 10.0; // 精确到100ms的整数倍
         
         // 创建当前快照
         DataSnapshot snapshot;
-        snapshot.timestamp = currentTime;
+        snapshot.timestamp = roundedTime; // 使用整百毫秒的时间
         
         // 获取当前的Modbus数据
         snapshot.modbusValid = modbusDataValid;
@@ -4609,6 +4637,7 @@ void MainWindow::processDataSnapshots()
         if (snapshot.daqValid && !daqChannelData.isEmpty()) {
             snapshot.daqData = daqChannelData;  // 复制当前DAQ数据
         }
+
         
         // 获取当前的ECU数据
         snapshot.ecuValid = ecuDataValid;
@@ -4623,56 +4652,25 @@ void MainWindow::processDataSnapshots()
             }
         }
         
-        // 每100毫秒处理一次快照（强制时间戳间隔）
-        if (currentTime - lastSnapshotTime >= 0.1 || lastSnapshotTime == 0.0) {
-            // 更新最后快照时间
-            lastSnapshotTime = currentTime;
-            snapshotCount++;
-            
-            // 对快照进行四舍五入以确保显示的时间戳是100ms的整数倍
-            double roundedTime = round(currentTime * 10.0) / 10.0;
-            snapshot.timestamp = roundedTime;
-            
-            // 将当前快照添加到队列中
-            snapshotQueue.enqueue(snapshot);
-            
-            // 限制队列大小，保留最新的300个快照(约30秒数据)
-            while (snapshotQueue.size() > 300) {
-                snapshotQueue.dequeue();
-            }
-            
-            // 创建时间向量 - 确保与snapshot.timestamp使用相同的四舍五入值
-            QVector<double> timeData;
-            timeData.append(roundedTime);
-            
-            // 更新数据表格
-            if (snapshot.daqValid) {
-                updateDAQTable(timeData, snapshot.daqData, daqNumChannels);
-            }
-            
-            if (snapshot.modbusValid) {
-                // 创建二维向量用于表格显示
-                QVector<QVector<double>> modbusDataForTable(modbusNumRegs);
-                for (int i = 0; i < modbusNumRegs && i < snapshot.modbusData.size(); ++i) {
-                    modbusDataForTable[i] = QVector<double>({snapshot.modbusData[i]});
-                }
-                
-                updateModbusTable(timeData, modbusDataForTable, modbusNumRegs);
-            }
-            
-            if (snapshot.ecuValid) {
-                updateECUDataDisplay(timeData, snapshot);
-            }
-            
-            // 更新仪表盘数据
-            if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid) {
-                updateDashboardData(timeData, snapshot);
-            }
-            
-            // 更新图表 - 传递时间向量和快照
-            if (snapshot.daqValid) {
-                updateDAQPlot(timeData, snapshot);
-            }
+        // 增加快照计数
+        snapshotCount++;
+        snapshot.snapshotIndex = snapshotCount;
+        
+        // 将当前快照添加到队列中
+        snapshotQueue.enqueue(snapshot);
+        
+        // 限制队列大小，保留最新的300个快照(约30秒数据)
+        while (snapshotQueue.size() > 300) {
+            snapshotQueue.dequeue();
+        }
+        
+        // 创建时间向量
+        QVector<double> timeData;
+        timeData.append(roundedTime);
+        
+        // 仅更新仪表盘数据，绘图会在main timer的50ms点进行
+        if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid) {
+            updateDashboardData(timeData, snapshot);
         }
     } catch (const std::exception& e) {
         qDebug() << "处理数据快照时出错: " << e.what();
@@ -4727,6 +4725,7 @@ void MainWindow::updateDashboardData(const QVector<double> &timeData, const Data
 // 更新Modbus数据表格（从快照）
 void MainWindow::updateModbusTable(const QVector<double> &timeData, const QVector<QVector<double>> &modbusData, int numRegs)
 {
+    /*
     try {
         // 确保表格模型和数据有效
         if (!tableModel || modbusData.isEmpty() || timeData.isEmpty() || numRegs <= 0) {
@@ -4768,6 +4767,7 @@ void MainWindow::updateModbusTable(const QVector<double> &timeData, const QVecto
     } catch (...) {
         qDebug() << "更新Modbus表格时发生未知错误";
     }
+    */
 }
 
 // 实现setupMasterTimer函数
@@ -4808,8 +4808,62 @@ void MainWindow::updateDAQPlot()
     updateDAQPlot(timeData, snapshot);
 }
 
-
-
-
-
-
+// 实现主定时器的超时处理函数
+void MainWindow::onMainTimerTimeout()
+{
+    // 获取当前时间(毫秒)
+    qint64 currentTime = masterTimer->elapsed();
+    
+    // 计算当前时间对应的整百毫秒和整百+50毫秒时间点
+    qint64 currentHundred = (currentTime / 100) * 100;
+    qint64 currentHundredPlus50 = currentHundred + 50;
+    
+    // 检查是否达到了整百毫秒时间点(用于快照)
+    if (currentTime >= currentHundred && lastSnapshotTime < currentHundred) {
+        // 更新上次快照时间
+        lastSnapshotTime = currentHundred;
+        
+        // 创建和处理数据快照 - 在整百毫秒触发
+        processDataSnapshots();
+    }
+    
+    // 检查是否达到了整百+50毫秒时间点(用于Modbus数据读取)
+    if (currentTime >= currentHundredPlus50 && lastModbusReadTime < currentHundredPlus50) {
+        // 更新上次Modbus读取时间
+        lastModbusReadTime = currentHundredPlus50;
+        
+        // 如果请求了Modbus读取且按钮处于"结束"状态，执行Modbus命令
+        if (modbusReadRequested && ui->btnSend->text() == "结束") {
+            emit sendModbusCommand(ui->lineServerAddress->text().toInt(),
+                                  ui->lineSegAddress->text().toInt(),
+                                  ui->lineSegNum->text().toInt());
+        }
+        
+        // 如果ECU连接有效，也在同一时间执行ECU数据读取
+        if (ecuIsConnected) {
+            // ECU数据读取通常由硬件触发，这里我们可以处理接收到的数据
+            // 根据实际情况补充ECU数据处理代码
+        }
+    }
+    
+    // 检查是否需要更新绘图 - 在快照时间之后的50ms触发
+    if (currentTime >= currentHundredPlus50 && lastPlotUpdateTime < currentHundredPlus50) {
+        // 更新上次绘图更新时间
+        lastPlotUpdateTime = currentHundredPlus50;
+        
+        // 如果队列中有快照数据，更新绘图
+        if (!snapshotQueue.isEmpty()) {
+            // 获取队列中的最新快照
+            DataSnapshot latestSnapshot = snapshotQueue.last();
+            
+            // 创建时间向量
+            QVector<double> timeData;
+            timeData.append(latestSnapshot.timestamp);
+            
+            // 更新DAQ图表
+            if (latestSnapshot.daqValid) {
+                updateDAQPlot(timeData, latestSnapshot);
+            }
+        }
+    }
+}
