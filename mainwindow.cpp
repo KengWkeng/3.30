@@ -354,8 +354,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 2. WebSocketThread直接接收Modbus数据，处理并转发
     connect(mbTh, &modbusThread::sendModbusResult, wsTh, &WebSocketThread::handleModbusRawData);
     
-    // 连接重置计时器的信号与槽
-    connect(this, &MainWindow::resetModbusTimer, mbTh, &modbusThread::resetTimer);
+    // // 连接重置计时器的信号与槽
+    // connect(this, &MainWindow::resetModbusTimer, mbTh, &modbusThread::resetTimer);
 
     // 连接DAQ信号与槽
     connect(daqTh, &DAQThread::dataReady, this, &MainWindow::handleDAQData);
@@ -583,15 +583,15 @@ MainWindow::MainWindow(QWidget *parent)
     // 初始化当前数据快照
     currentSnapshot = DataSnapshot();
 
-    // 将定时器启动放在构造函数的最后，确保所有初始化工作完成
-    // 在构造函数的最后一行添加:
-    QTimer::singleShot(1000, this, [this]() {
-        // 延迟启动快照定时器，确保所有组件都已完全初始化
-        if (snapshotTimer) {
-            snapshotTimer->start();
-            qDebug() << "数据快照定时器已启动";
-        }
-    });
+    // // 将定时器启动放在构造函数的最后，确保所有初始化工作完成
+    // // 在构造函数的最后一行添加:
+    // QTimer::singleShot(1000, this, [this]() {
+    //     // 延迟启动快照定时器，确保所有组件都已完全初始化
+    //     if (snapshotTimer) {
+    //         snapshotTimer->start();
+    //         qDebug() << "数据快照定时器已启动";
+    //     }
+    // });
 }
 
 MainWindow::~MainWindow()
@@ -1124,10 +1124,10 @@ void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QV
             }
         }
         
-        // 自动启动主定时器（如果还未启动）
-        if (masterTimer && !snapshotTimer->isActive()) {
-            snapshotTimer->start(100); // 设置为100ms间隔
-        }
+        // // 自动启动主定时器（如果还未启动）
+        // if (masterTimer && !snapshotTimer->isActive()) {
+        //     snapshotTimer->start(100); // 设置为100ms间隔
+        // }
     } catch (const std::exception& e) {
         qDebug() << "处理DAQ数据时出错:" << e.what();
     } catch (...) {
@@ -1361,8 +1361,8 @@ void MainWindow::on_btnSend_clicked()
         lastTimestamp = 0;
         realTimer->restart();
         
-        // 重置ModBus线程中的计时器，确保时间同步
-        emit resetModbusTimer();
+        // // 重置ModBus线程中的计时器，确保时间同步
+        // emit resetModbusTimer();
         
         // 读取滤波器状态并更新UI
         filterEnabled = ui->filterEnabledCheckBox->isChecked();
@@ -1674,10 +1674,10 @@ void MainWindow::showModbusResult(QVector<double> resultdata, qint64 readTimeInt
         }
         
         // 确保主时间戳定时器已启动
-        if (!snapshotTimer->isActive()) {
-            // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
-            snapshotTimer->start(100);
-        }
+        // if (!snapshotTimer->isActive()) {
+        //     // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
+        //     snapshotTimer->start(100);
+        // }
     } catch (const std::exception& e) {
         qDebug() << "处理Modbus数据时出错: " << e.what();
     } catch (...) {
@@ -2552,11 +2552,11 @@ void MainWindow::handleECUData(const ECUData &data)
         currentSnapshot.ecuValid = true;
         currentSnapshot.ecuData = ecuValues;
         
-        // 确保主时间戳定时器已启动
-        if (!snapshotTimer->isActive()) {
-            // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
-            snapshotTimer->start(100);
-        }
+        // // 确保主时间戳定时器已启动
+        // if (!snapshotTimer->isActive()) {
+        //     // 启动100ms间隔的快照定时器，确保所有数据源使用相同的时间基准
+        //     snapshotTimer->start(100);
+        // }
     } catch (const std::exception& e) {
         qDebug() << "处理ECU数据时出错: " << e.what();
     } catch (...) {
