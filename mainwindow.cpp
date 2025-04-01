@@ -1797,12 +1797,6 @@ void MainWindow::handleECUData(const ECUData &data)
         return;
     }
     
-    // 如果没有主计时器，则不处理
-    if (!masterTimer) {
-        qDebug() << "警告: 主计时器未初始化，无法处理ECU数据";
-        return;
-    }
-    
     try {
         // 使用互斥锁保护latestECUData的访问
         QMutexLocker locker(&latestECUDataMutex);
@@ -1822,7 +1816,7 @@ void MainWindow::handleECUData(const ECUData &data)
         ecuValues[7] = data.atmPressure;
         ecuValues[8] = data.flightTime;
         
-        // 更新全局ECU数据映射
+        // 更新全局ECU数据映射和标志
         ecudataMap = ecuValues;
         ecuDataValid = true;
         
@@ -1831,16 +1825,14 @@ void MainWindow::handleECUData(const ECUData &data)
             ECUPlotInit();
         }
         
-        // 直接添加数据点到时间序列，不依赖于快照
-        double currentTime = masterTimer->elapsed() / 1000.0;
-        addECUDataPoint(currentTime, ecuValues);
-        
-        // 直接更新ECU图表
-        updateECUPlot(data);
-        
-        // 添加到当前快照
+        // 注意：不再直接更新图表，统一由processDataSnapshots处理
+        // 更新当前快照，以便processDataSnapshots能够获取最新数据
         currentSnapshot.ecuValid = true;
         currentSnapshot.ecuData = ecuValues;
+        
+        // 调试信息
+        qDebug() << "收到ECU数据: 节气门=" << data.throttle 
+                 << "%, 转速=" << data.engineSpeed << "rpm";
         
     } catch (const std::exception& e) {
         qDebug() << "处理ECU数据时出错: " << e.what();
@@ -3314,6 +3306,9 @@ void MainWindow::updateECUDataDisplay(const QVector<double> &timeData, const Dat
             return;
         }
         
+        // 获取时间戳
+        double snapshotTime = timeData.isEmpty() ? snapshot.timestamp : timeData.first();
+        
         // 准备ECU数据结构
         ECUData data;
         data.throttle = ecuData[0];
@@ -3327,20 +3322,16 @@ void MainWindow::updateECUDataDisplay(const QVector<double> &timeData, const Dat
         data.flightTime = ecuData[8];
         data.isValid = true;
         
-        // 获取时间戳
-        double snapshotTime = timeData.isEmpty() ? snapshot.timestamp : timeData.first();
+        // 添加数据点到图表数据缓存
+        addECUDataPoint(snapshotTime, ecuData);
         
-        // 使用向量形式更新ECU图表
-        QVector<double> values(9);
-        for (int i = 0; i < 9; ++i) {
-            values[i] = ecuData[i];
-        }
-        
-        // 添加到ECU图表
-        addECUDataPoint(snapshotTime, values);
-        
-        // 更新ECU显示
+        // 更新ECU图表
         updateECUPlot(data);
+        
+        // 调试信息
+        qDebug() << "更新ECU图表: 时间=" << snapshotTime 
+                 << "节气门=" << data.throttle << "%, 转速=" << data.engineSpeed << "rpm";
+        
     } catch (const std::exception& e) {
         qDebug() << "更新ECU数据显示时出错: " << e.what();
     } catch (...) {
@@ -4099,7 +4090,7 @@ void MainWindow::onMainTimerTimeout()
         processDataSnapshots();
     }
     
-    // 检查是否达到了整百+50毫秒时间点(用于Modbus数据读取)
+    // 检查是否达到了整百+50毫秒时间点(用于数据读取)
     if (currentTime >= currentHundredPlus50 && lastModbusReadTime < currentHundredPlus50) {
         // 更新上次Modbus读取时间
         lastModbusReadTime = currentHundredPlus50;
@@ -4111,43 +4102,7 @@ void MainWindow::onMainTimerTimeout()
                                   ui->lineSegNum->text().toInt());
         }
         
-        // 如果ECU连接有效，也在同一时间执行ECU数据读取
-        if (ecuIsConnected) {
-            // 由于ECU数据是自动每100ms通过串口上报的，这里我们需要处理最新接收到的数据
-            // 使用互斥锁保护latestECUData的访问
-            QMutexLocker locker(&latestECUDataMutex);
-            
-            // 检查是否有最新的ECU数据
-            if (latestECUData.isValid) {
-                // 将ECU数据添加到当前快照中
-                QVector<double> ecuValues(9);
-                ecuValues[0] = latestECUData.throttle;
-                ecuValues[1] = latestECUData.engineSpeed;
-                ecuValues[2] = latestECUData.cylinderTemp;
-                ecuValues[3] = latestECUData.exhaustTemp;
-                ecuValues[4] = latestECUData.axleTemp;
-                ecuValues[5] = latestECUData.fuelPressure;
-                ecuValues[6] = latestECUData.intakeTemp;
-                ecuValues[7] = latestECUData.atmPressure;
-                ecuValues[8] = latestECUData.flightTime;
-                
-                // 更新全局ECU数据映射
-                ecudataMap = ecuValues;
-                ecuDataValid = true;
-                
-                // 添加到当前快照
-                currentSnapshot.ecuValid = true;
-                currentSnapshot.ecuData = ecuValues;
-                
-                // 记录处理的信息
-                qDebug() << "在时间点" << (currentTime / 1000.0) << "处理ECU数据: 节气门=" 
-                         << latestECUData.throttle << "%, 转速=" << latestECUData.engineSpeed << "rpm";
-            } else {
-                qDebug() << "ECU数据无效，跳过处理";
-            }
-        }
+        // 注意：ECU数据处理已经通过它自己的线程和handleECUData方法完成
+        // 不需要在这里重复处理ECU数据，避免数据冲突
     }
-    
-    // 注意：图表更新已移至processDataSnapshots方法中
-    // 不再需要额外的绘图更新代码
 }
