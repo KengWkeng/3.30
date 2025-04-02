@@ -49,6 +49,7 @@ public:
     QPushButton *btnPageInitial;
     QPushButton *btnPagePlot;
     QPushButton *btnPageData;
+    QPushButton *btnStartAll;
     QPushButton *btnSaveData;
     QPushButton *btnReadData;
     QSpacerItem *verticalSpacer;
@@ -371,6 +372,16 @@ public:
         btnPageData->setCheckable(true);
 
         verticalLayout_5->addWidget(btnPageData);
+
+        btnStartAll = new QPushButton(centralwidget);
+        btnStartAll->setObjectName("btnStartAll");
+        sizePolicy2.setHeightForWidth(btnStartAll->sizePolicy().hasHeightForWidth());
+        btnStartAll->setSizePolicy(sizePolicy2);
+        btnStartAll->setMinimumSize(QSize(120, 35));
+        btnStartAll->setFont(font);
+        btnStartAll->setCheckable(true);
+
+        verticalLayout_5->addWidget(btnStartAll);
 
         btnSaveData = new QPushButton(centralwidget);
         btnSaveData->setObjectName("btnSaveData");
@@ -1234,7 +1245,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        stackedWidget->setCurrentIndex(0);
+        stackedWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -1247,6 +1258,7 @@ public:
         btnPageInitial->setText(QCoreApplication::translate("MainWindow", "\351\200\232\344\277\241\345\210\235\345\247\213\345\214\226", nullptr));
         btnPagePlot->setText(QCoreApplication::translate("MainWindow", "\346\225\260\346\215\256\345\217\257\350\247\206\345\214\226", nullptr));
         btnPageData->setText(QCoreApplication::translate("MainWindow", "\346\225\260\346\215\256\345\233\276\350\241\250", nullptr));
+        btnStartAll->setText(QCoreApplication::translate("MainWindow", "\344\270\200\351\224\256\345\274\200\345\247\213", nullptr));
         btnSaveData->setText(QCoreApplication::translate("MainWindow", "\344\277\235\345\255\230\346\225\260\346\215\256", nullptr));
         btnReadData->setText(QCoreApplication::translate("MainWindow", "\350\257\273\345\217\226\346\225\260\346\215\256", nullptr));
         groupBox_10->setTitle(QCoreApplication::translate("MainWindow", "\346\225\260\346\215\256\347\233\221\346\216\247\351\235\242\346\235\277", nullptr));

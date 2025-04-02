@@ -64,9 +64,9 @@ static constexpr auto qt_meta_stringdata_ZN10MainWindowE = QtMocHelpers::stringD
     "on_btnClearReceiveArea_clicked",
     "on_btnClearSendArea_clicked",
     "on_btnSend_clicked",
-    "showModbusResult",
+    "handleModbusData",
     "QList<double>",
-    "result",
+    "resultdata",
     "readTimeInterval",
     "on_btnCanOpenDevice_clicked",
     "on_btnCanSend_clicked",
@@ -135,16 +135,15 @@ static constexpr auto qt_meta_stringdata_ZN10MainWindowE = QtMocHelpers::stringD
     "updateDashboardData",
     "DataSnapshot",
     "snapshot",
-    "updateECUDataDisplay",
     "setupDAQPlot",
-    "updateDAQPlot",
     "updateLayout",
     "ECUPlotInit",
     "setupDash1Plot",
     "updateDash1Plot",
     "value",
     "processDataSnapshots",
-    "setupMasterTimer"
+    "setupMasterTimer",
+    "on_btnStartAll_clicked"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -156,7 +155,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      67,   14, // methods
+      65,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -164,75 +163,73 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
        7,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    3,  416,    2, 0x06,    1 /* Public */,
-       6,    5,  423,    2, 0x06,    5 /* Public */,
-      12,    0,  434,    2, 0x06,   11 /* Public */,
-      13,    0,  435,    2, 0x06,   12 /* Public */,
-      14,    1,  436,    2, 0x06,   13 /* Public */,
-      15,    0,  439,    2, 0x06,   15 /* Public */,
-      16,    2,  440,    2, 0x06,   16 /* Public */,
+       1,    3,  404,    2, 0x06,    1 /* Public */,
+       6,    5,  411,    2, 0x06,    5 /* Public */,
+      12,    0,  422,    2, 0x06,   11 /* Public */,
+      13,    0,  423,    2, 0x06,   12 /* Public */,
+      14,    1,  424,    2, 0x06,   13 /* Public */,
+      15,    0,  427,    2, 0x06,   15 /* Public */,
+      16,    2,  428,    2, 0x06,   16 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-      19,    0,  445,    2, 0x08,   19 /* Private */,
-      20,    0,  446,    2, 0x08,   20 /* Private */,
-      21,    0,  447,    2, 0x08,   21 /* Private */,
-      22,    0,  448,    2, 0x08,   22 /* Private */,
-      23,    0,  449,    2, 0x08,   23 /* Private */,
-      24,    2,  450,    2, 0x08,   24 /* Private */,
-      28,    0,  455,    2, 0x08,   27 /* Private */,
-      29,    0,  456,    2, 0x08,   28 /* Private */,
-      30,    0,  457,    2, 0x08,   29 /* Private */,
-      31,    0,  458,    2, 0x08,   30 /* Private */,
-      32,    0,  459,    2, 0x08,   31 /* Private */,
-      33,    0,  460,    2, 0x08,   32 /* Private */,
-      34,    0,  461,    2, 0x08,   33 /* Private */,
-      35,    0,  462,    2, 0x08,   34 /* Private */,
-      36,    0,  463,    2, 0x08,   35 /* Private */,
-      37,    0,  464,    2, 0x08,   36 /* Private */,
-      38,    0,  465,    2, 0x08,   37 /* Private */,
-      39,    2,  466,    2, 0x08,   38 /* Private */,
-      43,    2,  471,    2, 0x08,   41 /* Private */,
-      46,    1,  476,    2, 0x08,   44 /* Private */,
-      48,    1,  479,    2, 0x08,   46 /* Private */,
-      50,    0,  482,    2, 0x08,   48 /* Private */,
-      51,    0,  483,    2, 0x08,   49 /* Private */,
-      52,    1,  484,    2, 0x08,   50 /* Private */,
-      54,    2,  487,    2, 0x08,   52 /* Private */,
-      56,    1,  492,    2, 0x08,   55 /* Private */,
-      57,    0,  495,    2, 0x08,   57 /* Private */,
-      58,    1,  496,    2, 0x08,   58 /* Private */,
-      60,    1,  499,    2, 0x08,   60 /* Private */,
-      62,    2,  502,    2, 0x08,   62 /* Private */,
-      64,    1,  507,    2, 0x08,   65 /* Private */,
-      66,    1,  510,    2, 0x08,   67 /* Private */,
-      67,    1,  513,    2, 0x08,   69 /* Private */,
-      68,    0,  516,    2, 0x08,   71 /* Private */,
-      69,    0,  517,    2, 0x08,   72 /* Private */,
-      70,    0,  518,    2, 0x08,   73 /* Private */,
-      71,    0,  519,    2, 0x08,   74 /* Private */,
-      72,    0,  520,    2, 0x08,   75 /* Private */,
-      73,    0,  521,    2, 0x08,   76 /* Private */,
-      74,    0,  522,    2, 0x08,   77 /* Private */,
-      75,    2,  523,    2, 0x08,   78 /* Private */,
-      79,    2,  528,    2, 0x08,   81 /* Private */,
-      80,    0,  533,    2, 0x08,   84 /* Private */,
-      81,    1,  534,    2, 0x08,   85 /* Private */,
-      83,    1,  537,    2, 0x08,   87 /* Private */,
-      84,    0,  540,    2, 0x08,   89 /* Private */,
-      85,    1,  541,    2, 0x08,   90 /* Private */,
-      87,    0,  544,    2, 0x08,   92 /* Private */,
-      88,    3,  545,    2, 0x08,   93 /* Private */,
-      92,    2,  552,    2, 0x08,   97 /* Private */,
-      95,    2,  557,    2, 0x08,  100 /* Private */,
-      96,    0,  562,    2, 0x08,  103 /* Private */,
-      97,    0,  563,    2, 0x08,  104 /* Private */,
-      97,    2,  564,    2, 0x08,  105 /* Private */,
-      98,    0,  569,    2, 0x08,  108 /* Private */,
-      99,    0,  570,    2, 0x08,  109 /* Private */,
-     100,    0,  571,    2, 0x08,  110 /* Private */,
-     101,    1,  572,    2, 0x08,  111 /* Private */,
-     103,    0,  575,    2, 0x08,  113 /* Private */,
-     104,    0,  576,    2, 0x08,  114 /* Private */,
+      19,    0,  433,    2, 0x08,   19 /* Private */,
+      20,    0,  434,    2, 0x08,   20 /* Private */,
+      21,    0,  435,    2, 0x08,   21 /* Private */,
+      22,    0,  436,    2, 0x08,   22 /* Private */,
+      23,    0,  437,    2, 0x08,   23 /* Private */,
+      24,    2,  438,    2, 0x08,   24 /* Private */,
+      28,    0,  443,    2, 0x08,   27 /* Private */,
+      29,    0,  444,    2, 0x08,   28 /* Private */,
+      30,    0,  445,    2, 0x08,   29 /* Private */,
+      31,    0,  446,    2, 0x08,   30 /* Private */,
+      32,    0,  447,    2, 0x08,   31 /* Private */,
+      33,    0,  448,    2, 0x08,   32 /* Private */,
+      34,    0,  449,    2, 0x08,   33 /* Private */,
+      35,    0,  450,    2, 0x08,   34 /* Private */,
+      36,    0,  451,    2, 0x08,   35 /* Private */,
+      37,    0,  452,    2, 0x08,   36 /* Private */,
+      38,    0,  453,    2, 0x08,   37 /* Private */,
+      39,    2,  454,    2, 0x08,   38 /* Private */,
+      43,    2,  459,    2, 0x08,   41 /* Private */,
+      46,    1,  464,    2, 0x08,   44 /* Private */,
+      48,    1,  467,    2, 0x08,   46 /* Private */,
+      50,    0,  470,    2, 0x08,   48 /* Private */,
+      51,    0,  471,    2, 0x08,   49 /* Private */,
+      52,    1,  472,    2, 0x08,   50 /* Private */,
+      54,    2,  475,    2, 0x08,   52 /* Private */,
+      56,    1,  480,    2, 0x08,   55 /* Private */,
+      57,    0,  483,    2, 0x08,   57 /* Private */,
+      58,    1,  484,    2, 0x08,   58 /* Private */,
+      60,    1,  487,    2, 0x08,   60 /* Private */,
+      62,    2,  490,    2, 0x08,   62 /* Private */,
+      64,    1,  495,    2, 0x08,   65 /* Private */,
+      66,    1,  498,    2, 0x08,   67 /* Private */,
+      67,    1,  501,    2, 0x08,   69 /* Private */,
+      68,    0,  504,    2, 0x08,   71 /* Private */,
+      69,    0,  505,    2, 0x08,   72 /* Private */,
+      70,    0,  506,    2, 0x08,   73 /* Private */,
+      71,    0,  507,    2, 0x08,   74 /* Private */,
+      72,    0,  508,    2, 0x08,   75 /* Private */,
+      73,    0,  509,    2, 0x08,   76 /* Private */,
+      74,    0,  510,    2, 0x08,   77 /* Private */,
+      75,    2,  511,    2, 0x08,   78 /* Private */,
+      79,    2,  516,    2, 0x08,   81 /* Private */,
+      80,    0,  521,    2, 0x08,   84 /* Private */,
+      81,    1,  522,    2, 0x08,   85 /* Private */,
+      83,    1,  525,    2, 0x08,   87 /* Private */,
+      84,    0,  528,    2, 0x08,   89 /* Private */,
+      85,    1,  529,    2, 0x08,   90 /* Private */,
+      87,    0,  532,    2, 0x08,   92 /* Private */,
+      88,    3,  533,    2, 0x08,   93 /* Private */,
+      92,    2,  540,    2, 0x08,   97 /* Private */,
+      95,    0,  545,    2, 0x08,  100 /* Private */,
+      96,    0,  546,    2, 0x08,  101 /* Private */,
+      97,    0,  547,    2, 0x08,  102 /* Private */,
+      98,    0,  548,    2, 0x08,  103 /* Private */,
+      99,    1,  549,    2, 0x08,  104 /* Private */,
+     101,    0,  552,    2, 0x08,  106 /* Private */,
+     102,    0,  553,    2, 0x08,  107 /* Private */,
+     103,    0,  554,    2, 0x08,  108 /* Private */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::Int, QMetaType::Int, QMetaType::Int,    3,    4,    5,
@@ -294,14 +291,12 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
     QMetaType::Void,
     QMetaType::Void, 0x80000000 | 25, 0x80000000 | 25, 0x80000000 | 53,   89,   90,   91,
     QMetaType::Void, 0x80000000 | 25, 0x80000000 | 93,   40,   94,
-    QMetaType::Void, 0x80000000 | 25, 0x80000000 | 93,   40,   94,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 25, 0x80000000 | 93,   40,   94,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Double,  102,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Double,  100,
+    QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
 
@@ -352,7 +347,7 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'on_btnSend_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        // method 'showModbusResult'
+        // method 'handleModbusData'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<QVector<double>, std::false_type>,
         QtPrivate::TypeAndForceComplete<qint64, std::false_type>,
@@ -473,18 +468,8 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QVector<double> &, std::false_type>,
         QtPrivate::TypeAndForceComplete<const DataSnapshot &, std::false_type>,
-        // method 'updateECUDataDisplay'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const QVector<double> &, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const DataSnapshot &, std::false_type>,
         // method 'setupDAQPlot'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        // method 'updateDAQPlot'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        // method 'updateDAQPlot'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const QVector<double> &, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const DataSnapshot &, std::false_type>,
         // method 'updateLayout'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'ECUPlotInit'
@@ -497,6 +482,8 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         // method 'processDataSnapshots'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'setupMasterTimer'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'on_btnStartAll_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>
     >,
     nullptr
@@ -519,7 +506,7 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 9: _t->on_btnClearReceiveArea_clicked(); break;
         case 10: _t->on_btnClearSendArea_clicked(); break;
         case 11: _t->on_btnSend_clicked(); break;
-        case 12: _t->showModbusResult((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<qint64>>(_a[2]))); break;
+        case 12: _t->handleModbusData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<qint64>>(_a[2]))); break;
         case 13: _t->on_btnCanOpenDevice_clicked(); break;
         case 14: _t->on_btnCanSend_clicked(); break;
         case 15: _t->on_btnCanStart_clicked(); break;
@@ -564,16 +551,14 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 54: _t->updateModbusChannels(); break;
         case 55: _t->updateDashboardByMapping((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<ECUData>>(_a[3]))); break;
         case 56: _t->updateDashboardData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[2]))); break;
-        case 57: _t->updateECUDataDisplay((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[2]))); break;
-        case 58: _t->setupDAQPlot(); break;
-        case 59: _t->updateDAQPlot(); break;
-        case 60: _t->updateDAQPlot((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[2]))); break;
-        case 61: _t->updateLayout(); break;
-        case 62: _t->ECUPlotInit(); break;
-        case 63: _t->setupDash1Plot(); break;
-        case 64: _t->updateDash1Plot((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
-        case 65: _t->processDataSnapshots(); break;
-        case 66: _t->setupMasterTimer(); break;
+        case 57: _t->setupDAQPlot(); break;
+        case 58: _t->updateLayout(); break;
+        case 59: _t->ECUPlotInit(); break;
+        case 60: _t->setupDash1Plot(); break;
+        case 61: _t->updateDash1Plot((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
+        case 62: _t->processDataSnapshots(); break;
+        case 63: _t->setupMasterTimer(); break;
+        case 64: _t->on_btnStartAll_clicked(); break;
         default: ;
         }
     }
@@ -605,20 +590,6 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
             }
             break;
         case 56:
-            switch (*reinterpret_cast<int*>(_a[1])) {
-            default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-            case 0:
-                *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<double> >(); break;
-            }
-            break;
-        case 57:
-            switch (*reinterpret_cast<int*>(_a[1])) {
-            default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-            case 0:
-                *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<double> >(); break;
-            }
-            break;
-        case 60:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 0:
@@ -700,14 +671,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 67)
+        if (_id < 65)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 67;
+        _id -= 65;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 67)
+        if (_id < 65)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 67;
+        _id -= 65;
     }
     return _id;
 }

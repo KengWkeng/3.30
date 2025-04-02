@@ -115,7 +115,7 @@ public:
     // 添加公开函数，供Dashboard类获取当前仪表盘映射
     QMap<QString, DashboardMapping>* getDashboardMappings() { return &dashboardMappings; }
 
-    void updateECUPlot(const ECUData &data);
+    // void updateECUPlot(const ECUData &data);
     void addECUDataPoint(double time, const QVector<double> &values);
 
 protected:
@@ -136,7 +136,7 @@ private slots:
 
     void on_btnSend_clicked();
 
-    void showModbusResult(QVector<double> result, qint64 readTimeInterval);
+    void handleModbusData(QVector<double> resultdata, qint64 readTimeInterval);
 
     void on_btnCanOpenDevice_clicked();
 
@@ -233,13 +233,13 @@ private slots:
 
     // 添加从数据快照更新各种UI的函数
     void updateDashboardData(const QVector<double> &timeData, const DataSnapshot &snapshot);
-    void updateECUDataDisplay(const QVector<double> &timeData, const DataSnapshot &snapshot);
+    // void updateECUDataDisplay(const QVector<double> &timeData, const DataSnapshot &snapshot);
    
 
     // DAQ相关函数
     void setupDAQPlot();
-    void updateDAQPlot();
-    void updateDAQPlot(const QVector<double> &timeData, const DataSnapshot &snapshot);
+    // void updateDAQPlot();
+    // void updateDAQPlot(const QVector<double> &timeData, const DataSnapshot &snapshot);
     // 添加用于更新布局的函数
     void updateLayout();
 
@@ -255,6 +255,9 @@ private slots:
 
     // 添加setupMasterTimer函数声明
     void setupMasterTimer();
+
+    // 添加一键启动所有采集任务的槽函数
+    void on_btnStartAll_clicked();
 
 private:
 
@@ -389,6 +392,9 @@ private:
 
     // 新增：互斥锁成员变量
     QMutex latestECUDataMutex;
+    
+    // 标记所有采集任务是否在运行中
+    bool allCaptureRunning = false;
 
 signals:
 
