@@ -86,3 +86,15 @@
 45	166	7651772937942355	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
 168	5097	7651772939171959	CMakeFiles/test1.dir/mainwindow.cpp.obj	5984c6929457b2e8
 5097	5680	7651772988467270	test1.exe	61dfe32cd7ec6859
+40	164	7651799978757757	test1_autogen/timestamp	3ccc2c62dc7625e1
+40	164	7651799978757757	test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+40	164	7651799978757757	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/timestamp	3ccc2c62dc7625e1
+40	164	7651799978757757	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+27	2074	7652634284649209	test1_autogen/timestamp	3ccc2c62dc7625e1
+27	2074	7652634284649209	test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+27	2074	7652634284649209	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/timestamp	3ccc2c62dc7625e1
+27	2074	7652634284649209	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+2079	6206	7652634285299214	CMakeFiles/test1.dir/main.cpp.obj	619fb63be5222925
+2082	7056	7652634285329215	CMakeFiles/test1.dir/mainwindow.cpp.obj	5984c6929457b2e8
+2076	8162	7652634285269203	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	44f150fac0faaa69
+8162	8782	7652634346138343	test1.exe	61dfe32cd7ec6859

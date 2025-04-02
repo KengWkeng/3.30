@@ -4086,7 +4086,6 @@ void MainWindow::onMainTimerTimeout()
         lastSnapshotTime = currentHundred;
         
         // 创建和处理数据快照 - 在整百毫秒触发
-        // 所有数据的图表更新都将在processDataSnapshots方法中完成
         processDataSnapshots();
     }
     
