@@ -2918,7 +2918,7 @@ static QVBoxLayout* getVerticalLayout_8(Ui::MainWindow* ui) {
 
 void MainWindow::ECUPlotInit()
 {
-     qDebug() << "开始初始化ECU图表";
+    qDebug() << "开始初始化ECU图表";
     
     // 使用ui中定义的ECUCustomPlot控件
     QCustomPlot *ecuPlot = ui->ECUCustomPlot;
@@ -3634,7 +3634,7 @@ void MainWindow::processDataSnapshots()
             // 直接复制currentSnapshot中已滤波的Modbus数据
             snapshot.modbusData = currentSnapshot.modbusData;
             qDebug() << "快照" << snapshotCount + 1 << "Modbus数据有效，数据:" << snapshot.modbusData;
-        } else {
+                } else {
             qDebug() << "快照" << snapshotCount + 1 << "Modbus数据无效";
         }
         
@@ -4138,9 +4138,28 @@ void MainWindow::on_btnStartAll_clicked()
     // 根据当前状态决定是启动还是停止所有采集
     if (!allCaptureRunning) {
         // 启动所有采集任务
+
         
-        // 1. 启动Modbus采集
-        if (ui->radioButton->isChecked() && ui->btnSend->isEnabled()) {
+        // 1. 首先检查并打开Modbus串口
+        if (ui->btnOpenPort->text() == "打开串口") {
+            // 串口未打开，先点击打开串口按钮
+            ui->btnOpenPort->click();
+            qDebug() << "正在打开Modbus串口...";
+            
+            // 等待短暂时间让串口连接完成
+            QTimer::singleShot(500, this, [this]() {
+                // 检查串口是否已连接成功
+                if (ui->radioButton->isChecked() && ui->btnSend->isEnabled()) {
+                    // 串口已连接，点击"读取"按钮
+                    if (ui->btnSend->text() == "读取") {
+                        ui->btnSend->click();
+                        qDebug() << "启动Modbus采集";
+                    }
+                } else {
+                    qDebug() << "Modbus串口连接失败或未就绪，无法启动Modbus采集";
+                }
+            });
+        } else if (ui->radioButton->isChecked() && ui->btnSend->isEnabled()) {
             // 如果串口已连接，且读取按钮可用，则点击"读取"按钮
             if (ui->btnSend->text() == "读取") {
                 ui->btnSend->click();
@@ -4150,7 +4169,7 @@ void MainWindow::on_btnStartAll_clicked()
             qDebug() << "Modbus串口未连接，无法启动Modbus采集";
         }
         
-        // 2. 启动ECU采集
+        // 3. 启动ECU采集
         if (ui->comboSerialECU->count() > 0 && ui->btnECUStart->isEnabled()) {
             // 如果有可用串口，且启动按钮可用，则点击启动按钮
             if (ui->btnECUStart->text() == "开始采集") {
@@ -4161,7 +4180,7 @@ void MainWindow::on_btnStartAll_clicked()
             qDebug() << "ECU串口未连接，无法启动ECU采集";
         }
         
-        // 3. 启动DAQ采集
+        // 4. 启动DAQ采集
         if (ui->startDAQButton->isEnabled()) {
             // 如果启动按钮可用，则点击启动按钮
             ui->startDAQButton->click();
