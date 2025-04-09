@@ -27,6 +27,8 @@ test1_autogen/timestamp: \
 	C:/Users/80911/Documents/QT/vs_test/test1/plotthread.h \
 	C:/Users/80911/Documents/QT/vs_test/test1/qcustomplot.cpp \
 	C:/Users/80911/Documents/QT/vs_test/test1/qcustomplot.h \
+	C:/Users/80911/Documents/QT/vs_test/test1/snapshotthread.cpp \
+	C:/Users/80911/Documents/QT/vs_test/test1/snapshotthread.h \
 	C:/Users/80911/Documents/QT/vs_test/test1/websocketserver.h \
 	C:/Users/80911/Documents/QT/vs_test/test1/websocketthread.cpp \
 	C:/Users/80911/Documents/QT/vs_test/test1/websocketthread.h \

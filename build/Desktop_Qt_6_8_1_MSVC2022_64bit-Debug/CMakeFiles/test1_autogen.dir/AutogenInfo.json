@@ -467,6 +467,12 @@
 			null
 		],
 		[
+			"C:/Users/80911/Documents/QT/vs_test/test1/snapshotthread.h",
+			"MU",
+			"EWIEGA46WW/moc_snapshotthread.cpp",
+			null
+		],
+		[
 			"C:/Users/80911/Documents/QT/vs_test/test1/websocketserver.h",
 			"MU",
 			"EWIEGA46WW/moc_websocketserver.cpp",
@@ -575,6 +581,11 @@
 		],
 		[
 			"C:/Users/80911/Documents/QT/vs_test/test1/qcustomplot.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/80911/Documents/QT/vs_test/test1/snapshotthread.cpp",
 			"MU",
 			null
 		],

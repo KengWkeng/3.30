@@ -37,6 +37,8 @@ set(PROJECT_SOURCES
         daqthread.h
         ecuthread.cpp
         ecuthread.h
+        snapshotthread.h
+        snapshotthread.cpp
         dashboard.cpp
         dashboard.h
         dashboardcalculator.cpp
@@ -67,6 +69,8 @@ qt_add_executable(test1
     daqthread.h
     ecuthread.cpp
     ecuthread.h
+    snapshotthread.h
+    snapshotthread.cpp
     dashboard.cpp
     dashboard.h
     dashboardcalculator.cpp

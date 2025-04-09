@@ -8,4 +8,5 @@
 #include "EWIEGA46WW/moc_modbusthread.cpp"
 #include "EWIEGA46WW/moc_plotthread.cpp"
 #include "EWIEGA46WW/moc_qcustomplot.cpp"
+#include "EWIEGA46WW/moc_snapshotthread.cpp"
 #include "EWIEGA46WW/moc_websocketthread.cpp"

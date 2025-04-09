@@ -45,6 +45,9 @@
 // 修改为只引入WebSocketThread
 #include "websocketthread.h"
 
+// 新增：引入SnapshotThread
+#include "snapshotthread.h"
+
 // 前向声明 DashboardCalculator
 class DashboardCalculator;
 
@@ -71,31 +74,31 @@ struct DashboardMapping {
     QString formula;            // 自定义变量公式
 };
 
-// 定义数据快照结构体
-struct DataSnapshot {
-    double timestamp;                   // 时间戳（秒）
-    QVector<double> modbusData;         // Modbus数据(一维) - 每个寄存器的值
-    QVector<double> daqData;            // DAQ数据(一维) - 修改为一维，每个通道只保留最新值
-    QVector<double> ecuData;            // ECU数据(9通道)
-    bool modbusValid;                   // Modbus数据有效标志
-    bool daqValid;                      // DAQ数据有效标志
-    bool ecuValid;                      // ECU数据有效标志
-    bool daqRunning;                    // DAQ运行状态标志
-    int snapshotIndex;                  // 快照索引（序号）
+// // 定义数据快照结构体
+// struct DataSnapshot {
+//     double timestamp;                   // 时间戳（秒）
+//     QVector<double> modbusData;         // Modbus数据(一维) - 每个寄存器的值
+//     QVector<double> daqData;            // DAQ数据(一维) - 修改为一维，每个通道只保留最新值
+//     QVector<double> ecuData;            // ECU数据(9通道)
+//     bool modbusValid;                   // Modbus数据有效标志
+//     bool daqValid;                      // DAQ数据有效标志
+//     bool ecuValid;                      // ECU数据有效标志
+//     bool daqRunning;                    // DAQ运行状态标志
+//     int snapshotIndex;                  // 快照索引（序号）
     
-    // 构造函数，初始化所有数据
-    DataSnapshot() {
-        timestamp = 0.0;                // 初始化为0秒
-        modbusData.resize(16, 0.0);     // 16个Modbus寄存器
-        daqData.resize(16, 0.0);        // 16个DAQ通道，每个通道只保存最新值
-        ecuData.resize(9, 0.0);         // 9个ECU通道
-        modbusValid = false;
-        daqValid = false;
-        ecuValid = false;
-        daqRunning = false;             // 初始化DAQ运行状态为false
-        snapshotIndex = 0;              // 初始化索引为0
-    }
-};
+//     // 构造函数，初始化所有数据
+//     DataSnapshot() {
+//         timestamp = 0.0;                // 初始化为0秒
+//         modbusData.resize(16, 0.0);     // 16个Modbus寄存器
+//         daqData.resize(16, 0.0);        // 16个DAQ通道，每个通道只保存最新值
+//         ecuData.resize(9, 0.0);         // 9个ECU通道
+//         modbusValid = false;
+//         daqValid = false;
+//         ecuValid = false;
+//         daqRunning = false;             // 初始化DAQ运行状态为false
+//         snapshotIndex = 0;              // 初始化索引为0
+//     }
+// };
 
 
 QT_BEGIN_NAMESPACE
@@ -136,7 +139,10 @@ private slots:
 
     void on_btnSend_clicked();
 
-    void handleModbusData(QVector<double> resultdata, qint64 readTimeInterval);
+    // 注释掉已移至SnapshotThread的函数，改为新的处理函数
+    // void handleModbusData(QVector<double> resultdata, qint64 readTimeInterval);
+    // 新增：接收快照线程处理后的数据
+    void handleSnapshotProcessed(const DataSnapshot &snapshot, int snapshotCount);
 
     void on_btnCanOpenDevice_clicked();
 
@@ -158,10 +164,8 @@ private slots:
     // 添加读取数据按钮槽函数
     void on_btnReadData_clicked();
     
-    // 添加DAQ相关槽函数
-    void on_startDAQButton_clicked();
-    void on_stopDAQButton_clicked();
-    void handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData);
+    // 注释掉已移至SnapshotThread的函数
+    // void handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData);
     void handleDAQStatus(bool isRunning, QString message);
     void handleDAQError(QString errorMessage);
 
@@ -171,7 +175,8 @@ private slots:
     // ECU相关槽函数
     void on_btnECUScan_clicked();
     void on_btnECUStart_clicked();
-    void handleECUData(const ECUData &data);
+    // 注释掉已移至SnapshotThread的函数
+    // void handleECUData(const ECUData &data);
     void handleECUStatus(bool connected, QString message);
     void handleECUError(QString errorMessage);
 
@@ -233,13 +238,13 @@ private slots:
 
     // 添加从数据快照更新各种UI的函数
     void updateDashboardData(const QVector<double> &timeData, const DataSnapshot &snapshot);
-    // void updateECUDataDisplay(const QVector<double> &timeData, const DataSnapshot &snapshot);
    
 
     // DAQ相关函数
     void setupDAQPlot();
-    // void updateDAQPlot();
-    // void updateDAQPlot(const QVector<double> &timeData, const DataSnapshot &snapshot);
+    void on_startDAQButton_clicked();
+    void on_stopDAQButton_clicked();
+
     // 添加用于更新布局的函数
     void updateLayout();
 
@@ -250,11 +255,12 @@ private slots:
     void setupDash1Plot();                 // 初始化dash1plot
     void updateDash1Plot(double value);    // 更新dash1plot数据
     
-    // 新增：数据快照相关槽函数
-    void processDataSnapshots();           // 处理数据快照队列的槽函数
+    // 注释掉已移至SnapshotThread的函数
+    // void processDataSnapshots();           // 处理数据快照队列的槽函数
+    void updateAllPlots(const DataSnapshot &snapshot, int snapshotCount); // 更新所有图表
 
     // 添加setupMasterTimer函数声明
-    void setupMasterTimer();
+    // void setupMasterTimer(); // 已移至SnapshotThread
 
     // 添加一键启动所有采集任务的槽函数
     void on_btnStartAll_clicked();
@@ -269,13 +275,9 @@ private:
     modbusThread *mbTh;
     CANThread *canTh;
 
-    // 添加Modbus数据相关变量
-    bool modbusDataValid = false;      // Modbus数据有效标志
-    int modbusNumRegs = 16;            // Modbus寄存器数量
-    QVector<QVector<double>> modbusData;  // Modbus数据缓冲区
+    // 仅保留用于UI参考的变量
+    int modbusNumRegs = 16;            // Modbus寄存器数量，保留用于UI参考
     
-    // 添加ECU数据相关变量
-    bool ecuDataValid = false;         // ECU数据有效标志
     QVector<double> ecudataMap;        // ECU数据映射
 
     //绘图控件指针
@@ -307,15 +309,11 @@ private:
     // 添加DAQ相关成员
     QThread *daqThread;
     DAQThread *daqTh;
-    // QTimer *daqUpdateTimer;
-    // QTimer *dashboardUpdateTimer = nullptr; // 用于低频率更新仪表盘
     
-    // 数据缓冲区
-    QVector<QVector<double>> daqChannelData;
-    QVector<double> daqTimeData;
-    int daqNumChannels;
+    // 仅保留用于UI参考的变量
+    int daqNumChannels;           // 保留，用于UI参考
     double daqSampleRate;
-    bool daqIsAcquiring;
+    bool daqIsAcquiring;          // 保留，用于UI状态
     QStandardItemModel *daqDataModel;
     
     // 保存初始窗口大小和控件位置
@@ -325,26 +323,18 @@ private:
     // 标志是否初始化了控件位置信息
     bool geometriesInitialized;
 
-    // 添加一阶低通滤波器相关变量
-    bool filterEnabled;                  // 滤波器使能状态
-    QVector<double> filteredValues;      // 存储上一次滤波后的结果
-    QElapsedTimer *realTimer;            // 计时器，用于计算deltaT
-    qint64 lastTimestamp;                // 上一次时间戳
-
-    // 一阶低通滤波函数
-    double applyLowPassFilter(double input, double prevOutput, double timeConstant, double deltaT);
-    
-    // 处理结果的时候应用滤波
-    QVector<double> applyFilterToResults(const QVector<double> &rawData, qint64 deltaT);
-
     // ECU相关变量
     QThread *ecuThread;
     ECUThread *ecuTh;
-    bool ecuIsConnected;
+    bool ecuIsConnected;          // 保留，用于UI状态
 
     // 修改WebSocket相关成员
     QThread *webSocketThread;
     WebSocketThread *wsTh;
+
+    // 新增：SnapshotThread相关成员
+    QThread *snapshotThread;
+    SnapshotThread *snpTh;
 
     // 新增保存和加载初始化文件的函数
     bool saveInitialSettings(const QString &filename);
@@ -360,12 +350,9 @@ private:
     DashboardCalculator *dashboardCalculator;
 
     // ECU图表相关
-    QVector<double> ecuTimeData; // ECU时间数据
-    QVector<QVector<double>> ecuData; // ECU多通道数据，使用二维向量替代静态数组
     QVector<QCustomPlot*> ecuPlots; // 每个参数的单独图表
     QVector<QLabel*> ecuArrows;     // ECU箭头标签
     QVector<QLabel*> ecuValueLabels;     // ECU值标签
-    ECUData latestECUData;                     // ECU最新数据
 
     // 添加dash1plot相关成员变量
     QCPGraph *dashForceGraph;              // dashForce图表对象
@@ -375,11 +362,7 @@ private:
     QLabel *dashForceArrowLabel;           // 右侧游标标签
     double dashPlotTimeCounter;            // 时间计数器
     
-    // 新增：数据快照相关成员
-    DataSnapshot currentSnapshot;          // 当前数据快照
-    QQueue<DataSnapshot> snapshotQueue;    // 数据快照队列
-    QTimer *snapshotTimer;                 // 数据快照定时器
-    QElapsedTimer *masterTimer;            // 主计时器，用于同步数据
+    QTimer *snapshotTimer;                 // 数据快照定时器，保留用于触发信号
     int maxQueueSize = 1000;               // 最大队列长度，防止内存占用过多
 
     // 添加统一定时器相关变量
@@ -390,13 +373,12 @@ private:
     qint64 lastSnapshotTime;    // 上次快照时间
     qint64 lastPlotUpdateTime;  // 上次绘图更新时间
 
-    // 新增：互斥锁成员变量
-    QMutex latestECUDataMutex;
-    
     // 标记所有采集任务是否在运行中
     bool allCaptureRunning = false;
 
 signals:
+    // 添加触发数据快照处理的信号
+    void triggerProcessDataSnapshots();
 
     void sendModbusCommand(int serverAddress, int startAddress, int length);
     

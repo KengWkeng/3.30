@@ -19,13 +19,11 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , channelNum(7)
     , geometriesInitialized(false)
-    , filterEnabled(false)  // 默认不启用滤波器
     , ecuIsConnected(false) // 默认ECU未连接
     , myScrollArea(nullptr) // 初始化滚动区域指针
     , myPlot(nullptr)       // 初始化图表指针为空
 {
-    // 初始化latestECUData，确保isValid为false
-    latestECUData = ECUData();
+    // 移除latestECUData初始化，已迁移至SnapshotThread
     
     ui->setupUi(this);
     
@@ -243,16 +241,8 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "WebSocket服务器启动状态:" << (success ? "成功" : "失败") << message;
     });
     
-    // 初始化滤波器相关变量
-    realTimer = new QElapsedTimer();
-    realTimer->start();
-    lastTimestamp = 0;
-    filteredValues.clear();
-
-
-
-    // 初始化主定时器
-    masterTimer = new QElapsedTimer();
+    // 初始化主定时器 - 保留在主线程中用于全局时间基准
+    QElapsedTimer *masterTimer = new QElapsedTimer();
     masterTimer->start();
     
     // 创建统一主定时器，取代之前的snapshotTimer和ModbusTimer
@@ -269,7 +259,7 @@ MainWindow::MainWindow(QWidget *parent)
     lastPlotUpdateTime = 0;
     
     // 初始化当前数据快照
-    currentSnapshot = DataSnapshot();
+    // currentSnapshot = DataSnapshot();
     
     // 添加WebSocket消息接收处理连接
     connect(wsTh, &WebSocketThread::messageReceived, this, &MainWindow::handleWebSocketMessage);
@@ -337,8 +327,8 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // 修改Modbus数据处理方式：
-    // 1. MainWindow仍然接收数据用于UI显示
-    connect(mbTh, &modbusThread::sendModbusResult, this, &MainWindow::handleModbusData);
+    // 1. MainWindow仍然接收数据
+    // connect(mbTh, &modbusThread::sendModbusResult, this, &MainWindow::handleModbusData);
     
     // 2. WebSocketThread直接接收Modbus数据，处理并转发
     connect(mbTh, &modbusThread::sendModbusResult, wsTh, &WebSocketThread::handleModbusRawData);
@@ -347,12 +337,12 @@ MainWindow::MainWindow(QWidget *parent)
     // connect(this, &MainWindow::resetModbusTimer, mbTh, &modbusThread::resetTimer);
 
     // 连接DAQ信号与槽
-    connect(daqTh, &DAQThread::dataReady, this, &MainWindow::handleDAQData);
+    // connect(daqTh, &DAQThread::dataReady, this, &MainWindow::handleDAQData);
     connect(daqTh, &DAQThread::acquisitionStatus, this, &MainWindow::handleDAQStatus);
     connect(daqTh, &DAQThread::error, this, &MainWindow::handleDAQError);
 
     // 连接ECU信号与槽
-    connect(ecuTh, &ECUThread::ecuDataReady, this, &MainWindow::handleECUData);
+    // connect(ecuTh, &ECUThread::ecuDataReady, this, &MainWindow::handleECUData);
     connect(ecuTh, &ECUThread::ecuConnectionStatus, this, &MainWindow::handleECUStatus);
     connect(ecuTh, &ECUThread::ecuError, this, &MainWindow::handleECUError);
     connect(this, &MainWindow::openECUPort, ecuTh, &ECUThread::openECUPort);
@@ -443,8 +433,8 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
     
-    // 初始化筛选器列表
-    filteredValues.clear();
+    // 不再使用主线程的filteredValues，已移至SnapshotThread
+    // filteredValues.clear();
     
     // 初始化复选框内容
     on_btnScanPort_clicked();
@@ -527,16 +517,52 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     // 初始化数据快照相关成员
-    masterTimer = new QElapsedTimer();
-    masterTimer->start();
+    // 移除不必要的masterTimer初始化，已移至SnapshotThread
+    // masterTimer = new QElapsedTimer();
+    // masterTimer->start();
 
     // 初始化当前数据快照
-    currentSnapshot = DataSnapshot();
+    // currentSnapshot = DataSnapshot();
 
     // 初始化ECU相关
     ecuThread = nullptr;
     ecuTh = nullptr;
     ecuIsConnected = false;
+    
+    // 在构造函数中，初始化SnapshotThread线程
+    // 在创建其他线程（如mbTh, daqTh, ecuTh）之后添加以下代码
+    // 创建SnapshotThread线程
+    snapshotThread = new QThread();
+    snpTh = new SnapshotThread();
+    snpTh->moveToThread(snapshotThread);
+    
+    // 启动线程
+    snapshotThread->start();
+    
+    // 设置主计时器
+    QMetaObject::invokeMethod(snpTh, &SnapshotThread::setupMasterTimer, Qt::QueuedConnection);
+    
+    // 连接信号和槽
+    // 将主线程的triggerProcessDataSnapshots信号连接到SnapshotThread的processDataSnapshots槽
+    connect(this, &MainWindow::triggerProcessDataSnapshots, snpTh, &SnapshotThread::processDataSnapshots, Qt::QueuedConnection);
+    
+    // 接收SnapshotThread处理后的数据
+    connect(snpTh, &SnapshotThread::snapshotProcessed, this, &MainWindow::handleSnapshotProcessed, Qt::QueuedConnection);
+    
+    // 修改Modbus数据处理连接
+    // 从主线程接收改为直接连接到SnapshotThread
+    connect(mbTh, &modbusThread::sendModbusResult, snpTh, &SnapshotThread::handleModbusData, Qt::QueuedConnection);
+    
+    // 修改DAQ数据处理连接
+    // 从主线程接收改为直接连接到SnapshotThread
+    connect(daqTh, &DAQThread::dataReady, snpTh, &SnapshotThread::handleDAQData, Qt::QueuedConnection);
+    
+    // 修改ECU数据处理连接
+    // 从主线程接收改为直接连接到SnapshotThread
+    connect(ecuTh, &ECUThread::ecuDataReady, snpTh, &SnapshotThread::handleECUData, Qt::QueuedConnection);
+    
+    // 将SnapshotThread的WebSocket数据转发连接到WebSocketThread
+    connect(snpTh, &SnapshotThread::sendModbusResultToWebSocket, wsTh, &WebSocketThread::handleModbusData, Qt::QueuedConnection);
 }
 
 MainWindow::~MainWindow()
@@ -568,18 +594,6 @@ MainWindow::~MainWindow()
     ecuThread->wait();
     ecuThread->deleteLater(); // 清理ECU线程
     
-    // 清理滤波器相关资源
-    if (realTimer) {
-        delete realTimer;
-        realTimer = nullptr;
-    }
-    
-    // 清理主计时器资源
-    if (masterTimer) {
-        delete masterTimer;
-        masterTimer = nullptr;
-    }
-
     // 停止WebSocket服务器
     if (wsTh) {
         wsTh->stopServer();
@@ -594,6 +608,15 @@ MainWindow::~MainWindow()
         dashboardCalculator->wait();
         delete dashboardCalculator;
     }
+    
+    // 在析构函数中添加清理SnapshotThread的代码
+    // 在清理其他线程之后
+    if (snapshotThread) {
+        snapshotThread->quit();
+        snapshotThread->wait();
+        delete snpTh;
+        delete snapshotThread;
+    }
 }
 
 // DAQ相关实现
@@ -604,108 +627,103 @@ void MainWindow::setupDAQPlot()
 
 
 
-void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData)
-{
-    // 检查数据有效性
-    if (timeData.isEmpty() || channelData.isEmpty() || !daqIsAcquiring) {
-        return;
-    }
+// void MainWindow::handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData)
+// {
+//     // 检查数据有效性
+//     if (timeData.isEmpty() || channelData.isEmpty() || !daqIsAcquiring) {
+//         return;
+//     }
     
-    try {
-        // 如果主时间戳未初始化，则不处理数据
-        if (!masterTimer) {
-            qDebug() << "警告: 主时间戳未初始化，无法处理DAQ数据";
-            return;
-        }
+//     try {
+//         // 如果主时间戳未初始化，则不处理数据
+//         if (!masterTimer) {
+//             qDebug() << "警告: 主时间戳未初始化，无法处理DAQ数据";
+//             return;
+//         }
         
-        // 计算相对于主时间戳的时间
-        static qint64 baseTimeMs = masterTimer->elapsed(); // 记录第一次数据到达时的时间
+//         // 计算相对于主时间戳的时间
+//         static qint64 baseTimeMs = masterTimer->elapsed(); // 记录第一次数据到达时的时间
         
-        // 获取实际通道数量
-        int numChannels = channelData.size();
+//         // 获取实际通道数量
+//         int numChannels = channelData.size();
         
-        // 初始化数据缓冲区（如果尚未初始化）
-        if (daqTimeData.isEmpty() || daqChannelData.isEmpty() || daqChannelData.size() != numChannels) {
-            daqTimeData.clear();
-            daqChannelData.clear();
-            daqChannelData.resize(numChannels);
-            daqNumChannels = numChannels;
-        }
+//         // 初始化数据缓冲区（如果尚未初始化）
+//         if (daqTimeData.isEmpty() || daqChannelData.isEmpty() || daqChannelData.size() != numChannels) {
+//             daqTimeData.clear();
+//             daqChannelData.clear();
+//             daqChannelData.resize(numChannels);
+//             daqNumChannels = numChannels;
+//         }
         
-        // 限制缓冲区大小常量 - 显著减小为1万个数据点
-        const int maxDataPoints = 10000; // 减小为1万个数据点，足够显示而不会占用过多内存
+//         // 限制缓冲区大小常量 - 显著减小为1万个数据点
+//         const int maxDataPoints = 10000; // 减小为1万个数据点，足够显示而不会占用过多内存
         
-        // 计算保留的数据点数量，确保足够空间添加新数据
-        int newPointsCount = timeData.size();
-        int currentSize = daqTimeData.size();
+//         // 计算保留的数据点数量，确保足够空间添加新数据
+//         int newPointsCount = timeData.size();
+//         int currentSize = daqTimeData.size();
         
-        // 预先检查并清理数据 - 如果添加新数据后会超出最大限制，先删除旧数据腾出空间
-        if (currentSize + newPointsCount > maxDataPoints) {
-            int pointsToRemove = (currentSize + newPointsCount) - maxDataPoints;
+//         // 预先检查并清理数据 - 如果添加新数据后会超出最大限制，先删除旧数据腾出空间
+//         if (currentSize + newPointsCount > maxDataPoints) {
+//             int pointsToRemove = (currentSize + newPointsCount) - maxDataPoints;
             
-            // 从缓冲区开头删除多余数据点
-            if (pointsToRemove > 0 && pointsToRemove <= daqTimeData.size()) {
-                daqTimeData.remove(0, pointsToRemove);
+//             // 从缓冲区开头删除多余数据点
+//             if (pointsToRemove > 0 && pointsToRemove <= daqTimeData.size()) {
+//                 daqTimeData.remove(0, pointsToRemove);
                 
-                for (int ch = 0; ch < daqChannelData.size(); ++ch) {
-                    if (daqChannelData[ch].size() > pointsToRemove) {
-                        daqChannelData[ch].remove(0, pointsToRemove);
-                    }
-                }
-            }
-        }
+//                 for (int ch = 0; ch < daqChannelData.size(); ++ch) {
+//                     if (daqChannelData[ch].size() > pointsToRemove) {
+//                         daqChannelData[ch].remove(0, pointsToRemove);
+//                     }
+//                 }
+//             }
+//         }
         
-        // 将新数据添加到缓冲区
-        for (int i = 0; i < timeData.size(); ++i) {
-            // 使用相对于主时间戳的时间（用于时间同步）
-            double relTime = ((masterTimer->elapsed() - baseTimeMs) / 1000.0) + timeData[i] - timeData.first();
-            daqTimeData.append(relTime);
+//         // 将新数据添加到缓冲区
+//         for (int i = 0; i < timeData.size(); ++i) {
+//             // 使用相对于主时间戳的时间（用于时间同步）
+//             double relTime = ((masterTimer->elapsed() - baseTimeMs) / 1000.0) + timeData[i] - timeData.first();
+//             daqTimeData.append(relTime);
             
-            // 添加每个通道的数据
-            for (int ch = 0; ch < numChannels && ch < channelData.size(); ++ch) {
-                if (i < channelData[ch].size()) {
-                    daqChannelData[ch].append(channelData[ch][i]);
-                } else {
-                    // 如果没有数据，填充最后一个值或0
-                    double lastValue = daqChannelData[ch].isEmpty() ? 0.0 : daqChannelData[ch].last();
-                    daqChannelData[ch].append(lastValue);
-                }
-            }
-        }
+//             // 添加每个通道的数据
+//             for (int ch = 0; ch < numChannels && ch < channelData.size(); ++ch) {
+//                 if (i < channelData[ch].size()) {
+//                     daqChannelData[ch].append(channelData[ch][i]);
+//                 } else {
+//                     // 如果没有数据，填充最后一个值或0
+//                     double lastValue = daqChannelData[ch].isEmpty() ? 0.0 : daqChannelData[ch].last();
+//                     daqChannelData[ch].append(lastValue);
+//                 }
+//             }
+//         }
         
-        // 更新快照中的DAQ数据状态
-        if (!daqChannelData.isEmpty() && !daqChannelData[0].isEmpty()) {
-            currentSnapshot.daqValid = true;
+//         // 更新快照中的DAQ数据状态
+//         if (!daqChannelData.isEmpty() && !daqChannelData[0].isEmpty()) {
+//             currentSnapshot.daqValid = true;
             
-            // 修改：使用一维数组保存每个通道的最新数据点
-            currentSnapshot.daqData.resize(daqNumChannels);
+//             // 修改：使用一维数组保存每个通道的最新数据点
+//             currentSnapshot.daqData.resize(daqNumChannels);
             
-            // 添加每个通道的最新数据点
-            for (int ch = 0; ch < daqNumChannels && ch < daqChannelData.size(); ++ch) {
-                if (!daqChannelData[ch].isEmpty()) {
-                    // 直接保存最新的数据点
-                    currentSnapshot.daqData[ch] = daqChannelData[ch].last();
-                } else {
-                    currentSnapshot.daqData[ch] = 0.0;
-                }
-            }
-        }
+//             // 添加每个通道的最新数据点
+//             for (int ch = 0; ch < daqNumChannels && ch < daqChannelData.size(); ++ch) {
+//                 if (!daqChannelData[ch].isEmpty()) {
+//                     // 直接保存最新的数据点
+//                     currentSnapshot.daqData[ch] = daqChannelData[ch].last();
+//                 } else {
+//                     currentSnapshot.daqData[ch] = 0.0;
+//                 }
+//             }
+//         }
 
-    } catch (const std::exception& e) {
-        qDebug() << "处理DAQ数据时出错:" << e.what();
-    } catch (...) {
-        qDebug() << "处理DAQ数据时发生未知错误";
-    }
-}
+//     } catch (const std::exception& e) {
+//         qDebug() << "处理DAQ数据时出错:" << e.what();
+//     } catch (...) {
+//         qDebug() << "处理DAQ数据时发生未知错误";
+//     }
+// }
 
 void MainWindow::handleDAQStatus(bool isRunning, QString message)
 {
     daqIsAcquiring = isRunning;
-    
-    // 如果停止采集，清除数据快照中的DAQ数据有效标志
-    if (!isRunning) {
-        currentSnapshot.daqValid = false;
-    }
     
     // 更新UI状态
     ui->startDAQButton->setEnabled(!isRunning);
@@ -765,8 +783,8 @@ void MainWindow::on_startDAQButton_clicked()
     ui->stopDAQButton->setEnabled(true);
     
     // 清空数据缓冲区，准备新的采集
-    daqTimeData.clear();
-    daqChannelData.clear();
+    // daqTimeData.clear();
+    // daqChannelData.clear();
     
     // // 先初始化图表，避免采集开始后再创建UI元素
     // updateDAQPlot();
@@ -909,23 +927,30 @@ void MainWindow::on_btnSend_clicked()
             return;
         }
         
-        // 重置滤波器状态
-        filteredValues.clear();
-        lastTimestamp = 0;
-        realTimer->restart();
-
+        // 直接通知SnapshotThread更新滤波状态
+        if (snpTh) {
+            QMetaObject::invokeMethod(snpTh, [this]() {
+                // 获取滤波时间常数
+                double timeConstant = ui->lineTimeLoop->text().toDouble();
+                bool enabled = ui->filterEnabledCheckBox->isChecked();
+                // 设置滤波参数
+                snpTh->setFilterEnabled(enabled, timeConstant);
+            }, Qt::QueuedConnection);
+        }
         
-        // 读取滤波器状态并更新UI
-        filterEnabled = ui->filterEnabledCheckBox->isChecked();
-        qDebug() << "滤波器状态: " << (filterEnabled ? "开启" : "关闭") 
+        qDebug() << "滤波器状态: " << (ui->filterEnabledCheckBox->isChecked() ? "开启" : "关闭") 
                  << "，时间常数: " << ui->lineTimeLoop->text().toDouble() << "ms";
         
         // 设置Modbus读取标志，之后的读取将由主定时器触发
         modbusReadRequested = true;
         
         // 计算下一个整百+50的时间点，等待第一次触发
-        qint64 currentTime = masterTimer->elapsed();
+        // 修改为使用本地临时变量，而不是成员变量
+        QElapsedTimer *tempTimer = new QElapsedTimer();
+        tempTimer->start();
+        qint64 currentTime = tempTimer->elapsed();
         qint64 nextReadTime = ((currentTime / 100) * 100) + 150; // 下一个整百+50
+        delete tempTimer;
         qDebug() << "Modbus读取将在下一个整百+50毫秒时间点触发: " << nextReadTime << "ms";
         
         // 改变按钮文字为"结束"
@@ -933,7 +958,7 @@ void MainWindow::on_btnSend_clicked()
         ui->plainReceive->appendPlainText("开始数据采集...");
         
         // 添加滤波状态信息
-        if (filterEnabled) {
+        if (ui->filterEnabledCheckBox->isChecked()) {
             ui->plainReceive->appendPlainText(QString("已启用低通滤波，时间常数: %1 ms").arg(ui->lineTimeLoop->text()));
         } else {
             ui->plainReceive->appendPlainText("低通滤波未启用，显示原始数据");
@@ -1188,103 +1213,107 @@ void MainWindow::updateLayout()
 }
 
 // 一阶低通滤波函数实现
-double MainWindow::applyLowPassFilter(double input, double prevOutput, double timeConstant, double deltaT)
-{
-    // 计算滤波系数 alpha = deltaT / (timeConstant + deltaT)
-    double alpha = deltaT / (timeConstant + deltaT);
-    
-    // 限制alpha在0到1之间，防止计算错误
-    alpha = qBound(0.0, alpha, 1.0);
-    
-    // 应用滤波公式: y[n] = alpha * x[n] + (1 - alpha) * y[n-1]
-    double result = alpha * input + (1.0 - alpha) * prevOutput;
-    
-    // qDebug() << "滤波计算: alpha=" << alpha << ", input=" << input << ", prevOutput=" << prevOutput << ", result=" << result;
-    
-    return result;
-}
+// 注释掉或删除已移至SnapshotThread的低通滤波函数
+// double MainWindow::applyLowPassFilter(double input, double prevOutput, double timeConstant, double deltaT)
+// {
+//     // 计算滤波系数 alpha = deltaT / (timeConstant + deltaT)
+//     double alpha = deltaT / (timeConstant + deltaT);
+//     
+//     // 限制alpha在0到1之间，防止计算错误
+//     alpha = qBound(0.0, alpha, 1.0);
+//     
+//     // 应用滤波公式: y[n] = alpha * x[n] + (1 - alpha) * y[n-1]
+//     double result = alpha * input + (1.0 - alpha) * prevOutput;
+//     
+//     return result;
+// }
 
 // 对所有通道应用滤波
-QVector<double> MainWindow::applyFilterToResults(const QVector<double> &rawData, qint64 deltaT)
-{
-    // 如果滤波禁用，直接返回原始数据
-    if (!filterEnabled) {
-        return rawData;
-    }
+// QVector<double> MainWindow::applyFilterToResults(const QVector<double> &rawData, qint64 deltaT)
+// {
+//     // 如果滤波禁用，直接返回原始数据
+//     if (!filterEnabled) {
+//         return rawData;
+//     }
     
-    // 如果原始数据为空，返回空数组
-    if (rawData.isEmpty()) {
-        qDebug() << "警告: 原始数据为空，无法应用滤波";
-        return rawData;
-    }
+//     // 如果原始数据为空，返回空数组
+//     if (rawData.isEmpty()) {
+//         qDebug() << "警告: 原始数据为空，无法应用滤波";
+//         return rawData;
+//     }
     
-    // 确保filteredValues的大小与当前通道数匹配
-    if (filteredValues.size() != rawData.size()) {
-        qDebug() << "重置滤波缓存，通道数量变化: " << filteredValues.size() << " -> " << rawData.size();
+//     // 确保filteredValues的大小与当前通道数匹配
+//     if (filteredValues.size() != rawData.size()) {
+//         qDebug() << "重置滤波缓存，通道数量变化: " << filteredValues.size() << " -> " << rawData.size();
         
-        // 保存旧值以便重用
-        QVector<double> oldValues = filteredValues;
-        filteredValues.resize(rawData.size());
+//         // 保存旧值以便重用
+//         QVector<double> oldValues = filteredValues;
+//         filteredValues.resize(rawData.size());
         
-        // 初始化新的通道值
-        for (int i = 0; i < rawData.size(); ++i) {
-            // 如果是原有通道，保留原来的值
-            if (i < oldValues.size()) {
-                filteredValues[i] = oldValues[i];
-            } else {
-                // 新通道使用原始值初始化
-                filteredValues[i] = rawData[i];
-            }
-        }
+//         // 初始化新的通道值
+//         for (int i = 0; i < rawData.size(); ++i) {
+//             // 如果是原有通道，保留原来的值
+//             if (i < oldValues.size()) {
+//                 filteredValues[i] = oldValues[i];
+//             } else {
+//                 // 新通道使用原始值初始化
+//                 filteredValues[i] = rawData[i];
+//             }
+//         }
         
-        // 第一次处理新通道数据时，直接返回原始数据，让滤波从下一轮开始生效
-        return rawData;
-    }
+//         // 第一次处理新通道数据时，直接返回原始数据，让滤波从下一轮开始生效
+//         return rawData;
+//     }
     
-    // 获取时间常数，单位为毫秒
-    double timeConstant = ui->lineTimeLoop->text().toDouble();
+//     // 获取时间常数，单位为毫秒
+//     double timeConstant = ui->lineTimeLoop->text().toDouble();
     
-    // 确保时间常数和deltaT有效
-    if (timeConstant <= 0) {
-        timeConstant = 1000; // 默认使用1000ms作为时间常数
-        qDebug() << "警告: 时间常数无效，使用默认值1000ms";
-    }
+//     // 确保时间常数和deltaT有效
+//     if (timeConstant <= 0) {
+//         timeConstant = 1000; // 默认使用1000ms作为时间常数
+//         qDebug() << "警告: 时间常数无效，使用默认值1000ms";
+//     }
     
-    if (deltaT <= 0) {
-        deltaT = 100; // 默认使用100ms
-        qDebug() << "警告: deltaT无效，使用默认值100ms";
-    }
+//     if (deltaT <= 0) {
+//         deltaT = 100; // 默认使用100ms
+//         qDebug() << "警告: deltaT无效，使用默认值100ms";
+//     }
     
-    QVector<double> filteredData(rawData.size());
+//     QVector<double> filteredData(rawData.size());
     
-    // 对每个通道应用滤波
-    for (int i = 0; i < rawData.size(); ++i) {
-        // 计算滤波结果
-        filteredData[i] = applyLowPassFilter(rawData[i], filteredValues[i], timeConstant, deltaT);
-        // 更新上一次的滤波值，用于下次计算
-        filteredValues[i] = filteredData[i];
-    }
+//     // 对每个通道应用滤波
+//     for (int i = 0; i < rawData.size(); ++i) {
+//         // 计算滤波结果
+//         filteredData[i] = applyLowPassFilter(rawData[i], filteredValues[i], timeConstant, deltaT);
+//         // 更新上一次的滤波值，用于下次计算
+//         filteredValues[i] = filteredData[i];
+//     }
     
-    return filteredData;
-}
+//     return filteredData;
+// }
 
 // 滤波开关状态改变槽函数
 void MainWindow::on_filterEnabledCheckBox_stateChanged(int state)
 {
-    filterEnabled = (state == Qt::Checked);
+    // 改为通过信号通知SnapshotThread更新滤波状态
+    bool enabled = (state == Qt::Checked);
     
-    // 如果禁用滤波器，则清除之前的滤波数据
-    if (!filterEnabled) {
-        filteredValues.clear();
+    // 直接调用SnapshotThread的方法设置滤波状态
+    if (snpTh) {
+        QMetaObject::invokeMethod(snpTh, [enabled, this]() {
+            // 获取滤波时间常数
+            double timeConstant = ui->lineTimeLoop->text().toDouble();
+            // 设置滤波参数
+            snpTh->setFilterEnabled(enabled, timeConstant);
+        }, Qt::QueuedConnection);
     }
     
-    // 更新状态栏提示
-    QString message = filterEnabled ? 
+    QString message = enabled ? 
                      "已启用低通滤波，使用循环时间作为时间常数" : 
                      "已禁用低通滤波，显示原始数据";
-    sBar->showMessage(message, 3000);
+    statusBar()->showMessage(message, 3000);
     
-    qDebug() << "低通滤波状态: " << (filterEnabled ? "开启" : "关闭") 
+    qDebug() << "低通滤波状态: " << (enabled ? "开启" : "关闭") 
              << "，时间常数: " << ui->lineTimeLoop->text().toDouble() << "ms";
 }
 
@@ -1332,6 +1361,8 @@ void MainWindow::on_btnECUStart_clicked()
     }
 }
 
+// 注释掉handleECUData函数，已移至SnapshotThread
+/*
 void MainWindow::handleECUData(const ECUData &data)
 {
     // 仅在ECU数据有效时处理
@@ -1369,8 +1400,8 @@ void MainWindow::handleECUData(const ECUData &data)
         
         // 注意：不再直接更新图表，统一由processDataSnapshots处理
         // 更新当前快照，以便processDataSnapshots能够获取最新数据
-        currentSnapshot.ecuValid = true;
-        currentSnapshot.ecuData = ecuValues;
+        // currentSnapshot.ecuValid = true;
+        // currentSnapshot.ecuData = ecuValues;
         
         // 调试信息
         qDebug() << "收到ECU数据: 节气门=" << data.throttle 
@@ -1382,6 +1413,7 @@ void MainWindow::handleECUData(const ECUData &data)
         qDebug() << "处理ECU数据时发生未知错误";
     }
 }
+*/
 
 void MainWindow::handleECUStatus(bool connected, QString message)
 {
@@ -2680,9 +2712,10 @@ void MainWindow::ECUPlotInit()
     ecuPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignRight|Qt::AlignTop);
     
     // 初始化数据容器
-    ecuTimeData.clear();
-    ecuData.clear();
-    ecuData.resize(names.size());
+    // 不再在主线程中管理这些变量，已移至SnapshotThread
+    // ecuTimeData.clear();
+    // ecuData.clear();
+    // ecuData.resize(names.size());
     
     // 设置初始轴范围
     ecuPlot->xAxis->setRange(0, 60); // 初始显示60秒
@@ -3124,337 +3157,354 @@ void MainWindow::handleDashForceSettingsChanged(const QString &dashboardName, co
     }
 }
 
-// 添加处理数据快照的槽函数实现
-void MainWindow::processDataSnapshots()
-{
-    static int snapshotCount = 0;
+// // 添加处理数据快照的槽函数实现
+// void MainWindow::processDataSnapshots()
+// {
+//     static int snapshotCount = 0;
     
-    try {
-        // 确保主时间戳已初始化
-        if (!masterTimer) {
-            qDebug() << "警告: 主时间戳未初始化，无法处理数据快照";
-            // 创建主时间戳
-            masterTimer = new QElapsedTimer();
-            masterTimer->start();
-            return;
-        }
+//     try {
+//         // 确保主时间戳已初始化
+//         if (!masterTimer) {
+//             qDebug() << "警告: 主时间戳未初始化，无法处理数据快照";
+//             // 创建主时间戳
+//             masterTimer = new QElapsedTimer();
+//             masterTimer->start();
+//             return;
+//         }
         
-        // 获取当前基于主时间戳的时间(秒)及精确到整百毫秒的时间
-        double currentTime = (masterTimer->elapsed() / 1000.0);
-        double roundedTime = round(currentTime * 10.0) / 10.0; // 精确到100ms的整数倍
+//         // 获取当前基于主时间戳的时间(秒)及精确到整百毫秒的时间
+//         double currentTime = (masterTimer->elapsed() / 1000.0);
+//         double roundedTime = round(currentTime * 10.0) / 10.0; // 精确到100ms的整数倍
         
-        // 创建当前快照
-        DataSnapshot snapshot;
-        snapshot.timestamp = roundedTime; // 使用整百毫秒的时间
+//         // 创建当前快照
+//         DataSnapshot snapshot;
+//         snapshot.timestamp = roundedTime; // 使用整百毫秒的时间
         
-        // 获取当前的Modbus数据 - 直接从currentSnapshot获取
-        snapshot.modbusValid = currentSnapshot.modbusValid;
-        if (snapshot.modbusValid) {
-            // 直接复制currentSnapshot中已滤波的Modbus数据
-            snapshot.modbusData = currentSnapshot.modbusData;
-            qDebug() << "快照" << snapshotCount + 1 << "Modbus数据有效，数据:" << snapshot.modbusData;
-                } else {
-            qDebug() << "快照" << snapshotCount + 1 << "Modbus数据无效";
-        }
+//         // 获取当前的Modbus数据 - 直接从currentSnapshot获取
+//         snapshot.modbusValid = currentSnapshot.modbusValid;
+//         if (snapshot.modbusValid) {
+//             // 直接复制currentSnapshot中已滤波的Modbus数据
+//             snapshot.modbusData = currentSnapshot.modbusData;
+//             qDebug() << "快照" << snapshotCount + 1 << "Modbus数据有效，数据:" << snapshot.modbusData;
+//                 } else {
+//             qDebug() << "快照" << snapshotCount + 1 << "Modbus数据无效";
+//         }
         
-        // 获取当前的DAQ数据
-        snapshot.daqValid = daqIsAcquiring && daqNumChannels > 0;
-        snapshot.daqRunning = daqIsAcquiring;
+//         // 获取当前的DAQ数据
+//         snapshot.daqValid = daqIsAcquiring && daqNumChannels > 0;
+//         snapshot.daqRunning = daqIsAcquiring;
         
-        if (snapshot.daqValid && !daqChannelData.isEmpty()) {
-            // 修改：为每个通道保存最新的数据点
-            snapshot.daqData.resize(daqNumChannels);
-            for (int i = 0; i < daqNumChannels && i < daqChannelData.size(); ++i) {
-                if (!daqChannelData[i].isEmpty()) {
-                    // 只保存最新的数据点
-                    snapshot.daqData[i] = daqChannelData[i].last();
-                } else {
-                    snapshot.daqData[i] = 0.0;
-                }
+//         if (snapshot.daqValid && !daqChannelData.isEmpty()) {
+//             // 修改：为每个通道保存最新的数据点
+//             snapshot.daqData.resize(daqNumChannels);
+//             for (int i = 0; i < daqNumChannels && i < daqChannelData.size(); ++i) {
+//                 if (!daqChannelData[i].isEmpty()) {
+//                     // 只保存最新的数据点
+//                     snapshot.daqData[i] = daqChannelData[i].last();
+//                 } else {
+//                     snapshot.daqData[i] = 0.0;
+//                 }
+//             }
+//             qDebug() << "快照" << snapshotCount + 1 << "DAQ数据有效，通道数:" << daqNumChannels << "数据:" << snapshot.daqData;
+//         } else {
+//             qDebug() << "快照" << snapshotCount + 1 << "DAQ数据无效，采集状态:" << daqIsAcquiring << "通道数:" << daqNumChannels;
+//         }
+        
+//         // 获取当前的ECU数据
+//         snapshot.ecuValid = ecuDataValid;
+//         if (ecuDataValid && !ecuData.isEmpty() && ecuData.size() == 9) {
+//             snapshot.ecuData.resize(9);
+//             for (int i = 0; i < 9; ++i) {
+//                 if (!ecuData[i].isEmpty()) {
+//                     snapshot.ecuData[i] = ecuData[i].last();
+//                 } else {
+//                     snapshot.ecuData[i] = 0.0;
+//                 }
+//             }
+            
+//             // 同时从latestECUData获取最新数据，确保没有遗漏
+//             if (latestECUData.isValid) {
+//                 // 使用最新的ECU数据，可能会比列表中的数据更新
+//                 snapshot.ecuData[0] = latestECUData.throttle;
+//                 snapshot.ecuData[1] = latestECUData.engineSpeed;
+//                 snapshot.ecuData[2] = latestECUData.cylinderTemp;
+//                 snapshot.ecuData[3] = latestECUData.exhaustTemp;
+//                 snapshot.ecuData[4] = latestECUData.axleTemp;
+//                 snapshot.ecuData[5] = latestECUData.fuelPressure;
+//                 snapshot.ecuData[6] = latestECUData.intakeTemp;
+//                 snapshot.ecuData[7] = latestECUData.atmPressure;
+//                 snapshot.ecuData[8] = latestECUData.flightTime;
+//             }
+//             qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效，数据:" << snapshot.ecuData;
+//         } else if (latestECUData.isValid && ecuIsConnected) {
+//             // 如果ecuData为空但有最新的ECU数据，直接使用latestECUData
+//             snapshot.ecuValid = true;
+//             snapshot.ecuData.resize(9);
+//             snapshot.ecuData[0] = latestECUData.throttle;
+//             snapshot.ecuData[1] = latestECUData.engineSpeed;
+//             snapshot.ecuData[2] = latestECUData.cylinderTemp;
+//             snapshot.ecuData[3] = latestECUData.exhaustTemp;
+//             snapshot.ecuData[4] = latestECUData.axleTemp;
+//             snapshot.ecuData[5] = latestECUData.fuelPressure;
+//             snapshot.ecuData[6] = latestECUData.intakeTemp;
+//             snapshot.ecuData[7] = latestECUData.atmPressure;
+//             snapshot.ecuData[8] = latestECUData.flightTime;
+//             qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效(从latestECUData)，数据:" << snapshot.ecuData;
+//         } else {
+//             qDebug() << "快照" << snapshotCount + 1 << "ECU数据无效，ECU连接状态:" << ecuIsConnected;
+//         }
+        
+//         // 增加快照计数
+//         snapshotCount++;
+//         snapshot.snapshotIndex = snapshotCount;
+        
+//         // 将当前快照添加到队列中
+//         snapshotQueue.enqueue(snapshot);
+        
+//         // 限制队列大小，保留最新的300个快照(约30秒数据)
+//         while (snapshotQueue.size() > 300) {
+//             snapshotQueue.dequeue();
+//         }
+        
+//         // 创建时间向量
+//         QVector<double> timeData;
+//         timeData.append(roundedTime);
+        
+//         // 4. 更新仪表盘数据
+//         if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid) {
+//             updateDashboardData(timeData, snapshot);
+//             qDebug() << "快照" << snapshotCount << "已更新到仪表盘，时间戳:" << roundedTime;
+//         } else {
+//             qDebug() << "快照" << snapshotCount << "无有效数据，跳过仪表盘更新";
+//         }
+        
+//         // 5. 当所有采集状态处于运行中时，更新绘图
+//         if (allCaptureRunning) {
+//             // 调用新的updateAllPlots函数更新所有图表
+//             updateAllPlots(snapshot, snapshotCount);
+//         }
+        
+//     } catch (const std::exception& e) {
+//         qDebug() << "处理数据快照时出错: " << e.what();
+//     } catch (...) {
+//         qDebug() << "处理数据快照时发生未知错误";
+//     }
+// }
+
+// 新增函数：更新所有图表
+void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
+{
+    // 更新Modbus图表
+    if (snapshot.modbusValid && ui->modbusCustomPlot) {
+        // 确保Modbus图表已初始化
+        if (ui->modbusCustomPlot->graphCount() == 0) {
+            // 初始化Modbus图表
+            ui->modbusCustomPlot->clearGraphs();
+            ui->modbusCustomPlot->legend->setVisible(true);
+            
+            // 设置坐标轴
+            ui->modbusCustomPlot->xAxis->setLabel("时间(秒)");
+            ui->modbusCustomPlot->yAxis->setLabel("值");
+            
+            // 为每个Modbus通道创建曲线
+            for (int i = 0; i < modbusNumRegs; ++i) {
+                QCPGraph *graph = ui->modbusCustomPlot->addGraph();
+                graph->setName(QString("通道%1").arg(i));
+                
+                // 使用不同颜色
+                QColor color = QColor::fromHsv((i * 255) / modbusNumRegs, 255, 255);
+                graph->setPen(QPen(color));
             }
-            qDebug() << "快照" << snapshotCount + 1 << "DAQ数据有效，通道数:" << daqNumChannels << "数据:" << snapshot.daqData;
-        } else {
-            qDebug() << "快照" << snapshotCount + 1 << "DAQ数据无效，采集状态:" << daqIsAcquiring << "通道数:" << daqNumChannels;
         }
         
-        // 获取当前的ECU数据
-        snapshot.ecuValid = ecuDataValid;
-        if (ecuDataValid && !ecuData.isEmpty() && ecuData.size() == 9) {
-            snapshot.ecuData.resize(9);
-            for (int i = 0; i < 9; ++i) {
-                if (!ecuData[i].isEmpty()) {
-                    snapshot.ecuData[i] = ecuData[i].last();
-                } else {
-                    snapshot.ecuData[i] = 0.0;
+        // 使用静态变量来保持历史数据
+        static QVector<double> modbusTimeData;
+        static QVector<QVector<double>> modbusValues;
+        
+        // 确保modbusValues大小正确
+        if (modbusValues.size() != modbusNumRegs) {
+            modbusValues.resize(modbusNumRegs);
+        }
+        
+        // 添加新的时间点
+        modbusTimeData.append(snapshot.timestamp);
+        
+        // 添加新的数据点
+        for (int ch = 0; ch < modbusNumRegs && ch < snapshot.modbusData.size(); ++ch) {
+            modbusValues[ch].append(snapshot.modbusData[ch]);
+            
+            // 限制数据点数量，保持最近30个点
+            while (modbusValues[ch].size() > 30) {
+                modbusValues[ch].removeFirst();
+            }
+        }
+        
+        // 限制时间数据点数量
+        while (modbusTimeData.size() > 30) {
+            modbusTimeData.removeFirst();
+        }
+        
+        // 更新图表数据
+        if (!modbusTimeData.isEmpty()) {
+            for (int ch = 0; ch < modbusNumRegs && ch < ui->modbusCustomPlot->graphCount(); ++ch) {
+                if (ch < modbusValues.size() && !modbusValues[ch].isEmpty()) {
+                    ui->modbusCustomPlot->graph(ch)->setData(modbusTimeData, modbusValues[ch]);
                 }
             }
             
-            // 同时从latestECUData获取最新数据，确保没有遗漏
-            if (latestECUData.isValid) {
-                // 使用最新的ECU数据，可能会比列表中的数据更新
-                snapshot.ecuData[0] = latestECUData.throttle;
-                snapshot.ecuData[1] = latestECUData.engineSpeed;
-                snapshot.ecuData[2] = latestECUData.cylinderTemp;
-                snapshot.ecuData[3] = latestECUData.exhaustTemp;
-                snapshot.ecuData[4] = latestECUData.axleTemp;
-                snapshot.ecuData[5] = latestECUData.fuelPressure;
-                snapshot.ecuData[6] = latestECUData.intakeTemp;
-                snapshot.ecuData[7] = latestECUData.atmPressure;
-                snapshot.ecuData[8] = latestECUData.flightTime;
+            // 自动缩放坐标轴
+            ui->modbusCustomPlot->xAxis->rescale();
+            ui->modbusCustomPlot->yAxis->rescale();
+            
+            // 重绘图表
+            ui->modbusCustomPlot->replot();
+        }
+    }
+    
+    // 更新DAQ图表
+    if (snapshot.daqValid && ui->daqCustomPlot) {
+        // 确保DAQ图表已初始化
+        if (ui->daqCustomPlot->graphCount() == 0) {
+            // 初始化DAQ图表
+            ui->daqCustomPlot->clearGraphs();
+            ui->daqCustomPlot->legend->setVisible(true);
+            
+            // 设置坐标轴
+            ui->daqCustomPlot->xAxis->setLabel("时间(秒)");
+            ui->daqCustomPlot->yAxis->setLabel("值");
+            
+            // 为每个DAQ通道创建曲线
+            for (int i = 0; i < daqNumChannels; ++i) {
+                QCPGraph *graph = ui->daqCustomPlot->addGraph();
+                graph->setName(QString("通道%1").arg(i));
+                
+                // 使用不同颜色
+                QColor color = QColor::fromHsv((i * 255) / daqNumChannels, 255, 255);
+                graph->setPen(QPen(color));
             }
-            qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效，数据:" << snapshot.ecuData;
-        } else if (latestECUData.isValid && ecuIsConnected) {
-            // 如果ecuData为空但有最新的ECU数据，直接使用latestECUData
-            snapshot.ecuValid = true;
-            snapshot.ecuData.resize(9);
-            snapshot.ecuData[0] = latestECUData.throttle;
-            snapshot.ecuData[1] = latestECUData.engineSpeed;
-            snapshot.ecuData[2] = latestECUData.cylinderTemp;
-            snapshot.ecuData[3] = latestECUData.exhaustTemp;
-            snapshot.ecuData[4] = latestECUData.axleTemp;
-            snapshot.ecuData[5] = latestECUData.fuelPressure;
-            snapshot.ecuData[6] = latestECUData.intakeTemp;
-            snapshot.ecuData[7] = latestECUData.atmPressure;
-            snapshot.ecuData[8] = latestECUData.flightTime;
-            qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效(从latestECUData)，数据:" << snapshot.ecuData;
-        } else {
-            qDebug() << "快照" << snapshotCount + 1 << "ECU数据无效，ECU连接状态:" << ecuIsConnected;
         }
         
-        // 增加快照计数
-        snapshotCount++;
-        snapshot.snapshotIndex = snapshotCount;
+        // 使用静态变量来保持历史数据
+        static QVector<double> daqTimeData;
+        static QVector<QVector<double>> daqValues;
         
-        // 将当前快照添加到队列中
-        snapshotQueue.enqueue(snapshot);
-        
-        // 限制队列大小，保留最新的300个快照(约30秒数据)
-        while (snapshotQueue.size() > 300) {
-            snapshotQueue.dequeue();
+        // 确保daqValues大小正确
+        if (daqValues.size() != daqNumChannels) {
+            daqValues.resize(daqNumChannels);
         }
         
-        // 创建时间向量
-        QVector<double> timeData;
-        timeData.append(roundedTime);
+        // 添加新的时间点
+        daqTimeData.append(snapshot.timestamp);
         
-        // 4. 更新仪表盘数据
-        if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid) {
-            updateDashboardData(timeData, snapshot);
-            qDebug() << "快照" << snapshotCount << "已更新到仪表盘，时间戳:" << roundedTime;
-        } else {
-            qDebug() << "快照" << snapshotCount << "无有效数据，跳过仪表盘更新";
+        // 添加新的数据点
+        for (int ch = 0; ch < daqNumChannels && ch < snapshot.daqData.size(); ++ch) {
+            daqValues[ch].append(snapshot.daqData[ch]);
+            
+            // 限制数据点数量，保持最近30个点
+            while (daqValues[ch].size() > 30) {
+                daqValues[ch].removeFirst();
+            }
         }
         
-        // 5. 当所有采集状态处于运行中时，更新绘图
-        if (allCaptureRunning) {
-            // 更新Modbus图表
-            if (snapshot.modbusValid && ui->modbusCustomPlot) {
-                // 确保Modbus图表已初始化
-                if (ui->modbusCustomPlot->graphCount() == 0) {
-                    // 初始化Modbus图表
-                    ui->modbusCustomPlot->clearGraphs();
-                    ui->modbusCustomPlot->legend->setVisible(true);
-                    
-                    // 设置坐标轴
-                    ui->modbusCustomPlot->xAxis->setLabel("时间(秒)");
-                    ui->modbusCustomPlot->yAxis->setLabel("值");
-                    
-                    // 为每个Modbus通道创建曲线
-                    for (int i = 0; i < modbusNumRegs; ++i) {
-                        QCPGraph *graph = ui->modbusCustomPlot->addGraph();
-                        graph->setName(QString("通道%1").arg(i));
-                        
-                        // 使用不同颜色
-                        QColor color = QColor::fromHsv((i * 255) / modbusNumRegs, 255, 255);
-                        graph->setPen(QPen(color));
-                    }
-                }
-                
-                // 从快照队列中获取最近的数据点
-                QVector<double> times;
-                QVector<QVector<double>> values(modbusNumRegs);
-                
-                // 获取最新的30个数据点或全部数据点
-                int dataPointCount = qMin(30, snapshotQueue.size());
-                int startIndex = snapshotQueue.size() - dataPointCount;
-                
-                for (int i = 0; i < dataPointCount; ++i) {
-                    DataSnapshot &s = snapshotQueue[startIndex + i];
-                    if (s.modbusValid) {
-                        times.append(s.timestamp);
-                        for (int ch = 0; ch < modbusNumRegs && ch < s.modbusData.size(); ++ch) {
-                            values[ch].append(s.modbusData[ch]);
-                        }
-                    }
-                }
-                
-                // 更新图表数据
-                if (!times.isEmpty()) {
-                    for (int ch = 0; ch < modbusNumRegs && ch < ui->modbusCustomPlot->graphCount(); ++ch) {
-                        ui->modbusCustomPlot->graph(ch)->setData(times, values[ch]);
-                    }
-                    
-                    // 自动缩放坐标轴
-                    ui->modbusCustomPlot->xAxis->rescale();
-                    ui->modbusCustomPlot->yAxis->rescale();
-                    
-                    // 重绘图表
-                    ui->modbusCustomPlot->replot();
+        // 限制时间数据点数量
+        while (daqTimeData.size() > 30) {
+            daqTimeData.removeFirst();
+        }
+        
+        // 更新图表数据
+        if (!daqTimeData.isEmpty()) {
+            for (int ch = 0; ch < daqNumChannels && ch < ui->daqCustomPlot->graphCount(); ++ch) {
+                if (ch < daqValues.size() && !daqValues[ch].isEmpty()) {
+                    ui->daqCustomPlot->graph(ch)->setData(daqTimeData, daqValues[ch]);
                 }
             }
             
-            // 更新DAQ图表
-            if (snapshot.daqValid && ui->daqCustomPlot) {
-                // 确保DAQ图表已初始化
-                if (ui->daqCustomPlot->graphCount() == 0) {
-                    // 初始化DAQ图表
-                    ui->daqCustomPlot->clearGraphs();
-                    ui->daqCustomPlot->legend->setVisible(true);
-                    
-                    // 设置坐标轴
-                    ui->daqCustomPlot->xAxis->setLabel("时间(秒)");
-                    ui->daqCustomPlot->yAxis->setLabel("值");
-                    
-                    // 为每个DAQ通道创建曲线
-                    for (int i = 0; i < daqNumChannels; ++i) {
-                        QCPGraph *graph = ui->daqCustomPlot->addGraph();
-                        graph->setName(QString("通道%1").arg(i));
-                        
-                        // 使用不同颜色
-                        QColor color = QColor::fromHsv((i * 255) / daqNumChannels, 255, 255);
-                        graph->setPen(QPen(color));
-                    }
-                }
+            // 自动缩放坐标轴
+            ui->daqCustomPlot->xAxis->rescale();
+            ui->daqCustomPlot->yAxis->rescale();
+            
+            // 重绘图表
+            ui->daqCustomPlot->replot();
+        }
+    }
+    
+    // ECU数据绘图
+    if (snapshot.ecuValid && ui->ECUCustomPlot) {
+        // 确保ECU图表已初始化
+        if (ui->ECUCustomPlot->graphCount() == 0) {
+            ECUPlotInit();
+            qDebug() << "初始化ECU图表，图表数量：" << ui->ECUCustomPlot->graphCount();
+        }
+        
+        // 检查图表是否初始化成功
+        if (ui->ECUCustomPlot->graphCount() >= 9) {
+            // 使用静态变量来保持历史数据
+            static QVector<double> ecuTimeData;
+            static QVector<QVector<double>> ecuValues(9);
+            
+            // 添加新的时间点
+            ecuTimeData.append(snapshot.timestamp);
+            
+            // 限制数据点数量
+            const int maxDataPoints = 300;
+            while (ecuTimeData.size() > maxDataPoints) {
+                ecuTimeData.removeFirst();
+            }
+            
+            // 添加新的数据点
+            for (int i = 0; i < 9 && i < snapshot.ecuData.size(); ++i) {
+                ecuValues[i].append(snapshot.ecuData[i]);
                 
-                // 从快照队列中获取最近的数据点
-                QVector<double> times;
-                QVector<QVector<double>> values(daqNumChannels);
-                
-                // 获取最新的30个数据点或全部数据点
-                int dataPointCount = qMin(30, snapshotQueue.size());
-                int startIndex = snapshotQueue.size() - dataPointCount;
-                
-                for (int i = 0; i < dataPointCount; ++i) {
-                    DataSnapshot &s = snapshotQueue[startIndex + i];
-                    if (s.daqValid) {
-                        times.append(s.timestamp);
-                        for (int ch = 0; ch < daqNumChannels && ch < s.daqData.size(); ++ch) {
-                            values[ch].append(s.daqData[ch]);
-                        }
-                    }
-                }
-                
-                // 更新图表数据
-                if (!times.isEmpty()) {
-                    for (int ch = 0; ch < daqNumChannels && ch < ui->daqCustomPlot->graphCount(); ++ch) {
-                        ui->daqCustomPlot->graph(ch)->setData(times, values[ch]);
-                    }
-                    
-                    // 自动缩放坐标轴
-                    ui->daqCustomPlot->xAxis->rescale();
-                    ui->daqCustomPlot->yAxis->rescale();
-                    
-                    // 重绘图表
-                    ui->daqCustomPlot->replot();
+                // 限制数据点数量，保持与时间数据同步
+                while (ecuValues[i].size() > ecuTimeData.size()) {
+                    ecuValues[i].removeFirst();
                 }
             }
             
-            // ECU数据绘图
-            if (snapshot.ecuValid && ui->ECUCustomPlot) {
-                // 确保ECU图表已初始化
-                if (ui->ECUCustomPlot->graphCount() == 0) {
-                    ECUPlotInit();
-                    qDebug() << "初始化ECU图表，图表数量：" << ui->ECUCustomPlot->graphCount();
-                }
-                
-                // 检查图表是否初始化成功
-                if (ui->ECUCustomPlot->graphCount() >= 9) {
-                    // 如果ecuTimeData为空，初始化数据容器
-                    if (ecuTimeData.isEmpty()) {
-                        ecuTimeData.clear();
-                        ecuData.clear();
-                        ecuData.resize(9);
-                        for (int i = 0; i < 9; ++i) {
-                            ecuData[i].clear();
-                        }
-                        qDebug() << "初始化ECU数据容器";
-                    }
+            // 更新图表数据
+            for (int i = 0; i < 9 && i < ui->ECUCustomPlot->graphCount(); ++i) {
+                if (!ecuValues[i].isEmpty()) {
+                    // 创建临时数据容器，确保时间和数据点数量匹配
+                    int dataSize = qMin(ecuTimeData.size(), ecuValues[i].size());
+                    QVector<double> timeData = ecuTimeData.mid(ecuTimeData.size() - dataSize);
+                    QVector<double> valueData = ecuValues[i].mid(ecuValues[i].size() - dataSize);
                     
-                    // 添加新的时间点
-                    ecuTimeData.append(snapshot.timestamp);
-                    
-                    // 限制数据点数量
-                    const int maxDataPoints = 300;
-                    while (ecuTimeData.size() > maxDataPoints) {
-                        ecuTimeData.removeFirst();
-                    }
-                    
-                    // 确保ecuData数组大小正确
-                    if (ecuData.size() != 9) {
-                        ecuData.resize(9);
-                    }
-                    
-                    // 添加新的数据点
-                    for (int i = 0; i < 9 && i < snapshot.ecuData.size(); ++i) {
-                        ecuData[i].append(snapshot.ecuData[i]);
-                        
-                        // 限制数据点数量，保持与时间数据同步
-                        while (ecuData[i].size() > ecuTimeData.size()) {
-                            ecuData[i].removeFirst();
-                        }
-                    }
-                    
-                    // 更新图表数据
-                    for (int i = 0; i < 9 && i < ui->ECUCustomPlot->graphCount(); ++i) {
-                        if (!ecuData[i].isEmpty()) {
-                            // 创建临时数据容器，确保时间和数据点数量匹配
-                            int dataSize = qMin(ecuTimeData.size(), ecuData[i].size());
-                            QVector<double> timeData = ecuTimeData.mid(ecuTimeData.size() - dataSize);
-                            QVector<double> valueData = ecuData[i].mid(ecuData[i].size() - dataSize);
-                            
-                            // 设置图表数据
-                            ui->ECUCustomPlot->graph(i)->setData(timeData, valueData);
-                        }
-                    }
-                    
-                    // 设置X轴范围，显示最近30秒的数据
-                    if (!ecuTimeData.isEmpty()) {
-                        double latestTime = ecuTimeData.last();
-                        double timeRange = 30.0;
-                        double minX = qMax(0.0, latestTime - timeRange);
-                        ui->ECUCustomPlot->xAxis->setRange(minX, latestTime);
-                    }
-                    
-                    // 自动调整Y轴
-                    ui->ECUCustomPlot->rescaleAxes();
-                    
-                    // 确保Y轴范围合理
-                    double yMin = ui->ECUCustomPlot->yAxis->range().lower;
-                    double yMax = ui->ECUCustomPlot->yAxis->range().upper;
-                    if (qAbs(yMax - yMin) < 1.0) {
-                        // 如果范围太小，设置一个合理的默认范围
-                        double center = (yMin + yMax) / 2.0;
-                        ui->ECUCustomPlot->yAxis->setRange(center - 5.0, center + 5.0);
-                    }
-                    
-                    // 重绘图表 - 使用立即重绘模式
-                    ui->ECUCustomPlot->replot(QCustomPlot::rpImmediateRefresh);
-                    
-                    if (snapshotCount % 10 == 0) { // 每10个快照输出一次日志，避免日志过多
-                        qDebug() << "ECU图表更新：时间点数=" << ecuTimeData.size() 
-                                << "，首个通道数据点数=" << ecuData[0].size()
-                                << "，最新值=" << (ecuData[0].isEmpty() ? 0.0 : ecuData[0].last());
-                    }
-                } else {
-                    qDebug() << "ECU图表未正确初始化，图表数量：" << ui->ECUCustomPlot->graphCount();
+                    // 设置图表数据
+                    ui->ECUCustomPlot->graph(i)->setData(timeData, valueData);
                 }
             }
+            
+            // 设置X轴范围，显示最近30秒的数据
+            if (!ecuTimeData.isEmpty()) {
+                double latestTime = ecuTimeData.last();
+                double timeRange = 30.0;
+                double minX = qMax(0.0, latestTime - timeRange);
+                ui->ECUCustomPlot->xAxis->setRange(minX, latestTime);
+            }
+            
+            // 自动调整Y轴
+            ui->ECUCustomPlot->rescaleAxes();
+            
+            // 确保Y轴范围合理
+            double yMin = ui->ECUCustomPlot->yAxis->range().lower;
+            double yMax = ui->ECUCustomPlot->yAxis->range().upper;
+            if (qAbs(yMax - yMin) < 1.0) {
+                // 如果范围太小，设置一个合理的默认范围
+                double center = (yMin + yMax) / 2.0;
+                ui->ECUCustomPlot->yAxis->setRange(center - 5.0, center + 5.0);
+            }
+            
+            // 重绘图表 - 使用立即重绘模式
+            ui->ECUCustomPlot->replot(QCustomPlot::rpImmediateRefresh);
+            
+            if (snapshotCount % 10 == 0) { // 每10个快照输出一次日志，避免日志过多
+                qDebug() << "ECU图表更新：时间点数=" << ecuTimeData.size() 
+                        << "，首个通道数据点数=" << ecuValues[0].size()
+                        << "，最新值=" << (ecuValues[0].isEmpty() ? 0.0 : ecuValues[0].last());
+            }
+        } else {
+            qDebug() << "ECU图表未正确初始化，图表数量：" << ui->ECUCustomPlot->graphCount();
         }
-        
-    } catch (const std::exception& e) {
-        qDebug() << "处理数据快照时出错: " << e.what();
-    } catch (...) {
-        qDebug() << "处理数据快照时发生未知错误";
     }
 }
 
@@ -3482,11 +3532,6 @@ void MainWindow::updateDashboardData(const QVector<double> &timeData, const Data
                 ecuData.flightTime = snapshot.ecuData[8];
             }
 
-            // 更新全局最新ECU数据
-            if (ecuData.isValid) {
-                latestECUData = ecuData;
-            }
-            
             // 更新仪表盘 - 使用当前映射关系
             // 确保有数据可用
             updateDashboardByMapping(
@@ -3502,60 +3547,63 @@ void MainWindow::updateDashboardData(const QVector<double> &timeData, const Data
 }
 
 
-// 实现setupMasterTimer函数
-void MainWindow::setupMasterTimer()
-{
-    // 如果主计时器已经存在，则先删除
-    if (masterTimer) {
-        delete masterTimer;
-    }
-    
-    // 创建新的主计时器并立即启动
-    masterTimer = new QElapsedTimer();
-    masterTimer->start();
-    
-    qDebug() << "主计时器已初始化并启动";
-}
-
-
-
 // 实现主定时器的超时处理函数
 void MainWindow::onMainTimerTimeout()
 {
-    // 获取当前时间(毫秒)
-    qint64 currentTime = masterTimer->elapsed();
+    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+    static qint64 programStartTime = currentTime; // 记录程序启动时间
     
-    // 计算当前时间对应的整百毫秒和整百+50毫秒时间点
-    qint64 currentHundred = (currentTime / 100) * 100;
-    qint64 currentHundredPlus50 = currentHundred + 50;
+    // 计算程序运行时间
+    qint64 runTime = currentTime - programStartTime;
     
-    // 检查是否达到了整百毫秒时间点(用于快照)
-    if (currentTime >= currentHundred && lastSnapshotTime < currentHundred) {
-        // 更新上次快照时间
-        lastSnapshotTime = currentHundred;
-        
-        // 创建和处理数据快照 - 在整百毫秒触发
-        processDataSnapshots();
-    }
-    
-    // 检查是否达到了整百+50毫秒时间点(用于数据读取)
-    if (currentTime >= currentHundredPlus50 && lastModbusReadTime < currentHundredPlus50) {
-        // 更新上次Modbus读取时间
-        lastModbusReadTime = currentHundredPlus50;
-        
-        // 如果请求了Modbus读取且按钮处于"结束"状态，执行Modbus命令
-        if (modbusReadRequested && ui->btnSend->text() == "结束") {
-            emit sendModbusCommand(ui->lineServerAddress->text().toInt(),
-                                  ui->lineSegAddress->text().toInt(),
-                                  ui->lineSegNum->text().toInt());
+    try {
+        // 处理Modbus读取请求 - 在整百毫秒+50的时间点触发
+        if (modbusReadRequested && !modbusReading) {
+            // 计算当前毫秒数在100ms周期中的位置
+            qint64 msInCycle = runTime % 100;
+            
+            // 在接近50ms位置时触发(45-55ms之间)
+            if (msInCycle >= 45 && msInCycle <= 55) {
+                // 只有在上次读取完成后才触发新的读取
+                if (currentTime - lastModbusReadTime >= ui->lineTimeLoop->text().toInt()) {
+                    // 设置读取标志和时间戳
+                    modbusReading = true;
+                    lastModbusReadTime = currentTime;
+                    
+                    // 发送Modbus读取命令
+                    emit sendModbusCommand(ui->lineServerAddress->text().toInt(),
+                                          ui->lineSegAddress->text().toInt(),
+                                          ui->lineSegNum->text().toInt());
+                }
+            }
         }
         
-        // 注意：ECU数据处理已经通过它自己的线程和handleECUData方法完成
-        // 不需要在这里重复处理ECU数据，避免数据冲突
+        // 处理快照 - 在整百毫秒的时间点触发
+        if (runTime - lastSnapshotTime >= 100) { // 每100ms处理一次快照
+            // 计算当前毫秒数在100ms周期中的位置
+            qint64 msInCycle = runTime % 100;
+            
+            // 当接近0ms位置时触发(90-10ms之间)
+            if (msInCycle >= 90 || msInCycle <= 10) {
+                // 更新时间戳
+                lastSnapshotTime = runTime;
+                
+                // 触发数据快照处理
+                emit triggerProcessDataSnapshots();
+            }
+        }
+    }
+    catch (const std::exception& e) {
+        qDebug() << "主定时器处理时出错: " << e.what();
+    }
+    catch (...) {
+        qDebug() << "主定时器处理时发生未知错误";
     }
 }
 
 // 添加新的函数: 处理Modbus数据，包括滤波处理，不含绘图功能
+// 注释掉handleModbusData函数，已移至SnapshotThread
+/*
 void MainWindow::handleModbusData(QVector<double> resultdata, qint64 readTimeInterval)
 {
     // 如果没有主计时器，则不处理
@@ -3614,6 +3662,7 @@ void MainWindow::handleModbusData(QVector<double> resultdata, qint64 readTimeInt
         qDebug() << "处理Modbus数据时发生未知错误";
     }
 }
+*/
 
 
 void MainWindow::on_btnStartAll_clicked()
@@ -3701,6 +3750,35 @@ void MainWindow::on_btnStartAll_clicked()
         allCaptureRunning = false;
         ui->btnStartAll->setText("启动所有采集");
         qDebug() << "所有采集任务已停止";
+    }
+}
+
+// 添加新函数：处理从SnapshotThread接收的数据
+void MainWindow::handleSnapshotProcessed(const DataSnapshot &snapshot, int snapshotCount)
+{
+    try {
+        // 从快照创建时间向量
+        QVector<double> timeData;
+        timeData.append(snapshot.timestamp);
+        
+        // 如果快照中有有效数据，更新仪表盘
+        if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid) {
+            // 1. 更新仪表盘数据
+            updateDashboardData(timeData, snapshot);
+            qDebug() << "快照" << snapshotCount << "已更新到仪表盘，时间戳:" << snapshot.timestamp;
+        } else {
+            qDebug() << "快照" << snapshotCount << "无有效数据，跳过仪表盘更新";
+        }
+        
+        // 2. 当所有采集状态处于运行中时，更新绘图
+        if (allCaptureRunning) {
+            // 更新所有图表
+            updateAllPlots(snapshot, snapshotCount);
+        }
+    } catch (const std::exception& e) {
+        qDebug() << "处理快照数据时出错: " << e.what();
+    } catch (...) {
+        qDebug() << "处理快照数据时发生未知错误";
     }
 }
 

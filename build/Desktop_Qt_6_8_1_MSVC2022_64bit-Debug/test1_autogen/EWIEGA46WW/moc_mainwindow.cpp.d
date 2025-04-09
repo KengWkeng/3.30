@@ -9,6 +9,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   C:/Users/80911/Documents/QT/vs_test/test1/modbusthread.h \
   C:/Users/80911/Documents/QT/vs_test/test1/plotthread.h \
   C:/Users/80911/Documents/QT/vs_test/test1/qcustomplot.h \
+  C:/Users/80911/Documents/QT/vs_test/test1/snapshotthread.h \
   C:/Users/80911/Documents/QT/vs_test/test1/websocketthread.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QCache \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QCoreApplication \
