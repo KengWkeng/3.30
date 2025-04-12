@@ -60,27 +60,41 @@ public:
     QCustomPlot *dash1plot;
     QGroupBox *groupBox_11;
     QGridLayout *dashboardLayout;
-    Dashboard *dashRPM;
-    Dashboard *dashFuelConsumption;
-    QLabel *labelRPM;
-    QLCDNumber *lcdFuelConsumption;
-    QLCDNumber *lcdPower;
-    QLCDNumber *lcdForce;
-    QLabel *labelSparkPlugTemp;
-    Dashboard *dashSparkPlugTemp;
-    Dashboard *dashTorque;
-    QLabel *labelTorque;
+    QVBoxLayout *verticalLayout_Force;
     Dashboard *dashForce;
-    QLabel *labelFuelConsumption;
-    QLCDNumber *lcdRPM;
-    Dashboard *dashPower;
+    QHBoxLayout *horizontalLayout_Force;
     QLabel *labelForce;
-    Dashboard *dashThrust;
-    QLabel *labelPower;
-    QLabel *labelThrust;
+    QLCDNumber *lcdForce;
+    QVBoxLayout *verticalLayout_Torque;
+    Dashboard *dashTorque;
+    QHBoxLayout *horizontalLayout_Torque;
+    QLabel *labelTorque;
     QLCDNumber *lcdTorque;
+    QVBoxLayout *verticalLayout_RPM;
+    Dashboard *dashRPM;
+    QHBoxLayout *horizontalLayout_RPM;
+    QLabel *labelRPM;
+    QLCDNumber *lcdRPM;
+    QVBoxLayout *verticalLayout_Thrust;
+    Dashboard *dashThrust;
+    QHBoxLayout *horizontalLayout_Thrust;
+    QLabel *labelThrust;
     QLCDNumber *lcdThrust;
+    QVBoxLayout *verticalLayout_FuelConsumption;
+    Dashboard *dashFuelConsumption;
+    QHBoxLayout *horizontalLayout_FuelConsumption;
+    QLabel *labelFuelConsumption;
+    QLCDNumber *lcdFuelConsumption;
+    QVBoxLayout *verticalLayout_SparkPlugTemp;
+    Dashboard *dashSparkPlugTemp;
+    QHBoxLayout *horizontalLayout_SparkPlugTemp;
+    QLabel *labelSparkPlugTemp;
     QLCDNumber *lcdSparkPlugTemp;
+    QVBoxLayout *verticalLayout_Power;
+    Dashboard *dashPower;
+    QHBoxLayout *horizontalLayout_Power;
+    QLabel *labelPower;
+    QLCDNumber *lcdPower;
     QStackedWidget *stackedWidget;
     QWidget *page;
     QVBoxLayout *pageLayout;
@@ -444,155 +458,255 @@ public:
         groupBox_11->setSizePolicy(sizePolicy);
         groupBox_11->setMinimumSize(QSize(300, 400));
         dashboardLayout = new QGridLayout(groupBox_11);
-        dashboardLayout->setSpacing(4);
+        dashboardLayout->setSpacing(6);
         dashboardLayout->setObjectName("dashboardLayout");
         dashboardLayout->setContentsMargins(4, 4, 4, 4);
-        dashRPM = new Dashboard(groupBox_11);
-        dashRPM->setObjectName("dashRPM");
-        sizePolicy.setHeightForWidth(dashRPM->sizePolicy().hasHeightForWidth());
-        dashRPM->setSizePolicy(sizePolicy);
-        dashRPM->setMinimumSize(QSize(120, 120));
+        verticalLayout_Force = new QVBoxLayout();
+        verticalLayout_Force->setObjectName("verticalLayout_Force");
+        dashForce = new Dashboard(groupBox_11);
+        dashForce->setObjectName("dashForce");
+        QSizePolicy sizePolicy4(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
+        sizePolicy4.setHorizontalStretch(0);
+        sizePolicy4.setVerticalStretch(1);
+        sizePolicy4.setHeightForWidth(dashForce->sizePolicy().hasHeightForWidth());
+        dashForce->setSizePolicy(sizePolicy4);
+        dashForce->setMinimumSize(QSize(120, 120));
 
-        dashboardLayout->addWidget(dashRPM, 1, 2, 1, 1);
+        verticalLayout_Force->addWidget(dashForce);
 
-        dashFuelConsumption = new Dashboard(groupBox_11);
-        dashFuelConsumption->setObjectName("dashFuelConsumption");
-        sizePolicy.setHeightForWidth(dashFuelConsumption->sizePolicy().hasHeightForWidth());
-        dashFuelConsumption->setSizePolicy(sizePolicy);
-        dashFuelConsumption->setMinimumSize(QSize(120, 120));
+        horizontalLayout_Force = new QHBoxLayout();
+        horizontalLayout_Force->setObjectName("horizontalLayout_Force");
+        labelForce = new QLabel(groupBox_11);
+        labelForce->setObjectName("labelForce");
+        QSizePolicy sizePolicy5(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Preferred);
+        sizePolicy5.setHorizontalStretch(1);
+        sizePolicy5.setVerticalStretch(0);
+        sizePolicy5.setHeightForWidth(labelForce->sizePolicy().hasHeightForWidth());
+        labelForce->setSizePolicy(sizePolicy5);
+        labelForce->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
-        dashboardLayout->addWidget(dashFuelConsumption, 2, 2, 1, 1);
-
-        labelRPM = new QLabel(groupBox_11);
-        labelRPM->setObjectName("labelRPM");
-        labelRPM->setMinimumSize(QSize(40, 0));
-        labelRPM->setMaximumSize(QSize(40, 16777215));
-        labelRPM->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
-
-        dashboardLayout->addWidget(labelRPM, 1, 0, 1, 1);
-
-        lcdFuelConsumption = new QLCDNumber(groupBox_11);
-        lcdFuelConsumption->setObjectName("lcdFuelConsumption");
-
-        dashboardLayout->addWidget(lcdFuelConsumption, 2, 1, 1, 1);
-
-        lcdPower = new QLCDNumber(groupBox_11);
-        lcdPower->setObjectName("lcdPower");
-
-        dashboardLayout->addWidget(lcdPower, 3, 1, 1, 1);
+        horizontalLayout_Force->addWidget(labelForce);
 
         lcdForce = new QLCDNumber(groupBox_11);
         lcdForce->setObjectName("lcdForce");
+        QSizePolicy sizePolicy6(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        sizePolicy6.setHorizontalStretch(2);
+        sizePolicy6.setVerticalStretch(0);
+        sizePolicy6.setHeightForWidth(lcdForce->sizePolicy().hasHeightForWidth());
+        lcdForce->setSizePolicy(sizePolicy6);
+        lcdForce->setMinimumSize(QSize(60, 20));
 
-        dashboardLayout->addWidget(lcdForce, 0, 1, 1, 1);
+        horizontalLayout_Force->addWidget(lcdForce);
 
-        labelSparkPlugTemp = new QLabel(groupBox_11);
-        labelSparkPlugTemp->setObjectName("labelSparkPlugTemp");
-        labelSparkPlugTemp->setMinimumSize(QSize(40, 0));
-        labelSparkPlugTemp->setMaximumSize(QSize(90, 16777215));
-        labelSparkPlugTemp->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
 
-        dashboardLayout->addWidget(labelSparkPlugTemp, 2, 3, 1, 1);
+        verticalLayout_Force->addLayout(horizontalLayout_Force);
 
-        dashSparkPlugTemp = new Dashboard(groupBox_11);
-        dashSparkPlugTemp->setObjectName("dashSparkPlugTemp");
-        sizePolicy.setHeightForWidth(dashSparkPlugTemp->sizePolicy().hasHeightForWidth());
-        dashSparkPlugTemp->setSizePolicy(sizePolicy);
-        dashSparkPlugTemp->setMinimumSize(QSize(120, 120));
 
-        dashboardLayout->addWidget(dashSparkPlugTemp, 2, 5, 1, 1);
+        dashboardLayout->addLayout(verticalLayout_Force, 0, 0, 1, 1);
 
+        verticalLayout_Torque = new QVBoxLayout();
+        verticalLayout_Torque->setObjectName("verticalLayout_Torque");
         dashTorque = new Dashboard(groupBox_11);
         dashTorque->setObjectName("dashTorque");
-        sizePolicy.setHeightForWidth(dashTorque->sizePolicy().hasHeightForWidth());
-        dashTorque->setSizePolicy(sizePolicy);
+        sizePolicy4.setHeightForWidth(dashTorque->sizePolicy().hasHeightForWidth());
+        dashTorque->setSizePolicy(sizePolicy4);
         dashTorque->setMinimumSize(QSize(120, 120));
 
-        dashboardLayout->addWidget(dashTorque, 0, 5, 1, 1);
+        verticalLayout_Torque->addWidget(dashTorque);
 
+        horizontalLayout_Torque = new QHBoxLayout();
+        horizontalLayout_Torque->setObjectName("horizontalLayout_Torque");
         labelTorque = new QLabel(groupBox_11);
         labelTorque->setObjectName("labelTorque");
-        labelTorque->setMinimumSize(QSize(40, 0));
-        labelTorque->setMaximumSize(QSize(40, 16777215));
-        labelTorque->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
+        sizePolicy5.setHeightForWidth(labelTorque->sizePolicy().hasHeightForWidth());
+        labelTorque->setSizePolicy(sizePolicy5);
+        labelTorque->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
-        dashboardLayout->addWidget(labelTorque, 0, 3, 1, 1);
-
-        dashForce = new Dashboard(groupBox_11);
-        dashForce->setObjectName("dashForce");
-        sizePolicy.setHeightForWidth(dashForce->sizePolicy().hasHeightForWidth());
-        dashForce->setSizePolicy(sizePolicy);
-        dashForce->setMinimumSize(QSize(120, 120));
-
-        dashboardLayout->addWidget(dashForce, 0, 2, 1, 1);
-
-        labelFuelConsumption = new QLabel(groupBox_11);
-        labelFuelConsumption->setObjectName("labelFuelConsumption");
-        labelFuelConsumption->setMinimumSize(QSize(40, 0));
-        labelFuelConsumption->setMaximumSize(QSize(40, 16777215));
-        labelFuelConsumption->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
-
-        dashboardLayout->addWidget(labelFuelConsumption, 2, 0, 1, 1);
-
-        lcdRPM = new QLCDNumber(groupBox_11);
-        lcdRPM->setObjectName("lcdRPM");
-
-        dashboardLayout->addWidget(lcdRPM, 1, 1, 1, 1);
-
-        dashPower = new Dashboard(groupBox_11);
-        dashPower->setObjectName("dashPower");
-        sizePolicy.setHeightForWidth(dashPower->sizePolicy().hasHeightForWidth());
-        dashPower->setSizePolicy(sizePolicy);
-        dashPower->setMinimumSize(QSize(120, 120));
-
-        dashboardLayout->addWidget(dashPower, 3, 2, 1, 1);
-
-        labelForce = new QLabel(groupBox_11);
-        labelForce->setObjectName("labelForce");
-        labelForce->setMinimumSize(QSize(40, 0));
-        labelForce->setMaximumSize(QSize(40, 16777215));
-        labelForce->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
-
-        dashboardLayout->addWidget(labelForce, 0, 0, 1, 1);
-
-        dashThrust = new Dashboard(groupBox_11);
-        dashThrust->setObjectName("dashThrust");
-        sizePolicy.setHeightForWidth(dashThrust->sizePolicy().hasHeightForWidth());
-        dashThrust->setSizePolicy(sizePolicy);
-        dashThrust->setMinimumSize(QSize(120, 120));
-
-        dashboardLayout->addWidget(dashThrust, 1, 5, 1, 1);
-
-        labelPower = new QLabel(groupBox_11);
-        labelPower->setObjectName("labelPower");
-        labelPower->setMinimumSize(QSize(40, 0));
-        labelPower->setMaximumSize(QSize(40, 16777215));
-        labelPower->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
-
-        dashboardLayout->addWidget(labelPower, 3, 0, 1, 1);
-
-        labelThrust = new QLabel(groupBox_11);
-        labelThrust->setObjectName("labelThrust");
-        labelThrust->setMinimumSize(QSize(40, 0));
-        labelThrust->setMaximumSize(QSize(40, 16777215));
-        labelThrust->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
-
-        dashboardLayout->addWidget(labelThrust, 1, 3, 1, 1);
+        horizontalLayout_Torque->addWidget(labelTorque);
 
         lcdTorque = new QLCDNumber(groupBox_11);
         lcdTorque->setObjectName("lcdTorque");
+        sizePolicy6.setHeightForWidth(lcdTorque->sizePolicy().hasHeightForWidth());
+        lcdTorque->setSizePolicy(sizePolicy6);
+        lcdTorque->setMinimumSize(QSize(60, 20));
 
-        dashboardLayout->addWidget(lcdTorque, 0, 4, 1, 1);
+        horizontalLayout_Torque->addWidget(lcdTorque);
+
+
+        verticalLayout_Torque->addLayout(horizontalLayout_Torque);
+
+
+        dashboardLayout->addLayout(verticalLayout_Torque, 0, 1, 1, 1);
+
+        verticalLayout_RPM = new QVBoxLayout();
+        verticalLayout_RPM->setObjectName("verticalLayout_RPM");
+        dashRPM = new Dashboard(groupBox_11);
+        dashRPM->setObjectName("dashRPM");
+        sizePolicy4.setHeightForWidth(dashRPM->sizePolicy().hasHeightForWidth());
+        dashRPM->setSizePolicy(sizePolicy4);
+        dashRPM->setMinimumSize(QSize(120, 120));
+
+        verticalLayout_RPM->addWidget(dashRPM);
+
+        horizontalLayout_RPM = new QHBoxLayout();
+        horizontalLayout_RPM->setObjectName("horizontalLayout_RPM");
+        labelRPM = new QLabel(groupBox_11);
+        labelRPM->setObjectName("labelRPM");
+        sizePolicy5.setHeightForWidth(labelRPM->sizePolicy().hasHeightForWidth());
+        labelRPM->setSizePolicy(sizePolicy5);
+        labelRPM->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+
+        horizontalLayout_RPM->addWidget(labelRPM);
+
+        lcdRPM = new QLCDNumber(groupBox_11);
+        lcdRPM->setObjectName("lcdRPM");
+        sizePolicy6.setHeightForWidth(lcdRPM->sizePolicy().hasHeightForWidth());
+        lcdRPM->setSizePolicy(sizePolicy6);
+        lcdRPM->setMinimumSize(QSize(60, 20));
+
+        horizontalLayout_RPM->addWidget(lcdRPM);
+
+
+        verticalLayout_RPM->addLayout(horizontalLayout_RPM);
+
+
+        dashboardLayout->addLayout(verticalLayout_RPM, 0, 2, 1, 1);
+
+        verticalLayout_Thrust = new QVBoxLayout();
+        verticalLayout_Thrust->setObjectName("verticalLayout_Thrust");
+        dashThrust = new Dashboard(groupBox_11);
+        dashThrust->setObjectName("dashThrust");
+        sizePolicy4.setHeightForWidth(dashThrust->sizePolicy().hasHeightForWidth());
+        dashThrust->setSizePolicy(sizePolicy4);
+        dashThrust->setMinimumSize(QSize(120, 120));
+
+        verticalLayout_Thrust->addWidget(dashThrust);
+
+        horizontalLayout_Thrust = new QHBoxLayout();
+        horizontalLayout_Thrust->setObjectName("horizontalLayout_Thrust");
+        labelThrust = new QLabel(groupBox_11);
+        labelThrust->setObjectName("labelThrust");
+        sizePolicy5.setHeightForWidth(labelThrust->sizePolicy().hasHeightForWidth());
+        labelThrust->setSizePolicy(sizePolicy5);
+        labelThrust->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+
+        horizontalLayout_Thrust->addWidget(labelThrust);
 
         lcdThrust = new QLCDNumber(groupBox_11);
         lcdThrust->setObjectName("lcdThrust");
+        sizePolicy6.setHeightForWidth(lcdThrust->sizePolicy().hasHeightForWidth());
+        lcdThrust->setSizePolicy(sizePolicy6);
+        lcdThrust->setMinimumSize(QSize(60, 20));
 
-        dashboardLayout->addWidget(lcdThrust, 1, 4, 1, 1);
+        horizontalLayout_Thrust->addWidget(lcdThrust);
+
+
+        verticalLayout_Thrust->addLayout(horizontalLayout_Thrust);
+
+
+        dashboardLayout->addLayout(verticalLayout_Thrust, 0, 3, 1, 1);
+
+        verticalLayout_FuelConsumption = new QVBoxLayout();
+        verticalLayout_FuelConsumption->setObjectName("verticalLayout_FuelConsumption");
+        dashFuelConsumption = new Dashboard(groupBox_11);
+        dashFuelConsumption->setObjectName("dashFuelConsumption");
+        sizePolicy4.setHeightForWidth(dashFuelConsumption->sizePolicy().hasHeightForWidth());
+        dashFuelConsumption->setSizePolicy(sizePolicy4);
+        dashFuelConsumption->setMinimumSize(QSize(120, 120));
+
+        verticalLayout_FuelConsumption->addWidget(dashFuelConsumption);
+
+        horizontalLayout_FuelConsumption = new QHBoxLayout();
+        horizontalLayout_FuelConsumption->setObjectName("horizontalLayout_FuelConsumption");
+        labelFuelConsumption = new QLabel(groupBox_11);
+        labelFuelConsumption->setObjectName("labelFuelConsumption");
+        sizePolicy5.setHeightForWidth(labelFuelConsumption->sizePolicy().hasHeightForWidth());
+        labelFuelConsumption->setSizePolicy(sizePolicy5);
+        labelFuelConsumption->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+
+        horizontalLayout_FuelConsumption->addWidget(labelFuelConsumption);
+
+        lcdFuelConsumption = new QLCDNumber(groupBox_11);
+        lcdFuelConsumption->setObjectName("lcdFuelConsumption");
+        sizePolicy6.setHeightForWidth(lcdFuelConsumption->sizePolicy().hasHeightForWidth());
+        lcdFuelConsumption->setSizePolicy(sizePolicy6);
+        lcdFuelConsumption->setMinimumSize(QSize(60, 20));
+
+        horizontalLayout_FuelConsumption->addWidget(lcdFuelConsumption);
+
+
+        verticalLayout_FuelConsumption->addLayout(horizontalLayout_FuelConsumption);
+
+
+        dashboardLayout->addLayout(verticalLayout_FuelConsumption, 1, 0, 1, 1);
+
+        verticalLayout_SparkPlugTemp = new QVBoxLayout();
+        verticalLayout_SparkPlugTemp->setObjectName("verticalLayout_SparkPlugTemp");
+        dashSparkPlugTemp = new Dashboard(groupBox_11);
+        dashSparkPlugTemp->setObjectName("dashSparkPlugTemp");
+        sizePolicy4.setHeightForWidth(dashSparkPlugTemp->sizePolicy().hasHeightForWidth());
+        dashSparkPlugTemp->setSizePolicy(sizePolicy4);
+        dashSparkPlugTemp->setMinimumSize(QSize(120, 120));
+
+        verticalLayout_SparkPlugTemp->addWidget(dashSparkPlugTemp);
+
+        horizontalLayout_SparkPlugTemp = new QHBoxLayout();
+        horizontalLayout_SparkPlugTemp->setObjectName("horizontalLayout_SparkPlugTemp");
+        labelSparkPlugTemp = new QLabel(groupBox_11);
+        labelSparkPlugTemp->setObjectName("labelSparkPlugTemp");
+        sizePolicy5.setHeightForWidth(labelSparkPlugTemp->sizePolicy().hasHeightForWidth());
+        labelSparkPlugTemp->setSizePolicy(sizePolicy5);
+        labelSparkPlugTemp->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+
+        horizontalLayout_SparkPlugTemp->addWidget(labelSparkPlugTemp);
 
         lcdSparkPlugTemp = new QLCDNumber(groupBox_11);
         lcdSparkPlugTemp->setObjectName("lcdSparkPlugTemp");
+        sizePolicy6.setHeightForWidth(lcdSparkPlugTemp->sizePolicy().hasHeightForWidth());
+        lcdSparkPlugTemp->setSizePolicy(sizePolicy6);
+        lcdSparkPlugTemp->setMinimumSize(QSize(60, 20));
 
-        dashboardLayout->addWidget(lcdSparkPlugTemp, 2, 4, 1, 1);
+        horizontalLayout_SparkPlugTemp->addWidget(lcdSparkPlugTemp);
+
+
+        verticalLayout_SparkPlugTemp->addLayout(horizontalLayout_SparkPlugTemp);
+
+
+        dashboardLayout->addLayout(verticalLayout_SparkPlugTemp, 1, 1, 1, 1);
+
+        verticalLayout_Power = new QVBoxLayout();
+        verticalLayout_Power->setObjectName("verticalLayout_Power");
+        dashPower = new Dashboard(groupBox_11);
+        dashPower->setObjectName("dashPower");
+        sizePolicy4.setHeightForWidth(dashPower->sizePolicy().hasHeightForWidth());
+        dashPower->setSizePolicy(sizePolicy4);
+        dashPower->setMinimumSize(QSize(120, 120));
+
+        verticalLayout_Power->addWidget(dashPower);
+
+        horizontalLayout_Power = new QHBoxLayout();
+        horizontalLayout_Power->setObjectName("horizontalLayout_Power");
+        labelPower = new QLabel(groupBox_11);
+        labelPower->setObjectName("labelPower");
+        sizePolicy5.setHeightForWidth(labelPower->sizePolicy().hasHeightForWidth());
+        labelPower->setSizePolicy(sizePolicy5);
+        labelPower->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+
+        horizontalLayout_Power->addWidget(labelPower);
+
+        lcdPower = new QLCDNumber(groupBox_11);
+        lcdPower->setObjectName("lcdPower");
+        sizePolicy6.setHeightForWidth(lcdPower->sizePolicy().hasHeightForWidth());
+        lcdPower->setSizePolicy(sizePolicy6);
+        lcdPower->setMinimumSize(QSize(60, 20));
+
+        horizontalLayout_Power->addWidget(lcdPower);
+
+
+        verticalLayout_Power->addLayout(horizontalLayout_Power);
+
+
+        dashboardLayout->addLayout(verticalLayout_Power, 1, 2, 1, 1);
 
 
         monitorLayout->addWidget(groupBox_11);
@@ -946,11 +1060,11 @@ public:
 
         groupBoxECU = new QGroupBox(page);
         groupBoxECU->setObjectName("groupBoxECU");
-        QSizePolicy sizePolicy4(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
-        sizePolicy4.setHorizontalStretch(0);
-        sizePolicy4.setVerticalStretch(0);
-        sizePolicy4.setHeightForWidth(groupBoxECU->sizePolicy().hasHeightForWidth());
-        groupBoxECU->setSizePolicy(sizePolicy4);
+        QSizePolicy sizePolicy7(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
+        sizePolicy7.setHorizontalStretch(0);
+        sizePolicy7.setVerticalStretch(0);
+        sizePolicy7.setHeightForWidth(groupBoxECU->sizePolicy().hasHeightForWidth());
+        groupBoxECU->setSizePolicy(sizePolicy7);
         groupBoxECU->setMinimumSize(QSize(0, 50));
         ecuLayout = new QHBoxLayout(groupBoxECU);
         ecuLayout->setObjectName("ecuLayout");
@@ -1065,11 +1179,8 @@ public:
 
         groupBox_4 = new QGroupBox(page_2);
         groupBox_4->setObjectName("groupBox_4");
-        QSizePolicy sizePolicy5(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
-        sizePolicy5.setHorizontalStretch(0);
-        sizePolicy5.setVerticalStretch(1);
-        sizePolicy5.setHeightForWidth(groupBox_4->sizePolicy().hasHeightForWidth());
-        groupBox_4->setSizePolicy(sizePolicy5);
+        sizePolicy4.setHeightForWidth(groupBox_4->sizePolicy().hasHeightForWidth());
+        groupBox_4->setSizePolicy(sizePolicy4);
         groupBox_4->setMinimumSize(QSize(0, 150));
         verticalLayout_6 = new QVBoxLayout(groupBox_4);
         verticalLayout_6->setObjectName("verticalLayout_6");
@@ -1084,8 +1195,8 @@ public:
 
         groupBox_6 = new QGroupBox(page_2);
         groupBox_6->setObjectName("groupBox_6");
-        sizePolicy5.setHeightForWidth(groupBox_6->sizePolicy().hasHeightForWidth());
-        groupBox_6->setSizePolicy(sizePolicy5);
+        sizePolicy4.setHeightForWidth(groupBox_6->sizePolicy().hasHeightForWidth());
+        groupBox_6->setSizePolicy(sizePolicy4);
         groupBox_6->setMinimumSize(QSize(0, 150));
         verticalLayout_7 = new QVBoxLayout(groupBox_6);
         verticalLayout_7->setObjectName("verticalLayout_7");
@@ -1100,8 +1211,8 @@ public:
 
         groupBoxECUplot = new QGroupBox(page_2);
         groupBoxECUplot->setObjectName("groupBoxECUplot");
-        sizePolicy5.setHeightForWidth(groupBoxECUplot->sizePolicy().hasHeightForWidth());
-        groupBoxECUplot->setSizePolicy(sizePolicy5);
+        sizePolicy4.setHeightForWidth(groupBoxECUplot->sizePolicy().hasHeightForWidth());
+        groupBoxECUplot->setSizePolicy(sizePolicy4);
         groupBoxECUplot->setMinimumSize(QSize(0, 150));
         verticalLayout_8 = new QVBoxLayout(groupBoxECUplot);
         verticalLayout_8->setObjectName("verticalLayout_8");
@@ -1116,8 +1227,8 @@ public:
 
         groupBoxCustomPlot = new QGroupBox(page_2);
         groupBoxCustomPlot->setObjectName("groupBoxCustomPlot");
-        sizePolicy5.setHeightForWidth(groupBoxCustomPlot->sizePolicy().hasHeightForWidth());
-        groupBoxCustomPlot->setSizePolicy(sizePolicy5);
+        sizePolicy4.setHeightForWidth(groupBoxCustomPlot->sizePolicy().hasHeightForWidth());
+        groupBoxCustomPlot->setSizePolicy(sizePolicy4);
         groupBoxCustomPlot->setMinimumSize(QSize(0, 150));
         verticalLayout_11 = new QVBoxLayout(groupBoxCustomPlot);
         verticalLayout_11->setObjectName("verticalLayout_11");
@@ -1144,8 +1255,8 @@ public:
 
         groupBox_7 = new QGroupBox(page_4);
         groupBox_7->setObjectName("groupBox_7");
-        sizePolicy5.setHeightForWidth(groupBox_7->sizePolicy().hasHeightForWidth());
-        groupBox_7->setSizePolicy(sizePolicy5);
+        sizePolicy4.setHeightForWidth(groupBox_7->sizePolicy().hasHeightForWidth());
+        groupBox_7->setSizePolicy(sizePolicy4);
         verticalLayout_81 = new QVBoxLayout(groupBox_7);
         verticalLayout_81->setObjectName("verticalLayout_81");
         tableView = new QTableView(groupBox_7);
@@ -1158,8 +1269,8 @@ public:
 
         groupBox_8 = new QGroupBox(page_4);
         groupBox_8->setObjectName("groupBox_8");
-        sizePolicy5.setHeightForWidth(groupBox_8->sizePolicy().hasHeightForWidth());
-        groupBox_8->setSizePolicy(sizePolicy5);
+        sizePolicy4.setHeightForWidth(groupBox_8->sizePolicy().hasHeightForWidth());
+        groupBox_8->setSizePolicy(sizePolicy4);
         verticalLayout_9 = new QVBoxLayout(groupBox_8);
         verticalLayout_9->setObjectName("verticalLayout_9");
         daqDataTableView = new QTableView(groupBox_8);
@@ -1172,8 +1283,8 @@ public:
 
         groupBox_9 = new QGroupBox(page_4);
         groupBox_9->setObjectName("groupBox_9");
-        sizePolicy5.setHeightForWidth(groupBox_9->sizePolicy().hasHeightForWidth());
-        groupBox_9->setSizePolicy(sizePolicy5);
+        sizePolicy4.setHeightForWidth(groupBox_9->sizePolicy().hasHeightForWidth());
+        groupBox_9->setSizePolicy(sizePolicy4);
         verticalLayout_10 = new QVBoxLayout(groupBox_9);
         verticalLayout_10->setObjectName("verticalLayout_10");
         tableViewECU = new QTableView(groupBox_9);
@@ -1186,8 +1297,8 @@ public:
 
         groupBoxCustomData = new QGroupBox(page_4);
         groupBoxCustomData->setObjectName("groupBoxCustomData");
-        sizePolicy5.setHeightForWidth(groupBoxCustomData->sizePolicy().hasHeightForWidth());
-        groupBoxCustomData->setSizePolicy(sizePolicy5);
+        sizePolicy4.setHeightForWidth(groupBoxCustomData->sizePolicy().hasHeightForWidth());
+        groupBoxCustomData->setSizePolicy(sizePolicy4);
         verticalLayout_12 = new QVBoxLayout(groupBoxCustomData);
         verticalLayout_12->setObjectName("verticalLayout_12");
         customVarTableView = new QTableView(groupBoxCustomData);
@@ -1263,13 +1374,13 @@ public:
         btnReadData->setText(QCoreApplication::translate("MainWindow", "\350\257\273\345\217\226\346\225\260\346\215\256", nullptr));
         groupBox_10->setTitle(QCoreApplication::translate("MainWindow", "\346\225\260\346\215\256\347\233\221\346\216\247\351\235\242\346\235\277", nullptr));
         groupBox_11->setTitle(QCoreApplication::translate("MainWindow", "\344\273\252\350\241\250\347\233\230", nullptr));
-        labelRPM->setText(QCoreApplication::translate("MainWindow", "\350\275\254\351\200\237", nullptr));
-        labelSparkPlugTemp->setText(QCoreApplication::translate("MainWindow", "\347\201\253\350\212\261\345\241\236\344\270\213\346\270\251\345\272\246", nullptr));
-        labelTorque->setText(QCoreApplication::translate("MainWindow", "\346\211\255\347\237\251", nullptr));
-        labelFuelConsumption->setText(QCoreApplication::translate("MainWindow", "\346\262\271\350\200\227", nullptr));
         labelForce->setText(QCoreApplication::translate("MainWindow", "\346\213\211\345\212\233", nullptr));
-        labelPower->setText(QCoreApplication::translate("MainWindow", "\345\212\237\347\216\207", nullptr));
+        labelTorque->setText(QCoreApplication::translate("MainWindow", "\346\211\255\347\237\251", nullptr));
+        labelRPM->setText(QCoreApplication::translate("MainWindow", "\350\275\254\351\200\237", nullptr));
         labelThrust->setText(QCoreApplication::translate("MainWindow", "\346\216\250\345\212\233", nullptr));
+        labelFuelConsumption->setText(QCoreApplication::translate("MainWindow", "\346\262\271\350\200\227", nullptr));
+        labelSparkPlugTemp->setText(QCoreApplication::translate("MainWindow", "\347\201\253\350\212\261\345\241\236\346\270\251\345\272\246", nullptr));
+        labelPower->setText(QCoreApplication::translate("MainWindow", "\345\212\237\347\216\207", nullptr));
         groupBox_5->setTitle(QCoreApplication::translate("MainWindow", "Modbus\351\200\232\344\277\241\345\217\202\346\225\260\351\205\215\347\275\256", nullptr));
         labelPort->setText(QCoreApplication::translate("MainWindow", "\344\270\262\345\217\243\345\217\267:", nullptr));
         labelBaudRate->setText(QCoreApplication::translate("MainWindow", "\346\263\242\347\211\271\347\216\207:", nullptr));
