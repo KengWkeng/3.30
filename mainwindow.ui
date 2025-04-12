@@ -469,6 +469,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                    <bold>true</bold>
+                   </font>
+                  </property>
                   <property name="text">
                    <string>拉力</string>
                   </property>
@@ -524,6 +530,12 @@ QStackedWidget {
                     <horstretch>1</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                    <bold>true</bold>
+                   </font>
                   </property>
                   <property name="text">
                    <string>扭矩</string>
@@ -581,6 +593,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                    <bold>true</bold>
+                   </font>
+                  </property>
                   <property name="text">
                    <string>转速</string>
                   </property>
@@ -636,6 +654,12 @@ QStackedWidget {
                     <horstretch>1</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                    <bold>true</bold>
+                   </font>
                   </property>
                   <property name="text">
                    <string>推力</string>
@@ -693,6 +717,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                    <bold>true</bold>
+                   </font>
+                  </property>
                   <property name="text">
                    <string>油耗</string>
                   </property>
@@ -749,6 +779,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                    <bold>true</bold>
+                   </font>
+                  </property>
                   <property name="text">
                    <string>火花塞温度</string>
                   </property>
@@ -804,6 +840,12 @@ QStackedWidget {
                     <horstretch>1</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                    <bold>true</bold>
+                   </font>
                   </property>
                   <property name="text">
                    <string>功率</string>

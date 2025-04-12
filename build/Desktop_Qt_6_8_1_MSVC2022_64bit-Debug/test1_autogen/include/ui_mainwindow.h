@@ -483,6 +483,10 @@ public:
         sizePolicy5.setVerticalStretch(0);
         sizePolicy5.setHeightForWidth(labelForce->sizePolicy().hasHeightForWidth());
         labelForce->setSizePolicy(sizePolicy5);
+        QFont font1;
+        font1.setPointSize(10);
+        font1.setBold(true);
+        labelForce->setFont(font1);
         labelForce->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
         horizontalLayout_Force->addWidget(labelForce);
@@ -520,6 +524,7 @@ public:
         labelTorque->setObjectName("labelTorque");
         sizePolicy5.setHeightForWidth(labelTorque->sizePolicy().hasHeightForWidth());
         labelTorque->setSizePolicy(sizePolicy5);
+        labelTorque->setFont(font1);
         labelTorque->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
         horizontalLayout_Torque->addWidget(labelTorque);
@@ -554,6 +559,7 @@ public:
         labelRPM->setObjectName("labelRPM");
         sizePolicy5.setHeightForWidth(labelRPM->sizePolicy().hasHeightForWidth());
         labelRPM->setSizePolicy(sizePolicy5);
+        labelRPM->setFont(font1);
         labelRPM->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
         horizontalLayout_RPM->addWidget(labelRPM);
@@ -588,6 +594,7 @@ public:
         labelThrust->setObjectName("labelThrust");
         sizePolicy5.setHeightForWidth(labelThrust->sizePolicy().hasHeightForWidth());
         labelThrust->setSizePolicy(sizePolicy5);
+        labelThrust->setFont(font1);
         labelThrust->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
         horizontalLayout_Thrust->addWidget(labelThrust);
@@ -622,6 +629,7 @@ public:
         labelFuelConsumption->setObjectName("labelFuelConsumption");
         sizePolicy5.setHeightForWidth(labelFuelConsumption->sizePolicy().hasHeightForWidth());
         labelFuelConsumption->setSizePolicy(sizePolicy5);
+        labelFuelConsumption->setFont(font1);
         labelFuelConsumption->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
         horizontalLayout_FuelConsumption->addWidget(labelFuelConsumption);
@@ -656,6 +664,7 @@ public:
         labelSparkPlugTemp->setObjectName("labelSparkPlugTemp");
         sizePolicy5.setHeightForWidth(labelSparkPlugTemp->sizePolicy().hasHeightForWidth());
         labelSparkPlugTemp->setSizePolicy(sizePolicy5);
+        labelSparkPlugTemp->setFont(font1);
         labelSparkPlugTemp->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
         horizontalLayout_SparkPlugTemp->addWidget(labelSparkPlugTemp);
@@ -690,6 +699,7 @@ public:
         labelPower->setObjectName("labelPower");
         sizePolicy5.setHeightForWidth(labelPower->sizePolicy().hasHeightForWidth());
         labelPower->setSizePolicy(sizePolicy5);
+        labelPower->setFont(font1);
         labelPower->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
 
         horizontalLayout_Power->addWidget(labelPower);
