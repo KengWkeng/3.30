@@ -1,16 +1,25 @@
 C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/EWIEGA46WW/moc_websocketthread.cpp: C:/Users/80911/Documents/QT/vs_test/test1/websocketthread.h \
+  C:/Users/80911/Documents/QT/vs_test/test1/ecuthread.h \
+  C:/Users/80911/Documents/QT/vs_test/test1/snapshotthread.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QCoreApplication \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QDateTime \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QDebug \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QElapsedTimer \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QFile \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QFlags \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonArray \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonDocument \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonObject \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QList \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutexLocker \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QQueue \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QSharedDataPointer \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QString \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QStringList \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTextStream \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QThread \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTimer \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QUrl \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QVariant \
@@ -93,6 +102,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmetacontainer.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmetatype.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qminmax.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmutex.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnamespace.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnativeinterface.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnumeric.h \
@@ -103,6 +113,9 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qoverload.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qpair.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qprocessordetection.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qproperty.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qpropertyprivate.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qqueue.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qrefcount.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qregularexpression.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qscopedpointer.h \
@@ -137,11 +150,13 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtdeprecationmarkers.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtenvironmentvariables.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtextstream.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qthread.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtimer.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtmetamacros.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtnoop.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtpreprocessorsupport.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtresource.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtsan_impl.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qttranslation.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qttypetraits.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtversion.h \
@@ -180,6 +195,12 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtNetwork/qtnetwork-config.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtNetwork/qtnetworkexports.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtNetwork/qtnetworkglobal.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtSerialPort/QSerialPort \
+  D:/Qt/6.8.1/msvc2022_64/include/QtSerialPort/QSerialPortInfo \
+  D:/Qt/6.8.1/msvc2022_64/include/QtSerialPort/qserialport.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtSerialPort/qserialportglobal.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtSerialPort/qserialportinfo.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtSerialPort/qtserialportexports.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtWebSockets/QWebSocket \
   D:/Qt/6.8.1/msvc2022_64/include/QtWebSockets/QWebSocketServer \
   D:/Qt/6.8.1/msvc2022_64/include/QtWebSockets/qtwebsocketsexports.h \

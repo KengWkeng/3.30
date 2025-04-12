@@ -50,6 +50,10 @@ static constexpr auto qt_meta_stringdata_ZN15WebSocketThreadE = QtMocHelpers::st
     "serverError",
     "errorMessage",
     "messageReceived",
+    "handleDataSnapshot",
+    "DataSnapshot",
+    "snapshot",
+    "snapshotCount",
     "handleModbusData",
     "data",
     "interval",
@@ -78,7 +82,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN15WebSocketThreadE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      16,   14, // methods
+      17,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -86,26 +90,27 @@ Q_CONSTINIT static const uint qt_meta_data_ZN15WebSocketThreadE[] = {
        6,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    1,  110,    2, 0x06,    1 /* Public */,
-       4,    1,  113,    2, 0x06,    3 /* Public */,
-       5,    2,  116,    2, 0x06,    5 /* Public */,
-       8,    0,  121,    2, 0x06,    8 /* Public */,
-       9,    1,  122,    2, 0x06,    9 /* Public */,
-      11,    1,  125,    2, 0x06,   11 /* Public */,
+       1,    1,  116,    2, 0x06,    1 /* Public */,
+       4,    1,  119,    2, 0x06,    3 /* Public */,
+       5,    2,  122,    2, 0x06,    5 /* Public */,
+       8,    0,  127,    2, 0x06,    8 /* Public */,
+       9,    1,  128,    2, 0x06,    9 /* Public */,
+      11,    1,  131,    2, 0x06,   11 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-      12,    2,  128,    2, 0x0a,   13 /* Public */,
-      15,    2,  133,    2, 0x0a,   16 /* Public */,
-      19,    1,  138,    2, 0x0a,   19 /* Public */,
-      20,    0,  141,    2, 0x08,   21 /* Private */,
-      21,    0,  142,    2, 0x08,   22 /* Private */,
-      22,    1,  143,    2, 0x08,   23 /* Private */,
-      23,    1,  146,    2, 0x08,   25 /* Private */,
-      26,    0,  149,    2, 0x08,   27 /* Private */,
-      27,    0,  150,    2, 0x08,   28 /* Private */,
+      12,    2,  134,    2, 0x0a,   13 /* Public */,
+      16,    2,  139,    2, 0x0a,   16 /* Public */,
+      19,    2,  144,    2, 0x0a,   19 /* Public */,
+      23,    1,  149,    2, 0x0a,   22 /* Public */,
+      24,    0,  152,    2, 0x08,   24 /* Private */,
+      25,    0,  153,    2, 0x08,   25 /* Private */,
+      26,    1,  154,    2, 0x08,   26 /* Private */,
+      27,    1,  157,    2, 0x08,   28 /* Private */,
+      30,    0,  160,    2, 0x08,   30 /* Private */,
+      31,    0,  161,    2, 0x08,   31 /* Private */,
 
  // methods: name, argc, parameters, tag, flags, initial metatype offsets
-      28,    0,  151,    2, 0x02,   29 /* Public */,
+      32,    0,  162,    2, 0x02,   32 /* Public */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::QString,    3,
@@ -116,13 +121,14 @@ Q_CONSTINIT static const uint qt_meta_data_ZN15WebSocketThreadE[] = {
     QMetaType::Void, QMetaType::QString,    7,
 
  // slots: parameters
-    QMetaType::Void, QMetaType::QJsonObject, QMetaType::Int,   13,   14,
-    QMetaType::Void, 0x80000000 | 16, QMetaType::LongLong,   17,   18,
+    QMetaType::Void, 0x80000000 | 13, QMetaType::Int,   14,   15,
+    QMetaType::Void, QMetaType::QJsonObject, QMetaType::Int,   17,   18,
+    QMetaType::Void, 0x80000000 | 20, QMetaType::LongLong,   21,   22,
     QMetaType::Void, QMetaType::QString,    7,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void, QMetaType::QString,    7,
-    QMetaType::Void, 0x80000000 | 24,   25,
+    QMetaType::Void, 0x80000000 | 28,   29,
     QMetaType::Void,
     QMetaType::Void,
 
@@ -159,6 +165,10 @@ Q_CONSTINIT const QMetaObject WebSocketThread::staticMetaObject = { {
         // method 'messageReceived'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<QString, std::false_type>,
+        // method 'handleDataSnapshot'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const DataSnapshot &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<int, std::false_type>,
         // method 'handleModbusData'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QJsonObject &, std::false_type>,
@@ -201,30 +211,31 @@ void WebSocketThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         case 3: _t->serverStopped(); break;
         case 4: _t->serverError((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         case 5: _t->messageReceived((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 6: _t->handleModbusData((*reinterpret_cast< std::add_pointer_t<QJsonObject>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
-        case 7: _t->handleModbusRawData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<qint64>>(_a[2]))); break;
-        case 8: _t->sendMessageToAllClients((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 9: _t->onNewConnection(); break;
-        case 10: _t->onSocketDisconnected(); break;
-        case 11: _t->onTextMessageReceived((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 12: _t->onSocketError((*reinterpret_cast< std::add_pointer_t<QAbstractSocket::SocketError>>(_a[1]))); break;
-        case 13: _t->onHttpNewConnection(); break;
-        case 14: _t->onHttpReadyRead(); break;
-        case 15: _t->testConnection(); break;
+        case 6: _t->handleDataSnapshot((*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
+        case 7: _t->handleModbusData((*reinterpret_cast< std::add_pointer_t<QJsonObject>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
+        case 8: _t->handleModbusRawData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<qint64>>(_a[2]))); break;
+        case 9: _t->sendMessageToAllClients((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 10: _t->onNewConnection(); break;
+        case 11: _t->onSocketDisconnected(); break;
+        case 12: _t->onTextMessageReceived((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 13: _t->onSocketError((*reinterpret_cast< std::add_pointer_t<QAbstractSocket::SocketError>>(_a[1]))); break;
+        case 14: _t->onHttpNewConnection(); break;
+        case 15: _t->onHttpReadyRead(); break;
+        case 16: _t->testConnection(); break;
         default: ;
         }
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
         switch (_id) {
         default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-        case 7:
+        case 8:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 0:
                 *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<double> >(); break;
             }
             break;
-        case 12:
+        case 13:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 0:
@@ -299,14 +310,14 @@ int WebSocketThread::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 16)
+        if (_id < 17)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 16;
+        _id -= 17;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 16)
+        if (_id < 17)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 16;
+        _id -= 17;
     }
     return _id;
 }

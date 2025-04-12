@@ -17,6 +17,7 @@
 #include <QFile>
 #include <QCoreApplication>
 #include <QDebug>
+#include "snapshotthread.h"
 
 class WebSocketThread : public QObject
 {
@@ -34,11 +35,13 @@ public:
     Q_INVOKABLE void testConnection();
 
 public slots:
-    // 接收JSON数据的槽函数
-    void handleModbusData(const QJsonObject &data, int interval);
+    // 新增：处理完整数据快照的槽函数
+    void handleDataSnapshot(const DataSnapshot &snapshot, int snapshotCount);
     
-    // 新增：直接接收Modbus原始数据的槽函数
-    void handleModbusRawData(QVector<double> resultdata, qint64 readTimeInterval);
+    // 以下旧方法标记为废弃，将在未来版本移除
+    void handleModbusData(const QJsonObject &data, int interval); // 废弃
+    void handleModbusRawData(QVector<double> resultdata, qint64 readTimeInterval); // 废弃
+    
     void sendMessageToAllClients(const QString &message);
 
 signals:
@@ -75,8 +78,11 @@ private:
     // 发送数据给所有客户端
     void broadcastMessage(const QJsonObject &data);
     
-    // 新增：将Modbus原始数据转换为JSON格式
-    QJsonObject convertModbusDataToJson(const QVector<double> &data, int startAddress);
+    // 新增：将DataSnapshot转换为JSON格式
+    QJsonObject convertSnapshotToJson(const DataSnapshot &snapshot, int snapshotCount);
+    
+    // 旧方法标记为废弃
+    QJsonObject convertModbusDataToJson(const QVector<double> &data, int startAddress); // 废弃
     
     // 处理HTTP请求
     void handleHttpRequest(QTcpSocket *socket, const QString &request);

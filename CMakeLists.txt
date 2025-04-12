@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(test1 VERSION 1.0 LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets SerialPort SerialBus PrintSupport WebSockets Network)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets SerialPort SerialBus PrintSupport WebSockets Network OpenGL Qml)
 
 qt_standard_project_setup()
 
@@ -90,6 +90,7 @@ target_include_directories(test1 PRIVATE ${CMAKE_SOURCE_DIR})
 
 target_link_libraries(test1 PRIVATE ${CMAKE_SOURCE_DIR}/ControlCAN.lib)
 target_link_libraries(test1 PRIVATE ${CMAKE_SOURCE_DIR}/Art_DAQ.lib)
+target_link_libraries(test1 PRIVATE Qt6::OpenGL)
 add_custom_command(TARGET test1 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/ControlCAN.dll

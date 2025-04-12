@@ -44,6 +44,7 @@ static constexpr auto qt_meta_stringdata_ZN14SnapshotThreadE = QtMocHelpers::str
     "DataSnapshot",
     "snapshot",
     "snapshotCount",
+    "snapshotForWebSocket",
     "sendModbusResultToWebSocket",
     "data",
     "interval",
@@ -78,39 +79,41 @@ Q_CONSTINIT static const uint qt_meta_data_ZN14SnapshotThreadE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      10,   14, // methods
+      11,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       2,       // signalCount
+       3,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    2,   74,    2, 0x06,    1 /* Public */,
-       6,    2,   79,    2, 0x06,    4 /* Public */,
+       1,    2,   80,    2, 0x06,    1 /* Public */,
+       6,    2,   85,    2, 0x06,    4 /* Public */,
+       7,    2,   90,    2, 0x06,    7 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-       9,    2,   84,    2, 0x0a,    7 /* Public */,
-      13,    2,   89,    2, 0x0a,   10 /* Public */,
-      17,    1,   94,    2, 0x0a,   13 /* Public */,
-      19,    0,   97,    2, 0x0a,   15 /* Public */,
-      20,    2,   98,    2, 0x0a,   16 /* Public */,
-      23,    1,  103,    2, 0x0a,   19 /* Public */,
-      25,    2,  106,    2, 0x0a,   21 /* Public */,
-      28,    0,  111,    2, 0x0a,   24 /* Public */,
+      10,    2,   95,    2, 0x0a,   10 /* Public */,
+      14,    2,  100,    2, 0x0a,   13 /* Public */,
+      18,    1,  105,    2, 0x0a,   16 /* Public */,
+      20,    0,  108,    2, 0x0a,   18 /* Public */,
+      21,    2,  109,    2, 0x0a,   19 /* Public */,
+      24,    1,  114,    2, 0x0a,   22 /* Public */,
+      26,    2,  117,    2, 0x0a,   24 /* Public */,
+      29,    0,  122,    2, 0x0a,   27 /* Public */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3, QMetaType::Int,    4,    5,
-    QMetaType::Void, QMetaType::QJsonObject, QMetaType::Int,    7,    8,
+    QMetaType::Void, 0x80000000 | 3, QMetaType::Int,    4,    5,
+    QMetaType::Void, QMetaType::QJsonObject, QMetaType::Int,    8,    9,
 
  // slots: parameters
-    QMetaType::Void, 0x80000000 | 10, QMetaType::LongLong,   11,   12,
-    QMetaType::Void, 0x80000000 | 10, 0x80000000 | 15,   14,   16,
-    QMetaType::Void, 0x80000000 | 18,    7,
+    QMetaType::Void, 0x80000000 | 11, QMetaType::LongLong,   12,   13,
+    QMetaType::Void, 0x80000000 | 11, 0x80000000 | 16,   15,   17,
+    QMetaType::Void, 0x80000000 | 19,    8,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   21,   22,
-    QMetaType::Void, QMetaType::Bool,   24,
-    QMetaType::Void, QMetaType::Int, QMetaType::Int,   26,   27,
+    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   22,   23,
+    QMetaType::Void, QMetaType::Bool,   25,
+    QMetaType::Void, QMetaType::Int, QMetaType::Int,   27,   28,
     QMetaType::Void,
 
        0        // eod
@@ -126,6 +129,10 @@ Q_CONSTINIT const QMetaObject SnapshotThread::staticMetaObject = { {
         // Q_OBJECT / Q_GADGET
         QtPrivate::TypeAndForceComplete<SnapshotThread, std::true_type>,
         // method 'snapshotProcessed'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const DataSnapshot &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<int, std::false_type>,
+        // method 'snapshotForWebSocket'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const DataSnapshot &, std::false_type>,
         QtPrivate::TypeAndForceComplete<int, std::false_type>,
@@ -169,29 +176,30 @@ void SnapshotThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
         case 0: _t->snapshotProcessed((*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
-        case 1: _t->sendModbusResultToWebSocket((*reinterpret_cast< std::add_pointer_t<QJsonObject>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
-        case 2: _t->handleModbusData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<qint64>>(_a[2]))); break;
-        case 3: _t->handleDAQData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<QList<double>>>>(_a[2]))); break;
-        case 4: _t->handleECUData((*reinterpret_cast< std::add_pointer_t<ECUData>>(_a[1]))); break;
-        case 5: _t->processDataSnapshots(); break;
-        case 6: _t->handleECUConnectionStatus((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
-        case 7: _t->setProcessingEnabled((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
-        case 8: _t->setupLogging((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
-        case 9: _t->resetMasterTimer(); break;
+        case 1: _t->snapshotForWebSocket((*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
+        case 2: _t->sendModbusResultToWebSocket((*reinterpret_cast< std::add_pointer_t<QJsonObject>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
+        case 3: _t->handleModbusData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<qint64>>(_a[2]))); break;
+        case 4: _t->handleDAQData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<QList<double>>>>(_a[2]))); break;
+        case 5: _t->handleECUData((*reinterpret_cast< std::add_pointer_t<ECUData>>(_a[1]))); break;
+        case 6: _t->processDataSnapshots(); break;
+        case 7: _t->handleECUConnectionStatus((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
+        case 8: _t->setProcessingEnabled((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
+        case 9: _t->setupLogging((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
+        case 10: _t->resetMasterTimer(); break;
         default: ;
         }
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
         switch (_id) {
         default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-        case 2:
+        case 3:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 0:
                 *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<double> >(); break;
             }
             break;
-        case 3:
+        case 4:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 1:
@@ -212,9 +220,16 @@ void SnapshotThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
             }
         }
         {
+            using _q_method_type = void (SnapshotThread::*)(const DataSnapshot & , int );
+            if (_q_method_type _q_method = &SnapshotThread::snapshotForWebSocket; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 1;
+                return;
+            }
+        }
+        {
             using _q_method_type = void (SnapshotThread::*)(const QJsonObject & , int );
             if (_q_method_type _q_method = &SnapshotThread::sendModbusResultToWebSocket; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
-                *result = 1;
+                *result = 2;
                 return;
             }
         }
@@ -240,14 +255,14 @@ int SnapshotThread::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 11;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 11)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 11;
     }
     return _id;
 }
@@ -260,9 +275,16 @@ void SnapshotThread::snapshotProcessed(const DataSnapshot & _t1, int _t2)
 }
 
 // SIGNAL 1
-void SnapshotThread::sendModbusResultToWebSocket(const QJsonObject & _t1, int _t2)
+void SnapshotThread::snapshotForWebSocket(const DataSnapshot & _t1, int _t2)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))) };
     QMetaObject::activate(this, &staticMetaObject, 1, _a);
+}
+
+// SIGNAL 2
+void SnapshotThread::sendModbusResultToWebSocket(const QJsonObject & _t1, int _t2)
+{
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))) };
+    QMetaObject::activate(this, &staticMetaObject, 2, _a);
 }
 QT_WARNING_POP

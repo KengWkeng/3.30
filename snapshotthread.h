@@ -100,6 +100,9 @@ signals:
     // 数据处理完成，传回主线程进行UI更新
     void snapshotProcessed(const DataSnapshot &snapshot, int snapshotCount);
 
+    // 新增：将数据快照发送到WebSocket
+    void snapshotForWebSocket(const DataSnapshot &snapshot, int snapshotCount);
+
     // 向WebSocket转发Modbus数据
     void sendModbusResultToWebSocket(const QJsonObject &data, int interval);
 

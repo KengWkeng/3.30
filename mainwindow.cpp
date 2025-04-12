@@ -577,16 +577,12 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() << "Connecting ecuTh::ecuConnectionStatus to MainWindow::handleECUStatus, Result:" << mainConnectResult;
     
     // 将SnapshotThread的WebSocket数据转发连接到WebSocketThread
-    connect(snpTh, &SnapshotThread::sendModbusResultToWebSocket, wsTh, &WebSocketThread::handleModbusData);
+    // 移除旧的连接，使用新的数据快照连接
+    // connect(snpTh, &SnapshotThread::sendModbusResultToWebSocket, wsTh, &WebSocketThread::handleModbusData);
     
-    // // 添加ECU连接状态信号与槽的连接
-    // // 连接到 SnapshotThread 处理底层逻辑
-    // bool snapConnectResult = connect(ecuTh, &ECUThread::ecuConnectionStatus, snpTh, &SnapshotThread::handleECUConnectionStatus);
-    // // 连接到 MainWindow 更新 UI
-    // bool mainConnectResult = connect(ecuTh, &ECUThread::ecuConnectionStatus, this, &MainWindow::handleECUStatus);
+    // 添加新的数据快照WebSocket连接
+    connect(snpTh, &SnapshotThread::snapshotForWebSocket, wsTh, &WebSocketThread::handleDataSnapshot);
     
-    // qDebug() << "===> 信号连接结果: ecuTh->snpTh=" << snapConnectResult << ", ecuTh->MainWindow=" << mainConnectResult;
-
     // 正确的位置打印组合的连接结果
     qDebug() << "===> ECU Signal Connection Results: ecuData->snpTh=" << ecuDataConnectResult 
              << ", ecuStatus->snpTh=" << ecuStatusConnectResult 
@@ -595,6 +591,37 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect config count signal
     connect(this, &MainWindow::sendConfigCounts, snpTh, &SnapshotThread::setupLogging, Qt::QueuedConnection);
     qDebug() << "Connecting MainWindow::sendConfigCounts to snpTh::setupLogging";
+
+        // --- 在 MainWindow 构造函数或其他初始化地方 ---
+
+    // 对 Modbus 图表启用 OpenGL
+    if (ui->modbusCustomPlot) {
+        ui->modbusCustomPlot->setOpenGl(true); // 启用OpenGL支持
+        // 可选：设置其他性能提示
+        // ui->modbusCustomPlot->setPerformanceHint(QCP::PerformanceHint::phFastPolylines, true); 
+        qDebug() << "Modbus图表启用OpenGL状态:" << ui->modbusCustomPlot->openGl();
+    }
+
+    // 对 DAQ 图表启用 OpenGL
+    if (ui->daqCustomPlot) {
+        ui->daqCustomPlot->setOpenGl(true);
+        qDebug() << "DAQ图表启用OpenGL状态:" << ui->daqCustomPlot->openGl();
+    }
+
+    // 对 ECU 图表启用 OpenGL
+    if (ui->ECUCustomPlot) {
+        ui->ECUCustomPlot->setOpenGl(true);
+        qDebug() << "ECU图表启用OpenGL状态:" << ui->ECUCustomPlot->openGl();
+    }
+
+    // 对 dash1plot 图表启用 OpenGL
+    if (ui->dash1plot) {
+        ui->dash1plot->setOpenGl(true);
+        qDebug() << "dash1plot图表启用OpenGL状态:" << ui->dash1plot->openGl();
+    }
+
+    // ... 对其他可能存在的 QCustomPlot 实例执行相同操作 ...
+    
 }
 
 MainWindow::~MainWindow()

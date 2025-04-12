@@ -377,14 +377,106 @@ bool WebSocketThread::isRunning() const
     return m_running;
 }
 
+// 新增：处理数据快照的方法
+void WebSocketThread::handleDataSnapshot(const DataSnapshot &snapshot, int snapshotCount)
+{
+    // 只有在服务器运行且有客户端连接的情况下才处理数据
+    if (!m_running) {
+        return;
+    }
+    
+    if (m_clients.isEmpty()) {
+        // 没有客户端连接，跳过数据处理
+        return;
+    }
+
+    // 转换快照为JSON格式
+    QJsonObject jsonData = convertSnapshotToJson(snapshot, snapshotCount);
+    
+    // 广播消息给所有客户端
+    broadcastMessage(jsonData);
+    
+    qDebug() << "发送快照数据到" << m_clients.size() << "个WebSocket客户端";
+}
+
+// 新增：将DataSnapshot转换为JSON
+QJsonObject WebSocketThread::convertSnapshotToJson(const DataSnapshot &snapshot, int snapshotCount)
+{
+    QJsonObject jsonData;
+    
+    // 添加基本信息
+    jsonData["type"] = "snapshot";
+    jsonData["timestamp"] = snapshot.timestamp;
+    jsonData["snapshotCount"] = snapshotCount;
+    jsonData["systemTime"] = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
+    
+    // 添加状态标志
+    jsonData["modbusValid"] = snapshot.modbusValid;
+    jsonData["daqValid"] = snapshot.daqValid;
+    jsonData["daqRunning"] = snapshot.daqRunning;
+    jsonData["ecuValid"] = snapshot.ecuValid;
+    
+    // 添加Modbus数据
+    if (snapshot.modbusValid) {
+        QJsonArray modbusArray;
+        for (int i = 0; i < snapshot.modbusData.size(); ++i) {
+            QJsonObject registerObj;
+            registerObj["address"] = i;
+            registerObj["value"] = snapshot.modbusData[i];
+            registerObj["description"] = QString("Modbus寄存器 %1").arg(i);
+            modbusArray.append(registerObj);
+        }
+        jsonData["modbus"] = modbusArray;
+        jsonData["modbusCount"] = snapshot.modbusData.size();
+    }
+    
+    // 添加DAQ数据
+    if (snapshot.daqValid) {
+        QJsonArray daqArray;
+        for (int i = 0; i < snapshot.daqData.size(); ++i) {
+            QJsonObject channelObj;
+            channelObj["channel"] = i;
+            channelObj["value"] = snapshot.daqData[i];
+            channelObj["description"] = QString("DAQ通道 %1").arg(i);
+            daqArray.append(channelObj);
+        }
+        jsonData["daq"] = daqArray;
+        jsonData["daqCount"] = snapshot.daqData.size();
+    }
+    
+    // 添加ECU数据
+    if (snapshot.ecuValid) {
+        QJsonArray ecuArray;
+        QStringList ecuLabels = {
+            "节气门开度", "发动机转速", "缸温", "排温", 
+            "轴温", "燃油压力", "进气温度", "大气压力", "飞行时间"
+        };
+        
+        for (int i = 0; i < snapshot.ecuData.size() && i < ecuLabels.size(); ++i) {
+            QJsonObject ecuObj;
+            ecuObj["index"] = i;
+            ecuObj["value"] = snapshot.ecuData[i];
+            ecuObj["label"] = ecuLabels[i];
+            ecuArray.append(ecuObj);
+        }
+        jsonData["ecu"] = ecuArray;
+        jsonData["ecuCount"] = snapshot.ecuData.size();
+    }
+    
+    return jsonData;
+}
+
+// 旧方法保留但标记为废弃
 void WebSocketThread::handleModbusData(const QJsonObject &data, int interval)
 {
+    qDebug() << "警告: 使用废弃的handleModbusData方法，建议使用handleDataSnapshot";
     if (!m_running || m_clients.isEmpty())
         return;
 
     // 添加时间间隔信息
     QJsonObject dataWithInterval = data;
     dataWithInterval["interval"] = interval;
+    dataWithInterval["deprecated"] = true;
     
     // 广播消息给所有客户端
     broadcastMessage(dataWithInterval);
@@ -392,6 +484,7 @@ void WebSocketThread::handleModbusData(const QJsonObject &data, int interval)
 
 void WebSocketThread::handleModbusRawData(QVector<double> resultdata, qint64 readTimeInterval)
 {
+    qDebug() << "警告: 使用废弃的handleModbusRawData方法，建议使用handleDataSnapshot";
     // 只有在服务器运行且有客户端连接的情况下才处理数据
     if (!m_running) {
         return;
@@ -410,6 +503,7 @@ void WebSocketThread::handleModbusRawData(QVector<double> resultdata, qint64 rea
     
     // 添加时间间隔信息
     jsonData["interval"] = (int)readTimeInterval;
+    jsonData["deprecated"] = true;
     
     // 广播消息给所有客户端
     broadcastMessage(jsonData);

@@ -3,204 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modbus数据监控</title>
+    <title>数据监控系统</title>
     <!-- 引入Chart.js用于绘图 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            overflow: hidden;
+            height: 100vh;
         }
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .status {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .connected {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .disconnected {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            aspect-ratio: 16/9;
+            max-height: 100vh;
         }
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        .control-panel {
-            margin: 20px 0;
+        .header {
+            grid-column: 1 / 3;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        button {
-            padding: 8px 15px;
-            background-color: #007bff;
+            padding: 0 10px;
+            background-color: #1e88e5;
             color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0069d9;
-        }
-        #interval {
-            font-weight: bold;
-        }
-        /* 修改为横向布局 */
-        .panels {
-            display: flex;
-            margin-top: 20px;
-            gap: 20px;
-        }
-        .chart-container {
-            flex: 2;
-            padding: 15px;
-            background-color: #f9f9f9;
             border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            height: 400px;
-        }
-        .data-container {
-            flex: 1;
-            overflow-y: auto;
-            max-height: 400px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .chart-toolbar {
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-right: 15px;
             margin-bottom: 5px;
         }
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            margin-right: 5px;
-            border-radius: 2px;
+        .panel {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        /* 添加连接信息样式 */
-        #connectionInfo {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #666;
-        }
-        /* 添加错误信息样式 */
-        .error-message {
-            color: #721c24;
-            background-color: #f8d7da;
+        .panel-header {
             padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-            display: none;
+            background-color: #1e88e5;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-body {
+            flex: 1;
+            padding: 10px;
+            overflow: auto;
+            position: relative;
+        }
+        .ecu-chart-panel {
+            grid-row: 1;
+            grid-column: 1;
+        }
+        .data-table-panel {
+            grid-row: 1;
+            grid-column: 2;
+        }
+        .modbus-chart-panel {
+            grid-row: 2;
+            grid-column: 1;
+        }
+        .daq-chart-panel {
+            grid-row: 2;
+            grid-column: 2;
+        }
+        /* 控制面板 */
+        .control-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #ddd;
+        }
+        /* 按钮样式 */
+        .btn {
+            padding: 5px 10px;
+            background-color: #1e88e5;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #1565c0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 5px;
+        }
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table td, .data-table th {
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .data-table tr:hover {
+            background-color: #e9f5ff;
+        }
+        /* 数据状态指示器 */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-indicator.valid {
+            background-color: #4caf50;
+        }
+        .status-indicator.invalid {
+            background-color: #f44336;
+        }
+        /* 横向表格样式 */
+        .horizontal-table {
+            width: 100%;
+        }
+        .horizontal-table tr td:first-child {
+            width: 30%;
+            font-weight: bold;
+            text-align: right;
+            padding-right: 10px;
+            color: #555;
+            background-color: #f2f2f2;
+            border-right: 2px solid #ddd;
+        }
+        .horizontal-table tr td:nth-child(2) {
+            width: 40%;
+            font-size: 1.1em;
+            color: #1e88e5;
+        }
+        .horizontal-table tr {
+            border-bottom: 1px solid #eee;
+        }
+        /* 图表容器 */
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        /* 状态指示区 */
+        .status-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 10;
+            font-size: 0.8em;
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h2>工业数据监控系统</h2>
+        <div class="connection-info">
+            <span id="connectionStatus">未连接</span>
+            <button id="connectBtn" class="btn">连接</button>
+            <button id="testBtn" class="btn">测试连接</button>
+        </div>
+    </div>
+    
     <div class="container">
-        <h1>Modbus数据监控</h1>
-        <div class="panel">
-            <div id="connectionInfo">将连接到WebSocket服务器...</div>
-            <div id="connectionStatus" class="status disconnected">未连接</div>
-            
-            <div class="control-panel">
-                <div>
-                    <span>状态: <span id="status">断开</span></span>
-                    <button id="connectBtn">连接</button>
-                </div>
-                <div>
-                    <span>数据更新间隔: <span id="interval">--</span> ms</span>
-                    <button id="clearBtn">清除数据</button>
-                    <button id="pauseBtn">暂停</button>
-                </div>
-                <div>
-                    <button id="testBtn">连接测试</button>
+        <!-- ECU图表 (左上) -->
+        <div class="panel ecu-chart-panel">
+            <div class="panel-header">
+                <span>ECU数据监控</span>
+                <select id="ecuTimeWindow">
+                    <option value="30">30秒</option>
+                    <option value="60">1分钟</option>
+                    <option value="300">5分钟</option>
+                </select>
+            </div>
+            <div class="panel-body">
+                <div class="chart-container">
+                    <canvas id="ecuChart"></canvas>
+                    <div id="ecuStatusContainer" class="status-container"></div>
                 </div>
             </div>
-            
-            <div id="errorMessage" style="display: none;"></div>
         </div>
         
-        <!-- 新增：调试日志面板 -->
-        <div class="debug-panel" style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; background-color: #f8f8f8;">
-            <h3>调试信息 <button id="clearDebugBtn">清除日志</button></h3>
-            <div id="debugLog" style="height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: white; font-family: monospace; font-size: 12px;"></div>
-        </div>
-
-        <!-- 横向布局的面板 -->
-        <div class="panels">
-            <!-- 图表区域 -->
-            <div class="chart-container">
-                <div class="chart-toolbar">
-                    <div>
-                        <label>显示时长: </label>
-                        <select id="timeWindow">
-                            <option value="30">30秒</option>
-                            <option value="60">1分钟</option>
-                            <option value="300">5分钟</option>
-                            <option value="600">10分钟</option>
-                        </select>
-                    </div>
+        <!-- 数据表格 (右上) -->
+        <div class="panel data-table-panel">
+            <div class="panel-header">
+                <span>数据汇总</span>
+                <div class="btn-group">
+                    <button id="pauseBtn" class="btn">暂停</button>
+                    <button id="clearBtn" class="btn">清除</button>
                 </div>
-                <canvas id="modbusChart"></canvas>
-                <div id="chartLegend" class="legend"></div>
             </div>
-            
-            <!-- 数据表格区域 -->
-            <div class="data-container">
-                <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th>寄存器地址</th>
-                            <th>值</th>
-                            <th>更新时间</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataBody">
-                        <!-- 数据将通过JavaScript动态插入 -->
+            <div class="panel-body">
+                <table class="horizontal-table" id="dataTable">
+                    <tbody id="summaryBody">
+                        <!-- 数据将动态插入，表头在左侧 -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+        
+        <!-- Modbus图表 (左下) -->
+        <div class="panel modbus-chart-panel">
+            <div class="panel-header">
+                <span>Modbus数据监控</span>
+                <select id="modbusTimeWindow">
+                    <option value="30">30秒</option>
+                    <option value="60">1分钟</option>
+                    <option value="300">5分钟</option>
+                </select>
+            </div>
+            <div class="panel-body">
+                <div class="chart-container">
+                    <canvas id="modbusChart"></canvas>
+                    <div id="modbusStatusContainer" class="status-container"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DAQ图表 (右下) -->
+        <div class="panel daq-chart-panel">
+            <div class="panel-header">
+                <span>DAQ数据监控</span>
+                <select id="daqTimeWindow">
+                    <option value="30">30秒</option>
+                    <option value="60">1分钟</option>
+                    <option value="300">5分钟</option>
+                </select>
+            </div>
+            <div class="panel-body">
+                <div class="chart-container">
+                    <canvas id="daqChart"></canvas>
+                    <div id="daqStatusContainer" class="status-container"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -210,23 +267,25 @@
         let ws = null;
         let isConnected = false;
         
-        // 确保使用正确的协议和端口
         // 从当前URL获取主机名，使用HTTP时是端口8081，WebSocket用8080
         const hostname = window.location.hostname || "localhost";
         const serverUrl = "ws://" + hostname + ":8080";
         
         // 图表相关变量
-        let chart = null;
-        let chartData = {
-            labels: [], // 时间标签
-            datasets: [] // 每个寄存器一个数据集
-        };
+        let ecuChart = null;
+        let modbusChart = null;
+        let daqChart = null;
+        
+        // 数据存储
+        let modbusData = [];
+        let daqData = [];
+        let ecuData = [];
+        
+        // 状态控制
         let isPaused = false;
-        let maxDataPoints = 100; // 最大数据点数
         let maxTimeWindow = 30; // 默认显示30秒数据
-        let startTimestamp = null; // 记录开始时间戳
-        let reconnectTimer = null; // 重连计时器
-        let reconnectAttempts = 0; // 重连尝试次数
+        let reconnectTimer = null;
+        let reconnectAttempts = 0;
         
         // 彩色数组用于不同曲线
         const colorSet = [
@@ -245,85 +304,60 @@
         const clearBtn = document.getElementById('clearBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const testBtn = document.getElementById('testBtn');
-        const statusElement = document.getElementById('status');
         const connectionStatus = document.getElementById('connectionStatus');
-        const intervalElement = document.getElementById('interval');
-        const dataBody = document.getElementById('dataBody');
-        const timeWindowSelect = document.getElementById('timeWindow');
-        const chartLegend = document.getElementById('chartLegend');
-        const errorMessage = document.getElementById('errorMessage');
-        const debugLog = document.getElementById('debugLog');
-        const clearDebugBtn = document.getElementById('clearDebugBtn');
+        const summaryBody = document.getElementById('summaryBody');
         
-        // 添加调试日志
-        function addDebugLog(message, isError = false) {
-            const now = new Date();
-            const timestamp = now.toLocaleTimeString() + '.' + now.getMilliseconds().toString().padStart(3, '0');
-            const logEntry = document.createElement('div');
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            if (isError) {
-                logEntry.style.color = 'red';
-                logEntry.style.fontWeight = 'bold';
-            }
-            debugLog.appendChild(logEntry);
-            debugLog.scrollTop = debugLog.scrollHeight; // 自动滚动到底部
-        }
-        
-        // 显示错误信息
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = "block";
-            setTimeout(() => {
-                errorMessage.style.display = "none";
-            }, 5000); // 5秒后自动隐藏
-            addDebugLog("错误: " + message, true);
-        }
+        // 时间窗口选择器
+        const ecuTimeWindow = document.getElementById('ecuTimeWindow');
+        const modbusTimeWindow = document.getElementById('modbusTimeWindow');
+        const daqTimeWindow = document.getElementById('daqTimeWindow');
         
         // 初始化图表
-        function initChart() {
-            const ctx = document.getElementById('modbusChart').getContext('2d');
+        function initCharts() {
+            // 初始化ECU图表
+            const ecuCtx = document.getElementById('ecuChart').getContext('2d');
+            ecuChart = createChart(ecuCtx, '时间 (秒)', 'ECU数据');
             
-            chart = new Chart(ctx, {
+            // 初始化Modbus图表
+            const modbusCtx = document.getElementById('modbusChart').getContext('2d');
+            modbusChart = createChart(modbusCtx, '时间 (秒)', 'Modbus数据');
+            
+            // 初始化DAQ图表
+            const daqCtx = document.getElementById('daqChart').getContext('2d');
+            daqChart = createChart(daqCtx, '时间 (秒)', 'DAQ数据');
+        }
+        
+        // 创建图表通用函数
+        function createChart(ctx, xLabel, yLabel) {
+            return new Chart(ctx, {
                 type: 'line',
-                data: chartData,
+                data: {
+                    datasets: []
+                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: false, // 禁用动画以提高性能
+                    animation: false,
                     elements: {
-                        point: {
-                            radius: 0 // 不显示点，只显示线
-                        },
-                        line: {
-                            tension: 0.2 // 平滑曲线
-                        }
+                        point: { radius: 0 },
+                        line: { tension: 0.2 }
                     },
                     scales: {
                         x: {
                             type: 'linear',
                             position: 'bottom',
-                            title: {
-                                display: true,
-                                text: '时间 (秒)'
-                            },
+                            title: { display: true, text: xLabel },
                             min: 0,
                             max: maxTimeWindow,
-                            ticks: {
-                                stepSize: 5
-                            }
+                            ticks: { stepSize: 5 }
                         },
                         y: {
                             beginAtZero: false,
-                            title: {
-                                display: true,
-                                text: '值'
-                            }
+                            title: { display: true, text: yLabel }
                         }
                     },
                     plugins: {
-                        legend: {
-                            display: false // 使用自定义图例
-                        },
+                        legend: { position: 'top' },
                         tooltip: {
                             mode: 'index',
                             intersect: false
@@ -333,48 +367,24 @@
             });
         }
         
-        // 更新图例
-        function updateLegend() {
-            chartLegend.innerHTML = '';
-            
-            chartData.datasets.forEach((dataset, index) => {
-                const legendItem = document.createElement('div');
-                legendItem.className = 'legend-item';
-                
-                const colorBox = document.createElement('div');
-                colorBox.className = 'legend-color';
-                colorBox.style.backgroundColor = dataset.borderColor;
-                
-                const label = document.createElement('span');
-                label.textContent = dataset.label;
-                
-                legendItem.appendChild(colorBox);
-                legendItem.appendChild(label);
-                chartLegend.appendChild(legendItem);
-            });
-        }
-        
         // 连接WebSocket
         function connectWebSocket() {
             if (ws !== null) {
                 ws.close();
             }
             
-            connectionStatus.textContent = "正在连接到 " + serverUrl + "...";
+            connectionStatus.textContent = "正在连接...";
             console.log("尝试连接到WebSocket服务器:", serverUrl);
-            addDebugLog("尝试连接到WebSocket服务器: " + serverUrl);
             
             try {
                 ws = new WebSocket(serverUrl);
                 
                 ws.onopen = function() {
                     isConnected = true;
-                    statusElement.textContent = "已连接";
-                    connectionStatus.className = "status connected";
-                    connectionStatus.textContent = "已连接到服务器 " + serverUrl;
+                    connectionStatus.textContent = "已连接";
+                    connectionStatus.style.color = "#4caf50";
                     connectBtn.textContent = "断开";
                     console.log("WebSocket连接已建立");
-                    addDebugLog("WebSocket连接已建立");
                     
                     // 重置重连计数器
                     reconnectAttempts = 0;
@@ -382,176 +392,336 @@
                         clearTimeout(reconnectTimer);
                         reconnectTimer = null;
                     }
-                    
-                    // 重置图表起始时间
-                    startTimestamp = Date.now() / 1000;
                 };
                 
                 ws.onclose = function(event) {
                     isConnected = false;
-                    statusElement.textContent = "断开";
-                    connectionStatus.className = "status disconnected";
-                    connectionStatus.textContent = "与服务器断开连接";
+                    connectionStatus.textContent = "已断开";
+                    connectionStatus.style.color = "#f44336";
                     connectBtn.textContent = "连接";
                     console.log("WebSocket连接已关闭", event);
-                    addDebugLog("WebSocket连接已关闭，代码: " + event.code + ", 原因: " + (event.reason || "未知"));
                     
-                    // 如果不是用户主动断开，自动尝试重连
+                    // 自动重连逻辑
                     if (reconnectAttempts < 5) {
                         reconnectAttempts++;
                         const delay = Math.min(1000 * reconnectAttempts, 5000);
-                        connectionStatus.textContent = `连接断开，${delay/1000}秒后尝试重连(${reconnectAttempts}/5)...`;
-                        addDebugLog(`连接断开，${delay/1000}秒后尝试重连(${reconnectAttempts}/5)...`);
+                        connectionStatus.textContent = `${delay/1000}秒后重连(${reconnectAttempts}/5)...`;
                         reconnectTimer = setTimeout(connectWebSocket, delay);
-                    } else {
-                        connectionStatus.textContent = "多次重连失败，请检查服务器状态或手动重连";
-                        showError("无法连接到WebSocket服务器，请确保服务器运行并且端口8080开放");
                     }
                 };
                 
                 ws.onerror = function(error) {
                     console.error("WebSocket错误:", error);
-                    connectionStatus.className = "status disconnected";
                     connectionStatus.textContent = "连接错误";
-                    addDebugLog("WebSocket连接错误", true);
-                    showError("WebSocket连接错误，请检查网络和服务器状态");
+                    connectionStatus.style.color = "#f44336";
                 };
                 
                 ws.onmessage = function(event) {
                     try {
                         const data = JSON.parse(event.data);
                         console.log("收到数据:", data);
-                        addDebugLog("收到数据: " + (data.registers ? data.registers.length + "个寄存器" : event.data.substring(0, 50) + "..."));
                         
                         if (!isPaused) {
-                            updateDataTable(data);
-                            updateChart(data);
-                        }
-                        
-                        if (data.interval) {
-                            intervalElement.textContent = data.interval;
+                            processSnapshot(data);
                         }
                     } catch (e) {
                         console.error("解析数据错误:", e, event.data);
-                        addDebugLog("收到非JSON数据: " + event.data.substring(0, 100));
-                        showError("数据解析错误: " + e.message);
                     }
                 };
             } catch (e) {
                 console.error("创建WebSocket连接错误:", e);
-                connectionStatus.className = "status disconnected";
-                connectionStatus.textContent = "创建连接失败: " + e.message;
-                addDebugLog("创建WebSocket连接错误: " + e.message, true);
-                showError("无法创建WebSocket连接: " + e.message);
+                connectionStatus.textContent = "创建连接失败";
+                connectionStatus.style.color = "#f44336";
             }
         }
         
-        // 更新数据表格
-        function updateDataTable(data) {
-            if (!data || !data.registers) return;
+        // 处理快照数据
+        function processSnapshot(snapshot) {
+            // 更新数据状态指示器
+            updateStatusIndicators(snapshot);
             
-            // 清除现有表格内容
-            dataBody.innerHTML = '';
+            // 更新汇总表格
+            updateSummaryTable(snapshot);
             
-            // 获取当前时间
-            const now = new Date();
-            const timeString = now.toLocaleTimeString();
+            // 更新各图表数据
+            if (snapshot.modbusValid && snapshot.modbus) {
+                // 保存Modbus数据并更新图表
+                saveDataForChart('modbus', snapshot.timestamp, snapshot.modbus);
+                updateChartWithData('modbus');
+            }
             
-            // 添加数据行
-            data.registers.forEach(register => {
-                const row = document.createElement('tr');
-                
-                const addressCell = document.createElement('td');
-                addressCell.textContent = register.address;
-                row.appendChild(addressCell);
-                
-                const valueCell = document.createElement('td');
-                valueCell.textContent = register.value.toFixed(2);
-                row.appendChild(valueCell);
-                
-                const timeCell = document.createElement('td');
-                timeCell.textContent = timeString;
-                row.appendChild(timeCell);
-                
-                dataBody.appendChild(row);
-            });
+            if (snapshot.daqValid && snapshot.daq) {
+                // 保存DAQ数据并更新图表
+                saveDataForChart('daq', snapshot.timestamp, snapshot.daq);
+                updateChartWithData('daq');
+            }
+            
+            if (snapshot.ecuValid && snapshot.ecu) {
+                // 保存ECU数据并更新图表
+                saveDataForChart('ecu', snapshot.timestamp, snapshot.ecu);
+                updateChartWithData('ecu');
+            }
         }
         
-        // 更新图表
-        function updateChart(data) {
-            if (!data || !data.registers || !chart) return;
+        // 保存数据用于图表
+        function saveDataForChart(sourceType, timestamp, dataArray) {
+            const dataPoints = [];
             
-            // 计算相对时间（秒）
-            const currentTime = (Date.now() / 1000) - startTimestamp;
-            
-            // 确保每个寄存器有对应的数据集
-            data.registers.forEach((register, index) => {
-                // 如果数据集不存在，创建一个
-                if (!chartData.datasets[index]) {
-                    const colorIndex = index % colorSet.length;
-                    chartData.datasets[index] = {
-                        label: register.description || `寄存器 ${register.address}`,
-                        data: [],
-                        borderColor: colorSet[colorIndex].borderColor,
-                        backgroundColor: colorSet[colorIndex].backgroundColor,
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.2,
-                        fill: false
-                    };
+            // 为每个数据项创建数据点
+            dataArray.forEach(item => {
+                let label, value, id;
+                
+                if (sourceType === 'modbus') {
+                    id = item.address;
+                    label = item.description || `寄存器 ${item.address}`;
+                    value = item.value;
+                } else if (sourceType === 'daq') {
+                    id = item.channel;
+                    label = item.description || `通道 ${item.channel}`;
+                    value = item.value;
+                } else if (sourceType === 'ecu') {
+                    id = item.index;
+                    label = item.label || `ECU ${item.index}`;
+                    value = item.value;
                 }
                 
-                // 添加数据点
-                chartData.datasets[index].data.push({
-                    x: currentTime,
-                    y: register.value
+                dataPoints.push({
+                    id: id,
+                    label: label,
+                    timestamp: timestamp,
+                    value: value
                 });
-                
-                // 限制数据点数量
-                while (chartData.datasets[index].data.length > 0 && 
-                       chartData.datasets[index].data[0].x < currentTime - maxTimeWindow) {
-                    chartData.datasets[index].data.shift();
-                }
             });
             
-            // 更新图表X轴范围，使用滚动窗口
-            chart.options.scales.x.min = Math.max(0, currentTime - maxTimeWindow);
+            // 根据数据源类型保存数据
+            if (sourceType === 'modbus') {
+                modbusData.push({ timestamp, dataPoints });
+                if (modbusData.length > 300) {
+                    modbusData.shift();
+                }
+            } else if (sourceType === 'daq') {
+                daqData.push({ timestamp, dataPoints });
+                if (daqData.length > 300) {
+                    daqData.shift();
+                }
+            } else if (sourceType === 'ecu') {
+                ecuData.push({ timestamp, dataPoints });
+                if (ecuData.length > 300) {
+                    ecuData.shift();
+                }
+            }
+        }
+        
+        // 更新数据状态指示器
+        function updateStatusIndicators(snapshot) {
+            // 更新ECU状态
+            document.getElementById('ecuStatusContainer').innerHTML = `
+                <div><span class="status-indicator ${snapshot.ecuValid ? 'valid' : 'invalid'}"></span> ECU: ${snapshot.ecuValid ? '有效' : '无效'}</div>
+            `;
+            
+            // 更新Modbus状态
+            document.getElementById('modbusStatusContainer').innerHTML = `
+                <div><span class="status-indicator ${snapshot.modbusValid ? 'valid' : 'invalid'}"></span> Modbus: ${snapshot.modbusValid ? '有效' : '无效'}</div>
+            `;
+            
+            // 更新DAQ状态
+            document.getElementById('daqStatusContainer').innerHTML = `
+                <div><span class="status-indicator ${snapshot.daqValid ? 'valid' : 'invalid'}"></span> DAQ: ${snapshot.daqValid ? '有效' : '无效'} ${snapshot.daqRunning ? '(运行中)' : ''}</div>
+            `;
+        }
+        
+        // 更新汇总表格 - 横向表格，表头在左侧
+        function updateSummaryTable(snapshot) {
+            summaryBody.innerHTML = '';
+            
+            // 系统状态信息
+            addSummaryRow("快照编号", snapshot.snapshotCount);
+            addSummaryRow("系统时间", snapshot.systemTime);
+            addSummaryRow("时间戳", snapshot.timestamp.toFixed(2) + " 秒");
+            
+            // 添加分隔行
+            addSeparatorRow("Modbus数据");
+            
+            // Modbus数据
+            if (snapshot.modbusValid && snapshot.modbus) {
+                snapshot.modbus.forEach((item, index) => {
+                    if (index < 8) { // 限制显示数量，避免表格过长
+                        addSummaryRow(item.description || `寄存器 ${item.address}`, item.value.toFixed(2));
+                    }
+                });
+            } else {
+                addSummaryRow("Modbus状态", "无效数据");
+            }
+            
+            // 添加分隔行
+            addSeparatorRow("DAQ数据");
+            
+            // DAQ数据
+            if (snapshot.daqValid && snapshot.daq) {
+                snapshot.daq.forEach((item, index) => {
+                    if (index < 8) { // 限制显示数量，避免表格过长
+                        addSummaryRow(item.description || `DAQ通道 ${item.channel}`, item.value.toFixed(4));
+                    }
+                });
+            } else {
+                addSummaryRow("DAQ状态", snapshot.daqRunning ? "运行中，等待数据" : "未运行");
+            }
+            
+            // 添加分隔行
+            addSeparatorRow("ECU数据");
+            
+            // ECU数据
+            if (snapshot.ecuValid && snapshot.ecu) {
+                snapshot.ecu.forEach((item) => {
+                    addSummaryRow(item.label || `ECU ${item.index}`, item.value.toFixed(2));
+                });
+            } else {
+                addSummaryRow("ECU状态", "无效数据");
+            }
+        }
+        
+        // 添加汇总表格行
+        function addSummaryRow(label, value) {
+            const row = document.createElement('tr');
+            
+            const labelCell = document.createElement('td');
+            labelCell.textContent = label;
+            row.appendChild(labelCell);
+            
+            const valueCell = document.createElement('td');
+            valueCell.textContent = value;
+            row.appendChild(valueCell);
+            
+            summaryBody.appendChild(row);
+        }
+        
+        // 添加分隔行
+        function addSeparatorRow(title) {
+            const row = document.createElement('tr');
+            row.style.backgroundColor = "#e3f2fd";
+            
+            const cell = document.createElement('td');
+            cell.colSpan = 2;
+            cell.textContent = title;
+            cell.style.fontWeight = "bold";
+            cell.style.textAlign = "center";
+            cell.style.padding = "5px";
+            
+            row.appendChild(cell);
+            summaryBody.appendChild(row);
+        }
+        
+        // 根据数据源更新图表
+        function updateChartWithData(sourceType) {
+            // 选择对应的图表和数据
+            let chart, sourceData, timeWindow;
+            
+            if (sourceType === 'modbus') {
+                chart = modbusChart;
+                sourceData = modbusData;
+                timeWindow = parseInt(modbusTimeWindow.value);
+            } else if (sourceType === 'daq') {
+                chart = daqChart;
+                sourceData = daqData;
+                timeWindow = parseInt(daqTimeWindow.value);
+            } else if (sourceType === 'ecu') {
+                chart = ecuChart;
+                sourceData = ecuData;
+                timeWindow = parseInt(ecuTimeWindow.value);
+            } else {
+                return;
+            }
+            
+            if (!sourceData || sourceData.length === 0) {
+                return;
+            }
+            
+            // 创建跟踪各数据项的映射
+            const dataMap = new Map();
+            
+            // 遍历所有时间点的数据
+            sourceData.forEach(timePoint => {
+                timePoint.dataPoints.forEach(point => {
+                    const id = point.id;
+                    
+                    // 如果该ID的数据集不存在，创建一个
+                    if (!dataMap.has(id)) {
+                        const colorIndex = dataMap.size % colorSet.length;
+                        dataMap.set(id, {
+                            id: id,
+                            label: point.label,
+                            data: [],
+                            borderColor: colorSet[colorIndex].borderColor,
+                            backgroundColor: colorSet[colorIndex].backgroundColor,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.2,
+                            fill: false
+                        });
+                    }
+                    
+                    // 添加数据点
+                    dataMap.get(id).data.push({
+                        x: timePoint.timestamp,
+                        y: point.value
+                    });
+                });
+            });
+            
+            // 计算当前最新时间
+            const currentTime = sourceData[sourceData.length - 1].timestamp;
+            
+            // 清空现有数据集
+            chart.data.datasets = [];
+            
+            // 为每个数据集移除过旧的数据点并添加到图表
+            dataMap.forEach(dataset => {
+                // 移除早于当前时间窗口的数据点
+                while (dataset.data.length > 0 && 
+                       dataset.data[0].x < currentTime - timeWindow) {
+                    dataset.data.shift();
+                }
+                
+                // 添加到图表数据集
+                chart.data.datasets.push(dataset);
+            });
+            
+            // 更新图表X轴范围
+            chart.options.scales.x.min = Math.max(0, currentTime - timeWindow);
             chart.options.scales.x.max = currentTime;
             
             // 更新图表
-            chart.update('none'); // 使用'none'模式跳过动画以提高性能
-            
-            // 更新图例
-            updateLegend();
+            chart.update('none');
         }
         
         // 事件监听器
         connectBtn.addEventListener('click', function() {
             if (isConnected) {
-                // 如果已连接，断开连接
                 if (ws) {
                     ws.close();
                 }
             } else {
-                // 如果未连接，建立连接
                 connectWebSocket();
             }
         });
         
         clearBtn.addEventListener('click', function() {
-            dataBody.innerHTML = '';
+            // 清除所有数据
+            modbusData = [];
+            daqData = [];
+            ecuData = [];
             
-            // 清除图表数据
-            chartData.datasets.forEach(dataset => {
-                dataset.data = [];
-            });
+            // 清除图表
+            modbusChart.data.datasets = [];
+            daqChart.data.datasets = [];
+            ecuChart.data.datasets = [];
             
-            // 重置起始时间
-            startTimestamp = Date.now() / 1000;
+            modbusChart.update();
+            daqChart.update();
+            ecuChart.update();
             
-            if (chart) {
-                chart.update();
-            }
+            // 清除表格
+            summaryBody.innerHTML = '';
         });
         
         pauseBtn.addEventListener('click', function() {
@@ -559,54 +729,40 @@
             pauseBtn.textContent = isPaused ? '继续' : '暂停';
         });
         
-        timeWindowSelect.addEventListener('change', function() {
-            maxTimeWindow = parseInt(this.value);
+        // 时间窗口选择器事件
+        ecuTimeWindow.addEventListener('change', function() {
+            updateChartWithData('ecu');
         });
         
-        // 新增：测试按钮点击事件
+        modbusTimeWindow.addEventListener('change', function() {
+            updateChartWithData('modbus');
+        });
+        
+        daqTimeWindow.addEventListener('change', function() {
+            updateChartWithData('daq');
+        });
+        
+        // 测试按钮点击事件
         testBtn.addEventListener('click', function() {
-            addDebugLog("执行连接测试");
-            
-            // 如果未连接，尝试连接
             if (!isConnected) {
-                addDebugLog("未连接，尝试连接WebSocket");
                 connectWebSocket();
-                setTimeout(() => {
-                    if (!isConnected) {
-                        showError("连接测试失败，无法连接到服务器");
-                    }
-                }, 2000);
             } else {
-                // 已连接，发送测试消息
                 try {
                     const testMessage = JSON.stringify({
                         type: "test",
                         client_time: new Date().toISOString()
                     });
                     ws.send(testMessage);
-                    addDebugLog("已发送测试消息: " + testMessage);
                 } catch (e) {
-                    addDebugLog("发送测试消息失败: " + e.message, true);
+                    console.error("发送测试消息失败:", e);
                 }
             }
         });
         
-        // 清除调试日志按钮
-        clearDebugBtn.addEventListener('click', function() {
-            debugLog.innerHTML = '';
-            addDebugLog("调试日志已清除");
-        });
-        
         // 页面加载完成后初始化
         window.addEventListener('load', function() {
-            // 显示连接地址
-            connectionStatus.textContent = "准备连接到: " + serverUrl;
-            
             // 初始化图表
-            initChart();
-            
-            // 设置起始时间戳
-            startTimestamp = Date.now() / 1000;
+            initCharts();
             
             // 自动连接
             connectWebSocket();

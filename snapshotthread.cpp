@@ -418,6 +418,10 @@ void SnapshotThread::processDataSnapshots()
         }
         // --- End Logging Logic ---
         
+        // 发送数据快照到WebSocket (新增)
+        // WebSocketThread 会通过信号槽连接接收这个信号
+        emit snapshotForWebSocket(snapshot, snapshotCount);
+        
         // 发送处理好的快照，让主线程更新UI
         emit snapshotProcessed(snapshot, snapshotCount);
         
