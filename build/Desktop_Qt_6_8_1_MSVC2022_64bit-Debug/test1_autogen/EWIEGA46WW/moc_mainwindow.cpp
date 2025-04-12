@@ -60,6 +60,9 @@ static constexpr auto qt_meta_stringdata_ZN10MainWindowE = QtMocHelpers::stringD
     "sendModbusResultToWebSocket",
     "data",
     "interval",
+    "sendConfigCounts",
+    "modbusCount",
+    "daqCount",
     "on_btnScanPort_clicked",
     "on_btnOpenPort_clicked",
     "on_btnClearReceiveArea_clicked",
@@ -150,79 +153,80 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      63,   14, // methods
+      64,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       8,       // signalCount
+       9,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    0,  392,    2, 0x06,    1 /* Public */,
-       3,    3,  393,    2, 0x06,    2 /* Public */,
-       7,    5,  400,    2, 0x06,    6 /* Public */,
-      13,    0,  411,    2, 0x06,   12 /* Public */,
-      14,    0,  412,    2, 0x06,   13 /* Public */,
-      15,    1,  413,    2, 0x06,   14 /* Public */,
-      16,    0,  416,    2, 0x06,   16 /* Public */,
-      17,    2,  417,    2, 0x06,   17 /* Public */,
+       1,    0,  398,    2, 0x06,    1 /* Public */,
+       3,    3,  399,    2, 0x06,    2 /* Public */,
+       7,    5,  406,    2, 0x06,    6 /* Public */,
+      13,    0,  417,    2, 0x06,   12 /* Public */,
+      14,    0,  418,    2, 0x06,   13 /* Public */,
+      15,    1,  419,    2, 0x06,   14 /* Public */,
+      16,    0,  422,    2, 0x06,   16 /* Public */,
+      17,    2,  423,    2, 0x06,   17 /* Public */,
+      20,    2,  428,    2, 0x06,   20 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-      20,    0,  422,    2, 0x08,   20 /* Private */,
-      21,    0,  423,    2, 0x08,   21 /* Private */,
-      22,    0,  424,    2, 0x08,   22 /* Private */,
-      23,    0,  425,    2, 0x08,   23 /* Private */,
-      24,    0,  426,    2, 0x08,   24 /* Private */,
-      25,    2,  427,    2, 0x08,   25 /* Private */,
-      29,    0,  432,    2, 0x08,   28 /* Private */,
-      30,    0,  433,    2, 0x08,   29 /* Private */,
-      31,    0,  434,    2, 0x08,   30 /* Private */,
-      32,    0,  435,    2, 0x08,   31 /* Private */,
-      33,    0,  436,    2, 0x08,   32 /* Private */,
-      34,    0,  437,    2, 0x08,   33 /* Private */,
-      35,    0,  438,    2, 0x08,   34 /* Private */,
-      36,    0,  439,    2, 0x08,   35 /* Private */,
-      37,    0,  440,    2, 0x08,   36 /* Private */,
-      38,    2,  441,    2, 0x08,   37 /* Private */,
-      41,    1,  446,    2, 0x08,   40 /* Private */,
-      43,    1,  449,    2, 0x08,   42 /* Private */,
-      45,    0,  452,    2, 0x08,   44 /* Private */,
-      46,    0,  453,    2, 0x08,   45 /* Private */,
-      47,    2,  454,    2, 0x08,   46 /* Private */,
-      49,    1,  459,    2, 0x08,   49 /* Private */,
-      50,    0,  462,    2, 0x08,   51 /* Private */,
-      51,    1,  463,    2, 0x08,   52 /* Private */,
-      53,    1,  466,    2, 0x08,   54 /* Private */,
-      55,    2,  469,    2, 0x08,   56 /* Private */,
-      57,    1,  474,    2, 0x08,   59 /* Private */,
-      59,    1,  477,    2, 0x08,   61 /* Private */,
-      60,    1,  480,    2, 0x08,   63 /* Private */,
-      61,    0,  483,    2, 0x08,   65 /* Private */,
-      62,    0,  484,    2, 0x08,   66 /* Private */,
-      63,    0,  485,    2, 0x08,   67 /* Private */,
-      64,    0,  486,    2, 0x08,   68 /* Private */,
-      65,    0,  487,    2, 0x08,   69 /* Private */,
-      66,    0,  488,    2, 0x08,   70 /* Private */,
-      67,    0,  489,    2, 0x08,   71 /* Private */,
-      68,    2,  490,    2, 0x08,   72 /* Private */,
-      72,    2,  495,    2, 0x08,   75 /* Private */,
-      73,    0,  500,    2, 0x08,   78 /* Private */,
-      74,    1,  501,    2, 0x08,   79 /* Private */,
-      76,    1,  504,    2, 0x08,   81 /* Private */,
-      77,    0,  507,    2, 0x08,   83 /* Private */,
-      78,    1,  508,    2, 0x08,   84 /* Private */,
-      80,    0,  511,    2, 0x08,   86 /* Private */,
-      81,    3,  512,    2, 0x08,   87 /* Private */,
-      87,    2,  519,    2, 0x08,   91 /* Private */,
-      89,    0,  524,    2, 0x08,   94 /* Private */,
-      90,    0,  525,    2, 0x08,   95 /* Private */,
-      91,    0,  526,    2, 0x08,   96 /* Private */,
-      92,    0,  527,    2, 0x08,   97 /* Private */,
-      93,    0,  528,    2, 0x08,   98 /* Private */,
-      94,    0,  529,    2, 0x08,   99 /* Private */,
-      95,    1,  530,    2, 0x08,  100 /* Private */,
-      97,    2,  533,    2, 0x08,  102 /* Private */,
-      98,    0,  538,    2, 0x08,  105 /* Private */,
+      23,    0,  433,    2, 0x08,   23 /* Private */,
+      24,    0,  434,    2, 0x08,   24 /* Private */,
+      25,    0,  435,    2, 0x08,   25 /* Private */,
+      26,    0,  436,    2, 0x08,   26 /* Private */,
+      27,    0,  437,    2, 0x08,   27 /* Private */,
+      28,    2,  438,    2, 0x08,   28 /* Private */,
+      32,    0,  443,    2, 0x08,   31 /* Private */,
+      33,    0,  444,    2, 0x08,   32 /* Private */,
+      34,    0,  445,    2, 0x08,   33 /* Private */,
+      35,    0,  446,    2, 0x08,   34 /* Private */,
+      36,    0,  447,    2, 0x08,   35 /* Private */,
+      37,    0,  448,    2, 0x08,   36 /* Private */,
+      38,    0,  449,    2, 0x08,   37 /* Private */,
+      39,    0,  450,    2, 0x08,   38 /* Private */,
+      40,    0,  451,    2, 0x08,   39 /* Private */,
+      41,    2,  452,    2, 0x08,   40 /* Private */,
+      44,    1,  457,    2, 0x08,   43 /* Private */,
+      46,    1,  460,    2, 0x08,   45 /* Private */,
+      48,    0,  463,    2, 0x08,   47 /* Private */,
+      49,    0,  464,    2, 0x08,   48 /* Private */,
+      50,    2,  465,    2, 0x08,   49 /* Private */,
+      52,    1,  470,    2, 0x08,   52 /* Private */,
+      53,    0,  473,    2, 0x08,   54 /* Private */,
+      54,    1,  474,    2, 0x08,   55 /* Private */,
+      56,    1,  477,    2, 0x08,   57 /* Private */,
+      58,    2,  480,    2, 0x08,   59 /* Private */,
+      60,    1,  485,    2, 0x08,   62 /* Private */,
+      62,    1,  488,    2, 0x08,   64 /* Private */,
+      63,    1,  491,    2, 0x08,   66 /* Private */,
+      64,    0,  494,    2, 0x08,   68 /* Private */,
+      65,    0,  495,    2, 0x08,   69 /* Private */,
+      66,    0,  496,    2, 0x08,   70 /* Private */,
+      67,    0,  497,    2, 0x08,   71 /* Private */,
+      68,    0,  498,    2, 0x08,   72 /* Private */,
+      69,    0,  499,    2, 0x08,   73 /* Private */,
+      70,    0,  500,    2, 0x08,   74 /* Private */,
+      71,    2,  501,    2, 0x08,   75 /* Private */,
+      75,    2,  506,    2, 0x08,   78 /* Private */,
+      76,    0,  511,    2, 0x08,   81 /* Private */,
+      77,    1,  512,    2, 0x08,   82 /* Private */,
+      79,    1,  515,    2, 0x08,   84 /* Private */,
+      80,    0,  518,    2, 0x08,   86 /* Private */,
+      81,    1,  519,    2, 0x08,   87 /* Private */,
+      83,    0,  522,    2, 0x08,   89 /* Private */,
+      84,    3,  523,    2, 0x08,   90 /* Private */,
+      90,    2,  530,    2, 0x08,   94 /* Private */,
+      92,    0,  535,    2, 0x08,   97 /* Private */,
+      93,    0,  536,    2, 0x08,   98 /* Private */,
+      94,    0,  537,    2, 0x08,   99 /* Private */,
+      95,    0,  538,    2, 0x08,  100 /* Private */,
+      96,    0,  539,    2, 0x08,  101 /* Private */,
+      97,    0,  540,    2, 0x08,  102 /* Private */,
+      98,    1,  541,    2, 0x08,  103 /* Private */,
+     100,    2,  544,    2, 0x08,  105 /* Private */,
+     101,    0,  549,    2, 0x08,  108 /* Private */,
 
  // signals: parameters
     QMetaType::Void,
@@ -233,6 +237,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
     QMetaType::Void, QMetaType::QString,    8,
     QMetaType::Void,
     QMetaType::Void, QMetaType::QJsonObject, QMetaType::Int,   18,   19,
+    QMetaType::Void, QMetaType::Int, QMetaType::Int,   21,   22,
 
  // slots: parameters
     QMetaType::Void,
@@ -240,7 +245,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 26, QMetaType::Int,   27,   28,
+    QMetaType::Void, 0x80000000 | 29, QMetaType::Int,   30,   31,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -250,45 +255,45 @@ Q_CONSTINIT static const uint qt_meta_data_ZN10MainWindowE[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   39,   40,
-    QMetaType::Void, QMetaType::QString,   42,
-    QMetaType::Void, QMetaType::Int,   44,
+    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   42,   43,
+    QMetaType::Void, QMetaType::QString,   45,
+    QMetaType::Void, QMetaType::Int,   47,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   48,   40,
-    QMetaType::Void, QMetaType::QString,   42,
+    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   51,   43,
+    QMetaType::Void, QMetaType::QString,   45,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Bool,   52,
-    QMetaType::Void, QMetaType::Int,   54,
-    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   56,   40,
-    QMetaType::Void, QMetaType::QString,   58,
-    QMetaType::Void, QMetaType::QString,   58,
-    QMetaType::Void, QMetaType::QString,   40,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void, QMetaType::QString, 0x80000000 | 70,   69,   71,
-    QMetaType::Void, QMetaType::QString, 0x80000000 | 70,   69,   71,
-    QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 75,   71,
-    QMetaType::Void, 0x80000000 | 75,   71,
-    QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   79,
-    QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 82, 0x80000000 | 82, 0x80000000 | 85,   83,   84,   86,
-    QMetaType::Void, 0x80000000 | 82, 0x80000000 | 26,   88,   27,
+    QMetaType::Void, QMetaType::Bool,   55,
+    QMetaType::Void, QMetaType::Int,   57,
+    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   59,   43,
+    QMetaType::Void, QMetaType::QString,   61,
+    QMetaType::Void, QMetaType::QString,   61,
+    QMetaType::Void, QMetaType::QString,   43,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Double,   96,
-    QMetaType::Void, 0x80000000 | 26, QMetaType::Int,   27,   28,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::QString, 0x80000000 | 73,   72,   74,
+    QMetaType::Void, QMetaType::QString, 0x80000000 | 73,   72,   74,
+    QMetaType::Void,
+    QMetaType::Void, 0x80000000 | 78,   74,
+    QMetaType::Void, 0x80000000 | 78,   74,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::QString,   82,
+    QMetaType::Void,
+    QMetaType::Void, 0x80000000 | 85, 0x80000000 | 85, 0x80000000 | 88,   86,   87,   89,
+    QMetaType::Void, 0x80000000 | 85, 0x80000000 | 29,   91,   30,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Double,   99,
+    QMetaType::Void, 0x80000000 | 29, QMetaType::Int,   30,   31,
     QMetaType::Void,
 
        0        // eod
@@ -329,6 +334,10 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         // method 'sendModbusResultToWebSocket'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QJsonObject &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<int, std::false_type>,
+        // method 'sendConfigCounts'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<int, std::false_type>,
         QtPrivate::TypeAndForceComplete<int, std::false_type>,
         // method 'on_btnScanPort_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
@@ -488,68 +497,69 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 5: _t->openECUPort((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         case 6: _t->closeECUPort(); break;
         case 7: _t->sendModbusResultToWebSocket((*reinterpret_cast< std::add_pointer_t<QJsonObject>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
-        case 8: _t->on_btnScanPort_clicked(); break;
-        case 9: _t->on_btnOpenPort_clicked(); break;
-        case 10: _t->on_btnClearReceiveArea_clicked(); break;
-        case 11: _t->on_btnClearSendArea_clicked(); break;
-        case 12: _t->on_btnSend_clicked(); break;
-        case 13: _t->handleSnapshotProcessed((*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
-        case 14: _t->on_btnCanOpenDevice_clicked(); break;
-        case 15: _t->on_btnCanSend_clicked(); break;
-        case 16: _t->on_btnCanStart_clicked(); break;
-        case 17: _t->on_btnCanReset_clicked(); break;
-        case 18: _t->on_btnCanInit_clicked(); break;
-        case 19: _t->on_btnPagePlot_clicked(); break;
-        case 20: _t->on_btnPageData_clicked(); break;
-        case 21: _t->on_btnSaveData_clicked(); break;
-        case 22: _t->on_btnReadData_clicked(); break;
-        case 23: _t->handleDAQStatus((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
-        case 24: _t->handleDAQError((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 25: _t->on_filterEnabledCheckBox_stateChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 26: _t->on_btnECUScan_clicked(); break;
-        case 27: _t->on_btnECUStart_clicked(); break;
-        case 28: _t->handleECUStatus((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
-        case 29: _t->handleECUError((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 30: _t->on_btnPageInitial_clicked(); break;
-        case 31: _t->enableInitialPage((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
-        case 32: _t->onRandomNumberGenerated((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 33: _t->handleWebSocketServerStarted((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
-        case 34: _t->handleWebSocketClientConnected((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 35: _t->handleWebSocketClientDisconnected((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 36: _t->handleWebSocketMessage((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 37: _t->testWebSocketConnection(); break;
-        case 38: _t->on_btnWebSocketControl_clicked(); break;
-        case 39: _t->on_btnWebSocketTest_clicked(); break;
-        case 40: _t->onMainTimerTimeout(); break;
-        case 41: _t->on_actionSetupInitial_triggered(); break;
-        case 42: _t->on_actionLoadInitial_triggered(); break;
-        case 43: _t->on_actionSaveInitial_triggered(); break;
-        case 44: _t->handleDashboardSettingsChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QMap<QString,QVariant>>>(_a[2]))); break;
-        case 45: _t->handleDashForceSettingsChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QMap<QString,QVariant>>>(_a[2]))); break;
-        case 46: _t->applyDashboardMappings(); break;
-        case 47: _t->saveDashboardMappings((*reinterpret_cast< std::add_pointer_t<QSettings&>>(_a[1]))); break;
-        case 48: _t->loadDashboardMappings((*reinterpret_cast< std::add_pointer_t<QSettings&>>(_a[1]))); break;
-        case 49: _t->initDefaultDashboardMappings(); break;
-        case 50: _t->updateDashboardDAQChannels((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 51: _t->updateModbusChannels(); break;
-        case 52: _t->updateDashboardByMapping((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<ECUData>>(_a[3]))); break;
-        case 53: _t->updateDashboardData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[2]))); break;
-        case 54: _t->setupDAQPlot(); break;
-        case 55: _t->on_startDAQButton_clicked(); break;
-        case 56: _t->on_stopDAQButton_clicked(); break;
-        case 57: _t->updateLayout(); break;
-        case 58: _t->ECUPlotInit(); break;
-        case 59: _t->setupDash1Plot(); break;
-        case 60: _t->updateDash1Plot((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
-        case 61: _t->updateAllPlots((*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
-        case 62: _t->on_btnStartAll_clicked(); break;
+        case 8: _t->sendConfigCounts((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
+        case 9: _t->on_btnScanPort_clicked(); break;
+        case 10: _t->on_btnOpenPort_clicked(); break;
+        case 11: _t->on_btnClearReceiveArea_clicked(); break;
+        case 12: _t->on_btnClearSendArea_clicked(); break;
+        case 13: _t->on_btnSend_clicked(); break;
+        case 14: _t->handleSnapshotProcessed((*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
+        case 15: _t->on_btnCanOpenDevice_clicked(); break;
+        case 16: _t->on_btnCanSend_clicked(); break;
+        case 17: _t->on_btnCanStart_clicked(); break;
+        case 18: _t->on_btnCanReset_clicked(); break;
+        case 19: _t->on_btnCanInit_clicked(); break;
+        case 20: _t->on_btnPagePlot_clicked(); break;
+        case 21: _t->on_btnPageData_clicked(); break;
+        case 22: _t->on_btnSaveData_clicked(); break;
+        case 23: _t->on_btnReadData_clicked(); break;
+        case 24: _t->handleDAQStatus((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
+        case 25: _t->handleDAQError((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 26: _t->on_filterEnabledCheckBox_stateChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 27: _t->on_btnECUScan_clicked(); break;
+        case 28: _t->on_btnECUStart_clicked(); break;
+        case 29: _t->handleECUStatus((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
+        case 30: _t->handleECUError((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 31: _t->on_btnPageInitial_clicked(); break;
+        case 32: _t->enableInitialPage((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
+        case 33: _t->onRandomNumberGenerated((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 34: _t->handleWebSocketServerStarted((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
+        case 35: _t->handleWebSocketClientConnected((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 36: _t->handleWebSocketClientDisconnected((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 37: _t->handleWebSocketMessage((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 38: _t->testWebSocketConnection(); break;
+        case 39: _t->on_btnWebSocketControl_clicked(); break;
+        case 40: _t->on_btnWebSocketTest_clicked(); break;
+        case 41: _t->onMainTimerTimeout(); break;
+        case 42: _t->on_actionSetupInitial_triggered(); break;
+        case 43: _t->on_actionLoadInitial_triggered(); break;
+        case 44: _t->on_actionSaveInitial_triggered(); break;
+        case 45: _t->handleDashboardSettingsChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QMap<QString,QVariant>>>(_a[2]))); break;
+        case 46: _t->handleDashForceSettingsChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QMap<QString,QVariant>>>(_a[2]))); break;
+        case 47: _t->applyDashboardMappings(); break;
+        case 48: _t->saveDashboardMappings((*reinterpret_cast< std::add_pointer_t<QSettings&>>(_a[1]))); break;
+        case 49: _t->loadDashboardMappings((*reinterpret_cast< std::add_pointer_t<QSettings&>>(_a[1]))); break;
+        case 50: _t->initDefaultDashboardMappings(); break;
+        case 51: _t->updateDashboardDAQChannels((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 52: _t->updateModbusChannels(); break;
+        case 53: _t->updateDashboardByMapping((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<ECUData>>(_a[3]))); break;
+        case 54: _t->updateDashboardData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[2]))); break;
+        case 55: _t->setupDAQPlot(); break;
+        case 56: _t->on_startDAQButton_clicked(); break;
+        case 57: _t->on_stopDAQButton_clicked(); break;
+        case 58: _t->updateLayout(); break;
+        case 59: _t->ECUPlotInit(); break;
+        case 60: _t->setupDash1Plot(); break;
+        case 61: _t->updateDash1Plot((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
+        case 62: _t->updateAllPlots((*reinterpret_cast< std::add_pointer_t<DataSnapshot>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
+        case 63: _t->on_btnStartAll_clicked(); break;
         default: ;
         }
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
         switch (_id) {
         default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-        case 52:
+        case 53:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 1:
@@ -557,7 +567,7 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
                 *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType::fromType< QList<double> >(); break;
             }
             break;
-        case 53:
+        case 54:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 0:
@@ -624,6 +634,13 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
                 return;
             }
         }
+        {
+            using _q_method_type = void (MainWindow::*)(int , int );
+            if (_q_method_type _q_method = &MainWindow::sendConfigCounts; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 8;
+                return;
+            }
+        }
     }
 }
 
@@ -646,14 +663,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 63)
+        if (_id < 64)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 63;
+        _id -= 64;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 63)
+        if (_id < 64)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 63;
+        _id -= 64;
     }
     return _id;
 }
@@ -708,5 +725,12 @@ void MainWindow::sendModbusResultToWebSocket(const QJsonObject & _t1, int _t2)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))) };
     QMetaObject::activate(this, &staticMetaObject, 7, _a);
+}
+
+// SIGNAL 8
+void MainWindow::sendConfigCounts(int _t1, int _t2)
+{
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))) };
+    QMetaObject::activate(this, &staticMetaObject, 8, _a);
 }
 QT_WARNING_POP

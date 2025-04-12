@@ -30,6 +30,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMetaType \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMultiMap \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutexLocker \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointF \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointer \
@@ -45,6 +46,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QStack \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QString \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QStringList \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTextStream \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QThread \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTime \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTimeZone \

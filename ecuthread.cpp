@@ -42,6 +42,8 @@ void ECUThread::initSerialPort()
     // 连接错误信号
     connect(serialPort, &QSerialPort::errorOccurred, this, [=](QSerialPort::SerialPortError error) {
         if (error != QSerialPort::NoError) {
+            qDebug() << "[ECUThread] Emitting ecuConnectionStatus(true)";
+            qDebug() << "[ECUThread] Emitting ecuConnectionStatus(false)";
             emit ecuError(QString("串口错误: %1").arg(serialPort->errorString()));
         }
     });
@@ -76,8 +78,10 @@ void ECUThread::openECUPort(const QString &portName)
     
     // 尝试打开串口
     if (serialPort->open(QIODevice::ReadOnly)) {
+        qDebug() << "===> ECUThread: 发送ecuConnectionStatus信号(true)：成功打开串口" << portName;
         emit ecuConnectionStatus(true, QString("ECU串口 %1 已成功打开").arg(portName));
     } else {
+        qDebug() << "===> ECUThread: 发送ecuConnectionStatus信号(false)：无法打开串口" << portName;
         emit ecuConnectionStatus(false, QString("无法打开ECU串口 %1: %2").arg(portName).arg(serialPort->errorString()));
     }
 }
@@ -89,6 +93,7 @@ void ECUThread::closeECUPort()
     // 检查串口是否存在并已打开
     if (serialPort && serialPort->isOpen()) {
         serialPort->close();
+        qDebug() << "===> ECUThread: 发送ecuConnectionStatus信号(false)：串口已关闭";
         emit ecuConnectionStatus(false, "ECU串口已关闭");
     }
 }
@@ -138,6 +143,7 @@ void ECUThread::processSerialData()
             ecuData.timestamp = QDateTime::currentDateTime();
             
             // 发送解析成功的数据
+            qDebug() << "[ECUThread] Emitting ecuDataReady. Data isValid:" << ecuData.isValid;
             emit ecuDataReady(ecuData);
         } else {
             qDebug() << "ECU数据帧解析失败";
@@ -233,11 +239,9 @@ bool ECUThread::parseECUData(const QByteArray &data, ECUData &result)
     // 飞行时间：精度1，偏移量0
     result.flightTimeError = (flightTimeRaw == 0xFFFF);
     result.flightTime = result.flightTimeError ? 0 : calculateRealValue(flightTimeRaw, 1, 0);
-    
-    // 数据解析完成，设置isValid为true
+
     result.isValid = true;
-    result.timer.restart(); // 重置计时器
-    
+
     return true;
 }
 

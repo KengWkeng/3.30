@@ -57,7 +57,15 @@ static constexpr auto qt_meta_stringdata_ZN14SnapshotThreadE = QtMocHelpers::str
     "channelData",
     "handleECUData",
     "ECUData",
-    "processDataSnapshots"
+    "processDataSnapshots",
+    "handleECUConnectionStatus",
+    "connected",
+    "message",
+    "setProcessingEnabled",
+    "enabled",
+    "setupLogging",
+    "modbusCount",
+    "daqCount"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -69,7 +77,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN14SnapshotThreadE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-       6,   14, // methods
+       9,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -77,14 +85,17 @@ Q_CONSTINIT static const uint qt_meta_data_ZN14SnapshotThreadE[] = {
        2,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    2,   50,    2, 0x06,    1 /* Public */,
-       6,    2,   55,    2, 0x06,    4 /* Public */,
+       1,    2,   68,    2, 0x06,    1 /* Public */,
+       6,    2,   73,    2, 0x06,    4 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-       9,    2,   60,    2, 0x0a,    7 /* Public */,
-      13,    2,   65,    2, 0x0a,   10 /* Public */,
-      17,    1,   70,    2, 0x0a,   13 /* Public */,
-      19,    0,   73,    2, 0x0a,   15 /* Public */,
+       9,    2,   78,    2, 0x0a,    7 /* Public */,
+      13,    2,   83,    2, 0x0a,   10 /* Public */,
+      17,    1,   88,    2, 0x0a,   13 /* Public */,
+      19,    0,   91,    2, 0x0a,   15 /* Public */,
+      20,    2,   92,    2, 0x0a,   16 /* Public */,
+      23,    1,   97,    2, 0x0a,   19 /* Public */,
+      25,    2,  100,    2, 0x0a,   21 /* Public */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3, QMetaType::Int,    4,    5,
@@ -95,6 +106,9 @@ Q_CONSTINIT static const uint qt_meta_data_ZN14SnapshotThreadE[] = {
     QMetaType::Void, 0x80000000 | 10, 0x80000000 | 15,   14,   16,
     QMetaType::Void, 0x80000000 | 18,    7,
     QMetaType::Void,
+    QMetaType::Void, QMetaType::Bool, QMetaType::QString,   21,   22,
+    QMetaType::Void, QMetaType::Bool,   24,
+    QMetaType::Void, QMetaType::Int, QMetaType::Int,   26,   27,
 
        0        // eod
 };
@@ -128,7 +142,18 @@ Q_CONSTINIT const QMetaObject SnapshotThread::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const ECUData &, std::false_type>,
         // method 'processDataSnapshots'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'handleECUConnectionStatus'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>,
+        QtPrivate::TypeAndForceComplete<QString, std::false_type>,
+        // method 'setProcessingEnabled'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>,
+        // method 'setupLogging'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<int, std::false_type>,
+        QtPrivate::TypeAndForceComplete<int, std::false_type>
     >,
     nullptr
 } };
@@ -144,6 +169,9 @@ void SnapshotThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
         case 3: _t->handleDAQData((*reinterpret_cast< std::add_pointer_t<QList<double>>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QList<QList<double>>>>(_a[2]))); break;
         case 4: _t->handleECUData((*reinterpret_cast< std::add_pointer_t<ECUData>>(_a[1]))); break;
         case 5: _t->processDataSnapshots(); break;
+        case 6: _t->handleECUConnectionStatus((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
+        case 7: _t->setProcessingEnabled((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
+        case 8: _t->setupLogging((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[2]))); break;
         default: ;
         }
     }
@@ -206,14 +234,14 @@ int SnapshotThread::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 6)
+        if (_id < 9)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 9;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 6)
+        if (_id < 9)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 9;
     }
     return _id;
 }

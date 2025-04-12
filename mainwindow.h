@@ -398,6 +398,9 @@ signals:
     // 添加Modbus数据转发的信号
     void sendModbusResultToWebSocket(const QJsonObject &data, int interval);
 
+    // Add signal to send config counts
+    void sendConfigCounts(int modbusCount, int daqCount);
+
 };
 
 

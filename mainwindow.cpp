@@ -249,7 +249,6 @@ MainWindow::MainWindow(QWidget *parent)
     mainTimer = new QTimer(this);
     mainTimer->setInterval(10); // 设置基本间隔为10ms
     connect(mainTimer, &QTimer::timeout, this, &MainWindow::onMainTimerTimeout);
-    mainTimer->start();
     
     // 初始化定时器相关变量
     modbusReadRequested = false;
@@ -343,7 +342,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 连接ECU信号与槽
     // connect(ecuTh, &ECUThread::ecuDataReady, this, &MainWindow::handleECUData);
-    connect(ecuTh, &ECUThread::ecuConnectionStatus, this, &MainWindow::handleECUStatus);
+    //connect(ecuTh, &ECUThread::ecuConnectionStatus, this, &MainWindow::handleECUStatus);
     connect(ecuTh, &ECUThread::ecuError, this, &MainWindow::handleECUError);
     connect(this, &MainWindow::openECUPort, ecuTh, &ECUThread::openECUPort);
     connect(this, &MainWindow::closeECUPort, ecuTh, &ECUThread::closeECUPort);
@@ -525,8 +524,8 @@ MainWindow::MainWindow(QWidget *parent)
     // currentSnapshot = DataSnapshot();
 
     // 初始化ECU相关
-    ecuThread = nullptr;
-    ecuTh = nullptr;
+    // ecuThread = nullptr;
+    // ecuTh = nullptr;
     ecuIsConnected = false;
     
     // 在构造函数中，初始化SnapshotThread线程
@@ -540,29 +539,62 @@ MainWindow::MainWindow(QWidget *parent)
     snapshotThread->start();
     
     // 设置主计时器
-    QMetaObject::invokeMethod(snpTh, &SnapshotThread::setupMasterTimer, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(snpTh, &SnapshotThread::setupMasterTimer);
+    
+    // --- 调试: 检查对象指针是否有效 ---
+    qDebug() << "Checking object pointers before connecting ECU signals:";
+    qDebug() << "  ecuTh pointer:" << ecuTh;
+    qDebug() << "  snpTh pointer:" << snpTh;
+    qDebug() << "  this (MainWindow) pointer:" << this;
+    // --- 结束调试 ---
     
     // 连接信号和槽
     // 将主线程的triggerProcessDataSnapshots信号连接到SnapshotThread的processDataSnapshots槽
-    connect(this, &MainWindow::triggerProcessDataSnapshots, snpTh, &SnapshotThread::processDataSnapshots, Qt::QueuedConnection);
+    connect(this, &MainWindow::triggerProcessDataSnapshots, snpTh, &SnapshotThread::processDataSnapshots);
     
     // 接收SnapshotThread处理后的数据
-    connect(snpTh, &SnapshotThread::snapshotProcessed, this, &MainWindow::handleSnapshotProcessed, Qt::QueuedConnection);
+    connect(snpTh, &SnapshotThread::snapshotProcessed, this, &MainWindow::handleSnapshotProcessed);
     
     // 修改Modbus数据处理连接
     // 从主线程接收改为直接连接到SnapshotThread
-    connect(mbTh, &modbusThread::sendModbusResult, snpTh, &SnapshotThread::handleModbusData, Qt::QueuedConnection);
+    connect(mbTh, &modbusThread::sendModbusResult, snpTh, &SnapshotThread::handleModbusData);
     
     // 修改DAQ数据处理连接
     // 从主线程接收改为直接连接到SnapshotThread
-    connect(daqTh, &DAQThread::dataReady, snpTh, &SnapshotThread::handleDAQData, Qt::QueuedConnection);
+    connect(daqTh, &DAQThread::dataReady, snpTh, &SnapshotThread::handleDAQData);
     
     // 修改ECU数据处理连接
     // 从主线程接收改为直接连接到SnapshotThread
-    connect(ecuTh, &ECUThread::ecuDataReady, snpTh, &SnapshotThread::handleECUData, Qt::QueuedConnection);
+    bool ecuDataConnectResult = connect(ecuTh, &ECUThread::ecuDataReady, snpTh, &SnapshotThread::handleECUData, Qt::QueuedConnection);
+    qDebug() << "Connecting ecuTh::ecuDataReady to snpTh::handleECUData, Result:" << ecuDataConnectResult;
+
+    // 添加ECU连接状态信号与槽的连接
+    // 连接到 SnapshotThread 处理底层逻辑
+    bool ecuStatusConnectResult = connect(ecuTh, &ECUThread::ecuConnectionStatus, snpTh, &SnapshotThread::handleECUConnectionStatus, Qt::QueuedConnection);
+    qDebug() << "Connecting ecuTh::ecuConnectionStatus to snpTh::handleECUConnectionStatus, Result:" << ecuStatusConnectResult;
+    // 连接到 MainWindow 更新 UI
+    bool mainConnectResult = connect(ecuTh, &ECUThread::ecuConnectionStatus, this, &MainWindow::handleECUStatus);
+    qDebug() << "Connecting ecuTh::ecuConnectionStatus to MainWindow::handleECUStatus, Result:" << mainConnectResult;
     
     // 将SnapshotThread的WebSocket数据转发连接到WebSocketThread
-    connect(snpTh, &SnapshotThread::sendModbusResultToWebSocket, wsTh, &WebSocketThread::handleModbusData, Qt::QueuedConnection);
+    connect(snpTh, &SnapshotThread::sendModbusResultToWebSocket, wsTh, &WebSocketThread::handleModbusData);
+    
+    // // 添加ECU连接状态信号与槽的连接
+    // // 连接到 SnapshotThread 处理底层逻辑
+    // bool snapConnectResult = connect(ecuTh, &ECUThread::ecuConnectionStatus, snpTh, &SnapshotThread::handleECUConnectionStatus);
+    // // 连接到 MainWindow 更新 UI
+    // bool mainConnectResult = connect(ecuTh, &ECUThread::ecuConnectionStatus, this, &MainWindow::handleECUStatus);
+    
+    // qDebug() << "===> 信号连接结果: ecuTh->snpTh=" << snapConnectResult << ", ecuTh->MainWindow=" << mainConnectResult;
+
+    // 正确的位置打印组合的连接结果
+    qDebug() << "===> ECU Signal Connection Results: ecuData->snpTh=" << ecuDataConnectResult 
+             << ", ecuStatus->snpTh=" << ecuStatusConnectResult 
+             << ", ecuStatus->MainWindow=" << mainConnectResult;
+
+    // Connect config count signal
+    connect(this, &MainWindow::sendConfigCounts, snpTh, &SnapshotThread::setupLogging, Qt::QueuedConnection);
+    qDebug() << "Connecting MainWindow::sendConfigCounts to snpTh::setupLogging";
 }
 
 MainWindow::~MainWindow()
@@ -935,7 +967,7 @@ void MainWindow::on_btnSend_clicked()
                 bool enabled = ui->filterEnabledCheckBox->isChecked();
                 // 设置滤波参数
                 snpTh->setFilterEnabled(enabled, timeConstant);
-            }, Qt::QueuedConnection);
+            });
         }
         
         qDebug() << "滤波器状态: " << (ui->filterEnabledCheckBox->isChecked() ? "开启" : "关闭") 
@@ -1305,7 +1337,7 @@ void MainWindow::on_filterEnabledCheckBox_stateChanged(int state)
             double timeConstant = ui->lineTimeLoop->text().toDouble();
             // 设置滤波参数
             snpTh->setFilterEnabled(enabled, timeConstant);
-        }, Qt::QueuedConnection);
+        });
     }
     
     QString message = enabled ? 
@@ -1417,6 +1449,9 @@ void MainWindow::handleECUData(const ECUData &data)
 
 void MainWindow::handleECUStatus(bool connected, QString message)
 {
+    // 添加详细调试信息
+    qDebug() << "===> MainWindow::handleECUStatus被调用：connected=" << connected << ", message=" << message;
+    
     // 更新连接状态
     ecuIsConnected = connected;
     
@@ -1433,6 +1468,8 @@ void MainWindow::handleECUStatus(bool connected, QString message)
         ui->comboSerialECU->setEnabled(true);
         ui->btnECUScan->setEnabled(true);
     }
+    
+    qDebug() << "===> MainWindow中ECU状态更新完成: ecuIsConnected=" << ecuIsConnected;
 }
 
 void MainWindow::handleECUError(QString errorMessage)
@@ -3793,13 +3830,31 @@ void MainWindow::on_btnStartAll_clicked()
             qDebug() << "DAQ设备未准备好，无法启动DAQ采集";
         }
         
+        // Get current config counts
+        int modbusCount = ui->lineSegNum->text().toInt();
+        QStringList daqParts = ui->channelsEdit->text().split('/', Qt::SkipEmptyParts);
+        int daqCount = daqParts.size();
+
+        // Send config counts to SnapshotThread BEFORE enabling processing/logging
+        emit sendConfigCounts(modbusCount, daqCount);
+        qDebug() << "Emitted config counts: Modbus=" << modbusCount << ", DAQ=" << daqCount;
+
         // 更新状态
         allCaptureRunning = true;
         ui->btnStartAll->setText("停止所有采集");
-        qDebug() << "所有采集任务已启动";
+        mainTimer->start(); // <--- START the main timer
+        qDebug() << "所有采集任务已启动，主定时器已启动";
+        // Enable processing and START logging in SnapshotThread
+        QMetaObject::invokeMethod(snpTh, "setProcessingEnabled", Qt::QueuedConnection, Q_ARG(bool, true));
+        qDebug() << "通知 SnapshotThread 启用处理和日志记录";
     } else {
         // 停止所有采集任务
-        
+        // Disable processing and STOP logging in SnapshotThread FIRST
+        QMetaObject::invokeMethod(snpTh, "setProcessingEnabled", Qt::QueuedConnection, Q_ARG(bool, false));
+        qDebug() << "通知 SnapshotThread 禁用处理和日志记录";
+        mainTimer->stop(); // <--- STOP the main timer
+        qDebug() << "主定时器已停止";
+
         // 1. 停止Modbus采集
         if (ui->btnSend->text() == "结束") {
             ui->btnSend->click();

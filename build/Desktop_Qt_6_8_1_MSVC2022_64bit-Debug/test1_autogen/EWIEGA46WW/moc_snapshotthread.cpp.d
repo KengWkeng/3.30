@@ -3,11 +3,16 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QDateTime \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QDebug \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QElapsedTimer \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QFile \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonArray \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonDocument \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonObject \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutexLocker \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QQueue \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QStringList \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTextStream \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QThread \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTimer \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QVector \
@@ -52,6 +57,8 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qelapsedtimer.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qendian.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qexceptionhandling.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qfile.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qfiledevice.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qflags.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qfloat16.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qforeach.h \
@@ -67,6 +74,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qiterable.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qiterator.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qjsonarray.h \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qjsondocument.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qjsonobject.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qjsonvalue.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qlatin1stringview.h \

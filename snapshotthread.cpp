@@ -1,6 +1,8 @@
 #include "snapshotthread.h"
+#include <QDir> // Include for QDir::currentPath()
 
-SnapshotThread::SnapshotThread(QObject *parent) : QObject(parent)
+SnapshotThread::SnapshotThread(QObject *parent) : QObject(parent),
+    logFile(nullptr), logStream(nullptr), snapshotsSinceLastWrite(0) // Initialize new members
 {
     // 初始化计时器
     masterTimer = new QElapsedTimer();
@@ -12,10 +14,15 @@ SnapshotThread::SnapshotThread(QObject *parent) : QObject(parent)
     
     // 初始化滤波相关变量
     filteredValues.resize(16, 0.0); // 默认支持16个通道
+    
+
+
+
 }
 
 SnapshotThread::~SnapshotThread()
 {
+    closeLogFile(); // Ensure file is closed on destruction
     // 清理资源
     if (masterTimer) {
         delete masterTimer;
@@ -85,6 +92,12 @@ QVector<double> SnapshotThread::applyFilterToResults(const QVector<double> &rawD
 // 处理Modbus数据
 void SnapshotThread::handleModbusData(QVector<double> resultdata, qint64 readTimeInterval)
 {
+    // Add check for processing enabled flag
+    if (!processingEnabled) {
+        qDebug() << "[SnapshotThread] handleModbusData: Processing disabled, skipping.";
+        return; // If processing is not enabled, exit early
+    }
+
     // 如果没有主计时器，则不处理
     if (!masterTimer) {
         qDebug() << "警告: 主计时器未初始化，无法处理Modbus数据";
@@ -214,60 +227,80 @@ void SnapshotThread::handleDAQData(const QVector<double> &timeData, const QVecto
 // 处理ECU数据
 void SnapshotThread::handleECUData(const ECUData &data)
 {
+    // 在 snapshotthread.cpp 的 handleECUData 开头
+    qDebug() << "[SnapshotThread] handleECUData called. Received data isValid:" << data.isValid;
+
+    if (!data.isValid) { // 保持原有逻辑
+        qDebug() << "[SnapshotThread] handleECUData: Received data is invalid, returning.";
+        return;
+    }
+
+
     try {
-        // 使用互斥锁保护ECU数据访问
+        // 使用互斥锁保护latestECUData的访问
         QMutexLocker locker(&latestECUDataMutex);
-        
+
         // 保存最新的ECU数据
         latestECUData = data;
-        ecuDataValid = data.isValid;
-        ecuIsConnected = true;
+        ecuDataValid = true;  // 设置ECU数据有效标志
+        qDebug() << "[SnapshotThread] handleECUData: Updated latestECUData and set ecuDataValid to true.";
+
+        // 准备ECU数据向量 - 保存成向量格式方便处理
+        QVector<double> ecuValues(9);
+        ecuValues[0] = data.throttle;
+        ecuValues[1] = data.engineSpeed;
+        ecuValues[2] = data.cylinderTemp;
+        ecuValues[3] = data.exhaustTemp;
+        ecuValues[4] = data.axleTemp;
+        ecuValues[5] = data.fuelPressure;
+        ecuValues[6] = data.intakeTemp;
+        ecuValues[7] = data.atmPressure;
+        ecuValues[8] = data.flightTime;
         
-        // 确保ecuData大小正确
-        if (ecuData.size() != 9) {
-            ecuData.resize(9);
-        }
+
         
-        // 如果数据有效，将数据添加到ecuData中
-        if (data.isValid) {
-            // 添加数据
-            ecuData[0].append(data.throttle);
-            ecuData[1].append(data.engineSpeed);
-            ecuData[2].append(data.cylinderTemp);
-            ecuData[3].append(data.exhaustTemp);
-            ecuData[4].append(data.axleTemp);
-            ecuData[5].append(data.fuelPressure);
-            ecuData[6].append(data.intakeTemp);
-            ecuData[7].append(data.atmPressure);
-            ecuData[8].append(data.flightTime);
-            
-            // 限制数据点数量
-            const int maxPoints = 10000;
-            for (int i = 0; i < 9; i++) {
-                while (ecuData[i].size() > maxPoints) {
-                    ecuData[i].removeFirst();
-                }
-            }
-            
-            // 更新当前快照中的ECU数据
-            currentSnapshot.ecuValid = true;
-            currentSnapshot.ecuData.resize(9);
-            currentSnapshot.ecuData[0] = data.throttle;
-            currentSnapshot.ecuData[1] = data.engineSpeed;
-            currentSnapshot.ecuData[2] = data.cylinderTemp;
-            currentSnapshot.ecuData[3] = data.exhaustTemp;
-            currentSnapshot.ecuData[4] = data.axleTemp;
-            currentSnapshot.ecuData[5] = data.fuelPressure;
-            currentSnapshot.ecuData[6] = data.intakeTemp;
-            currentSnapshot.ecuData[7] = data.atmPressure;
-            currentSnapshot.ecuData[8] = data.flightTime;
-        }
+
+        
+        // 注意：不再直接更新图表，统一由processDataSnapshots处理
+        // 更新当前快照，以便processDataSnapshots能够获取最新数据
+        currentSnapshot.ecuValid = true;
+        currentSnapshot.ecuData = ecuValues;
+        
+        // 调试信息
+        qDebug() << "收到ECU数据: 节气门=" << data.throttle 
+                 << "%, 转速=" << data.engineSpeed << "rpm"
+                 << ", ecuDataValid=" << ecuDataValid
+                 << ", snapEcuIsConnected=" << snapEcuIsConnected;
         
     } catch (const std::exception& e) {
         qDebug() << "处理ECU数据时出错: " << e.what();
     } catch (...) {
         qDebug() << "处理ECU数据时发生未知错误";
     }
+}
+
+// 接收ECU连接状态
+void SnapshotThread::handleECUConnectionStatus(bool connected, QString message)
+{
+    // 添加详细调试信息，帮助追踪函数是否被调用
+    qDebug() << "===> [SnapshotThread] handleECUConnectionStatus called: connected=" << connected << ", message=" << message;
+    
+    // 更新ECU连接状态
+    snapEcuIsConnected = connected;
+    qDebug() << "===> [SnapshotThread] snapEcuIsConnected set to:" << snapEcuIsConnected;
+    
+    // 如果连接断开，则标记ECU数据无效
+    if (!connected) {
+        ecuDataValid = false;
+        
+        // 更新当前快照中的ECU状态
+        currentSnapshot.ecuValid = false;
+    }
+    
+    qDebug() << "===> 更新后的ECU状态: 已连接=" << snapEcuIsConnected << ", 数据有效=" << ecuDataValid;
+    
+    // 手动触发数据快照处理，确保状态变化立即反映
+    QMetaObject::invokeMethod(this, &SnapshotThread::processDataSnapshots, Qt::QueuedConnection);
 }
 
 // 处理数据快照
@@ -321,51 +354,24 @@ void SnapshotThread::processDataSnapshots()
             qDebug() << "快照" << snapshotCount + 1 << "DAQ数据无效，采集状态:" << daqIsAcquiring << "通道数:" << daqNumChannels;
         }
         
-        // 获取当前的ECU数据
-        snapshot.ecuValid = ecuDataValid;
-        if (ecuDataValid && !ecuData.isEmpty() && ecuData.size() == 9) {
-            snapshot.ecuData.resize(9);
-            for (int i = 0; i < 9; ++i) {
-                if (!ecuData[i].isEmpty()) {
-                    snapshot.ecuData[i] = ecuData[i].last();
-                } else {
-                    snapshot.ecuData[i] = 0.0;
-                }
-            }
-            
-            // 同时从latestECUData获取最新数据，确保没有遗漏
-            QMutexLocker locker(&latestECUDataMutex);
-            if (latestECUData.isValid) {
-                // 使用最新的ECU数据，可能会比列表中的数据更新
-                snapshot.ecuData[0] = latestECUData.throttle;
-                snapshot.ecuData[1] = latestECUData.engineSpeed;
-                snapshot.ecuData[2] = latestECUData.cylinderTemp;
-                snapshot.ecuData[3] = latestECUData.exhaustTemp;
-                snapshot.ecuData[4] = latestECUData.axleTemp;
-                snapshot.ecuData[5] = latestECUData.fuelPressure;
-                snapshot.ecuData[6] = latestECUData.intakeTemp;
-                snapshot.ecuData[7] = latestECUData.atmPressure;
-                snapshot.ecuData[8] = latestECUData.flightTime;
-            }
-            qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效，数据:" << snapshot.ecuData;
-        } else if (latestECUData.isValid && ecuIsConnected) {
-            // 如果ecuData为空但有最新的ECU数据，直接使用latestECUData
-            QMutexLocker locker(&latestECUDataMutex);
-            snapshot.ecuValid = true;
-            snapshot.ecuData.resize(9);
-            snapshot.ecuData[0] = latestECUData.throttle;
-            snapshot.ecuData[1] = latestECUData.engineSpeed;
-            snapshot.ecuData[2] = latestECUData.cylinderTemp;
-            snapshot.ecuData[3] = latestECUData.exhaustTemp;
-            snapshot.ecuData[4] = latestECUData.axleTemp;
-            snapshot.ecuData[5] = latestECUData.fuelPressure;
-            snapshot.ecuData[6] = latestECUData.intakeTemp;
-            snapshot.ecuData[7] = latestECUData.atmPressure;
-            snapshot.ecuData[8] = latestECUData.flightTime;
-            qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效(从latestECUData)，数据:" << snapshot.ecuData;
-        } else {
-            qDebug() << "快照" << snapshotCount + 1 << "ECU数据无效，ECU连接状态:" << ecuIsConnected;
-        }
+        // 获取当前的ECU数据 - 使用基于snapEcuIsConnected和ecuDataValid的简化逻辑
+      snapshot.ecuValid = snapEcuIsConnected && latestECUData.isValid; // 直接基于连接状态和最新数据有效性
+
+    if (snapshot.ecuValid) { // 如果连接正常且最新数据有效
+        snapshot.ecuData.resize(9);
+        snapshot.ecuData[0] = latestECUData.throttle;
+        snapshot.ecuData[1] = latestECUData.engineSpeed;
+        snapshot.ecuData[2] = latestECUData.cylinderTemp;
+        snapshot.ecuData[3] = latestECUData.exhaustTemp;
+        snapshot.ecuData[4] = latestECUData.axleTemp;
+        snapshot.ecuData[5] = latestECUData.fuelPressure;
+        snapshot.ecuData[6] = latestECUData.intakeTemp;
+        snapshot.ecuData[7] = latestECUData.atmPressure;
+        snapshot.ecuData[8] = latestECUData.flightTime;
+        qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效，数据:" << snapshot.ecuData;
+    } else {
+        qDebug() << "快照" << snapshotCount + 1 << "ECU数据无效，ECU连接状态:" << snapEcuIsConnected << "最新数据有效:" << latestECUData.isValid;
+    }
         
         // 增加快照计数
         snapshotCount++;
@@ -382,6 +388,19 @@ void SnapshotThread::processDataSnapshots()
         // 创建时间向量
         QVector<double> timeData;
         timeData.append(roundedTime);
+        
+        // --- Logging Logic ---
+        if (logFile && logStream && logFile->isOpen()) {
+            writeSnapshotToFile(snapshot);
+            snapshotsSinceLastWrite++;
+
+            if (snapshotsSinceLastWrite >= writeThreshold) {
+                logStream->flush(); // Flush buffer to disk
+                snapshotsSinceLastWrite = 0;
+                qDebug() << "[SnapshotThread] Flushed log data to disk.";
+            }
+        }
+        // --- End Logging Logic ---
         
         // 发送处理好的快照，让主线程更新UI
         emit snapshotProcessed(snapshot, snapshotCount);
@@ -410,4 +429,155 @@ void SnapshotThread::setFilterEnabled(bool enabled, double timeConstant)
     
     qDebug() << "SnapshotThread: 滤波状态已更新为" << (enabled ? "启用" : "禁用") 
              << "时间常数:" << filterTimeConstant << "秒";
-} 
+}
+
+// Modified slot to handle processing and logging state
+void SnapshotThread::setProcessingEnabled(bool enabled)
+{
+    processingEnabled = enabled;
+    qDebug() << "[SnapshotThread] Processing enabled set to:" << processingEnabled;
+
+    if (enabled) {
+        // Start logging when processing starts
+        if (!initializeLogFile()) {
+            qDebug() << "[SnapshotThread] Failed to initialize log file. Logging disabled.";
+            // Optionally handle the error, e.g., disable processing again or notify user
+        }
+    } else {
+        // Stop logging when processing stops
+        closeLogFile();
+    }
+}
+
+// --- Implementation of Logging Helper Methods ---
+
+bool SnapshotThread::initializeLogFile()
+{
+    if (logFile) { // Already initialized
+        return true;
+    }
+
+    // Create filename with timestamp
+    QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
+    logFilePath = QDir::currentPath() + "/" + timestamp + ".csv"; // Store in executable directory
+
+    logFile = new QFile(logFilePath);
+    if (!logFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append )) {
+        qDebug() << "[SnapshotThread] Error: Could not open log file for writing:" << logFilePath << logFile->errorString();
+        delete logFile;
+        logFile = nullptr;
+        return false;
+    }
+
+    logStream = new QTextStream(logFile);
+
+    qDebug() << "[SnapshotThread] Log file initialized:" << logFilePath;
+
+    // Generate and write header
+    generateCsvHeader();
+    writeCsvHeader();
+    snapshotsSinceLastWrite = 0; // Reset counter
+
+    return true;
+}
+
+void SnapshotThread::generateCsvHeader()
+{
+    csvHeader.clear();
+    csvHeader << "Timestamp" << "SnapshotIndex" << "ModbusValid" << "DAQValid" << "DAQRunning" << "ECUValid";
+
+    // Add headers based on configured counts
+    const int MAX_ECU_CH = 9; // Fixed
+
+    for (int i = 0; i < configuredModbusChannels; ++i) { // Use configured count
+        csvHeader << QString("Modbus_%1").arg(i);
+    }
+    for (int i = 0; i < configuredDaqChannels; ++i) { // Use configured count
+        csvHeader << QString("DAQ_%1").arg(i);
+    }
+    QStringList ecuNames = {"Throttle", "EngineSpeed", "CylinderTemp", "ExhaustTemp", "AxleTemp", "FuelPressure", "IntakeTemp", "AtmPressure", "FlightTime"};
+    for (int i = 0; i < MAX_ECU_CH; ++i) {
+        csvHeader << QString("ECU_%1").arg(ecuNames.value(i, QString::number(i))); // Use names if available
+    }
+}
+
+void SnapshotThread::writeCsvHeader()
+{
+    if (logStream && !csvHeader.isEmpty()) {
+        *logStream << csvHeader.join(",") << Qt::endl;
+        logStream->flush(); // Write header immediately
+    }
+}
+
+void SnapshotThread::writeSnapshotToFile(const DataSnapshot &snapshot)
+{
+    if (!logStream) return;
+
+    QStringList dataRow;
+    dataRow << QString::number(snapshot.timestamp, 'f', 3); // Timestamp with ms precision
+    dataRow << QString::number(snapshot.snapshotIndex);
+    dataRow << QString(snapshot.modbusValid ? "1" : "0");
+    dataRow << QString(snapshot.daqValid ? "1" : "0");
+    dataRow << QString(snapshot.daqRunning ? "1" : "0");
+    dataRow << QString(snapshot.ecuValid ? "1" : "0");
+
+    // Add Modbus data based on configured count
+    for (int i = 0; i < configuredModbusChannels; ++i) { // Use configured count
+        if (snapshot.modbusValid && i < snapshot.modbusData.size()) {
+            dataRow << QString::number(snapshot.modbusData[i], 'f', 4); // 4 decimal places for Modbus
+        } else {
+            dataRow << ""; // Empty string if invalid or channel doesn't exist
+        }
+    }
+
+    // Add DAQ data based on configured count
+    for (int i = 0; i < configuredDaqChannels; ++i) { // Use configured count
+        if (snapshot.daqValid && i < snapshot.daqData.size()) {
+            dataRow << QString::number(snapshot.daqData[i], 'f', 6); // 6 decimal places for DAQ
+        } else {
+            dataRow << "";
+        }
+    }
+
+    // Add ECU data (up to MAX_ECU_CH)
+    const int MAX_ECU_CH = 9;
+    for (int i = 0; i < MAX_ECU_CH; ++i) {
+        if (snapshot.ecuValid && i < snapshot.ecuData.size()) {
+            dataRow << QString::number(snapshot.ecuData[i], 'f', 2); // 2 decimal places for ECU
+        } else {
+            dataRow << "";
+        }
+    }
+
+    *logStream << dataRow.join(",") << Qt::endl;
+}
+
+void SnapshotThread::closeLogFile()
+{
+    if (logStream) {
+        logStream->flush(); // Final flush
+        qDebug() << "[SnapshotThread] Final log flush.";
+    }
+    if (logFile && logFile->isOpen()) {
+        logFile->close();
+        qDebug() << "[SnapshotThread] Log file closed:" << logFilePath;
+    }
+    // Safely delete objects
+    delete logStream;
+    logStream = nullptr;
+    delete logFile;
+    logFile = nullptr;
+    logFilePath.clear();
+}
+
+// --- End of Logging Helper Methods ---
+
+// --- New Slot Implementation ---
+void SnapshotThread::setupLogging(int modbusCount, int daqCount)
+{
+    configuredModbusChannels = (modbusCount > 0) ? modbusCount : 0; // Ensure non-negative
+    configuredDaqChannels = (daqCount > 0) ? daqCount : 0;       // Ensure non-negative
+    qDebug() << "[SnapshotThread] Logging configured for Modbus:" << configuredModbusChannels << "channels, DAQ:" << configuredDaqChannels << "channels.";
+}
+
+// ... other existing methods like setFilterEnabled ...

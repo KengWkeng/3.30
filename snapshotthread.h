@@ -11,9 +11,20 @@
 #include <QMutex>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QJsonDocument>
+#include <QMutexLocker>
+#include <QDateTime>
+#include <cmath> // For round
+#include <QFile>         // Added for file logging
+#include <QTextStream>   // Added for file logging
+#include <QStringList>   // Added for CSV header
 
 // 包含ECU数据结构的定义
 #include "ecuthread.h"
+
+// Forward declaration or include ECUData definition here
+struct ECUData;
+struct DataSnapshot;
 
 // 使用与MainWindow相同的数据快照结构体
 struct DataSnapshot {
@@ -58,7 +69,7 @@ public:
     double applyLowPassFilter(double input, double prevOutput, double timeConstant, double deltaT);
 
     // 设置滤波状态和参数
-    void setFilterEnabled(bool enabled, double timeConstant = 0.2);
+    void setFilterEnabled(bool enabled, double timeConstant = 100.0);
 
 public slots:
     // 处理Modbus数据
@@ -72,6 +83,15 @@ public slots:
     
     // 处理数据快照
     void processDataSnapshots();
+    
+    // 接收ECU连接状态
+    void handleECUConnectionStatus(bool connected, QString message);
+
+    // New public slot
+    void setProcessingEnabled(bool enabled);
+
+    // New slot to receive config
+    void setupLogging(int modbusCount, int daqCount);
 
 signals:
     // 数据处理完成，传回主线程进行UI更新
@@ -101,8 +121,8 @@ private:
     
     // ECU相关
     QVector<QVector<double>> ecuData;      // ECU数据缓冲区
-    ECUData latestECUData;                 // 最新ECU数据
-    bool ecuIsConnected = false;           // ECU连接状态
+    ECUData latestECUData;                     // ECU最新数据
+    bool snapEcuIsConnected = false;           // ECU连接状态
     bool ecuDataValid = false;             // ECU数据有效标志
     QMutex latestECUDataMutex;             // 保护latestECUData的互斥锁
     
@@ -112,6 +132,28 @@ private:
     QElapsedTimer *realTimer;              // 计时器，用于计算deltaT
     qint64 lastTimestamp;                  // 上一次时间戳
     double filterTimeConstant = 0.2;       // 滤波时间常数，可调整
+
+    // Add processing enabled flag
+    bool processingEnabled = false;
+
+    // Logging members
+    QFile *logFile = nullptr;
+    QTextStream *logStream = nullptr;
+    QString logFilePath;
+    QStringList csvHeader;
+    int snapshotsSinceLastWrite = 0;
+    const int writeThreshold = 100; // Write to disk every 100 snapshots
+    // Store configured channel counts
+    int configuredModbusChannels = 0;
+    int configuredDaqChannels = 0;
+
+    // Private helper methods for logging
+    bool initializeLogFile();
+    void generateCsvHeader(); // Helper to create the header string
+    void writeCsvHeader();
+    void writeSnapshotToFile(const DataSnapshot &snapshot);
+    void closeLogFile();
+
 };
 
 #endif // SNAPSHOTTHREAD_H 
