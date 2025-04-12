@@ -50,6 +50,22 @@ void SnapshotThread::setupMasterTimer()
     qDebug() << "主计时器已初始化并启动";
 }
 
+// New slot implementation to restart the master timer
+void SnapshotThread::resetMasterTimer()
+{
+    if (masterTimer) {
+        masterTimer->restart();
+        qDebug() << "[SnapshotThread] Master timer restarted.";
+    } else {
+        qDebug() << "[SnapshotThread] Warning: resetMasterTimer called but masterTimer is null!";
+        // Optionally recreate it if necessary
+        setupMasterTimer(); 
+    }
+    snapshotCount = 0; // Also reset snapshot count
+    // Reset data buffers if needed, e.g., snapshotQueue.clear(); - uncomment if desired
+    // snapshotQueue.clear(); 
+}
+
 // 应用一阶低通滤波器
 double SnapshotThread::applyLowPassFilter(double input, double prevOutput, double timeConstant, double deltaT)
 {

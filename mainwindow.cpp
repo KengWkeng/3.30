@@ -3331,6 +3331,8 @@ void MainWindow::handleDashForceSettingsChanged(const QString &dashboardName, co
 // 新增函数：更新所有图表
 void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
 {
+    const int maxDataPoints = 600; // Increase buffer size to ~60 seconds
+
     // 更新Modbus图表
     if (snapshot.modbusValid && ui->modbusCustomPlot) {
         // 确保Modbus图表已初始化
@@ -3359,43 +3361,53 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
         static QVector<QVector<double>> modbusValues;
         
         // 确保modbusValues大小正确
-        if (modbusValues.size() != modbusNumRegs) {
-            modbusValues.resize(modbusNumRegs);
+        int currentModbusRegs = snapshot.modbusData.size(); // Use actual size from snapshot
+        if (modbusValues.size() != currentModbusRegs) {
+            modbusValues.resize(currentModbusRegs);
         }
         
         // 添加新的时间点
         modbusTimeData.append(snapshot.timestamp);
         
         // 添加新的数据点
-        for (int ch = 0; ch < modbusNumRegs && ch < snapshot.modbusData.size(); ++ch) {
+        for (int ch = 0; ch < currentModbusRegs; ++ch) {
             modbusValues[ch].append(snapshot.modbusData[ch]);
-            
-            // 限制数据点数量，保持最近60个点 (保留更多点以显示趋势)
-            while (modbusValues[ch].size() > 60) {
+            // 限制数据点数量
+            while (modbusValues[ch].size() > maxDataPoints) {
                 modbusValues[ch].removeFirst();
             }
         }
         
         // 限制时间数据点数量
-        while (modbusTimeData.size() > 60) {
+        while (modbusTimeData.size() > maxDataPoints) {
             modbusTimeData.removeFirst();
         }
         
         // 更新图表数据
         if (!modbusTimeData.isEmpty()) {
-            for (int ch = 0; ch < modbusNumRegs && ch < ui->modbusCustomPlot->graphCount(); ++ch) {
-                if (ch < modbusValues.size() && !modbusValues[ch].isEmpty()) {
-                    ui->modbusCustomPlot->graph(ch)->setData(modbusTimeData, modbusValues[ch]);
-                }
+            // Ensure graph count matches data size
+            while(ui->modbusCustomPlot->graphCount() < currentModbusRegs) {
+                ui->modbusCustomPlot->addGraph(); // Add missing graphs
+                // Optionally set name/pen here
             }
-            // 自动缩放坐标轴
-            ui->modbusCustomPlot->xAxis->rescale();
+            while(ui->modbusCustomPlot->graphCount() > currentModbusRegs) {
+                ui->modbusCustomPlot->removeGraph(ui->modbusCustomPlot->graphCount() - 1); // Remove extra graphs
+            }
+
+            for (int ch = 0; ch < currentModbusRegs; ++ch) {
+                ui->modbusCustomPlot->graph(ch)->setData(modbusTimeData, modbusValues[ch], true); // Use sorted data flag
+            }
+            // 优化X轴范围
+            double latestTimestamp = snapshot.timestamp;
+            double displayWindowSeconds = 60.0;
+            if (latestTimestamp <= displayWindowSeconds) {
+                ui->modbusCustomPlot->xAxis->setRange(0, displayWindowSeconds);
+            } else {
+                ui->modbusCustomPlot->xAxis->setRange(latestTimestamp - displayWindowSeconds, latestTimestamp);
+            }
             ui->modbusCustomPlot->yAxis->rescale();
-
-
-            
-            // 重绘图表
-            ui->modbusCustomPlot->replot();
+            // 重绘图表 (queued)
+            ui->modbusCustomPlot->replot(QCustomPlot::rpQueuedReplot);
         }
     }
     
@@ -3436,69 +3448,52 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
         static QVector<QVector<double>> daqValues;
         
         // 获取实际通道数量
-        int numChannels = snapshot.daqData.size();
-        if (numChannels > daqValues.size()) {
-            daqValues.resize(numChannels);
+        int currentDaqChannels = snapshot.daqData.size();
+        if (daqValues.size() != currentDaqChannels) {
+            daqValues.resize(currentDaqChannels);
+            // Optional: Clear old graphs if channel count changes drastically?
         }
         
         // 添加新的时间点
         daqTimeData.append(snapshot.timestamp);
         
         // 添加新的数据点
-        for (int ch = 0; ch < numChannels; ++ch) {
+        for (int ch = 0; ch < currentDaqChannels; ++ch) {
             daqValues[ch].append(snapshot.daqData[ch]);
-            
-            // 限制数据点数量，保持最近60个点
-            while (daqValues[ch].size() > 60) {
+            while (daqValues[ch].size() > maxDataPoints) {
                 daqValues[ch].removeFirst();
             }
         }
-        
-        // 限制时间数据点数量
-        while (daqTimeData.size() > 60) {
+        while (daqTimeData.size() > maxDataPoints) {
             daqTimeData.removeFirst();
         }
         
         // 更新图表数据
         if (!daqTimeData.isEmpty()) {
-            // 确保图表有足够的通道
-            while (ui->daqCustomPlot->graphCount() < numChannels) {
-                QCPGraph *graph = ui->daqCustomPlot->addGraph();
-                int idx = ui->daqCustomPlot->graphCount() - 1;
-                graph->setName(QString("通道%1").arg(idx));
-                
-                // 使用不同颜色
-                QColor color = QColor::fromHsv((idx * 255) / numChannels, 255, 255);
-                graph->setPen(QPen(color));
+             // Ensure graph count matches data size
+            while(ui->daqCustomPlot->graphCount() < currentDaqChannels) {
+                ui->daqCustomPlot->addGraph(); // Add missing graphs
+                 // Optionally set name/pen here
             }
-            
-            // 更新每个通道的数据
-            for (int ch = 0; ch < numChannels && ch < ui->daqCustomPlot->graphCount(); ++ch) {
-                if (ch < daqValues.size() && !daqValues[ch].isEmpty()) {
-                    ui->daqCustomPlot->graph(ch)->setData(daqTimeData, daqValues[ch]);
-                }
+            while(ui->daqCustomPlot->graphCount() > currentDaqChannels) {
+                ui->daqCustomPlot->removeGraph(ui->daqCustomPlot->graphCount() - 1); // Remove extra graphs
             }
-            
-            // 设置X轴范围，显示最近30秒的数据
-            if (daqTimeData.size() > 1) {
-                double latestTime = daqTimeData.last();
-                double timeRange = 30.0;
-                double minX = qMax(0.0, latestTime - timeRange);
-                ui->daqCustomPlot->xAxis->setRange(minX, latestTime);
+
+            for (int ch = 0; ch < currentDaqChannels; ++ch) {
+                 ui->daqCustomPlot->graph(ch)->setData(daqTimeData, daqValues[ch], true);
             }
-            
-            // 自动调整Y轴
-            ui->daqCustomPlot->rescaleAxes();
-            
-            // 重绘图表
-            ui->daqCustomPlot->replot();
-            
-            // 输出调试信息
-            if (snapshotCount % 10 == 0) { // 每10个快照输出一次日志
-                qDebug() << "DAQ图表更新：时间点数=" << daqTimeData.size() 
-                         << "，通道数=" << numChannels
-                         << "，有效数据点数=" << (!daqValues.isEmpty() && !daqValues[0].isEmpty() ? daqValues[0].size() : 0);
+
+            // ui->daqCustomPlot->xAxis->setRange(snapshot.timestamp - 60, snapshot.timestamp); // Show last 60 seconds
+            // Apply the same logic for DAQ plot X-axis range
+            double latestTimestampDaq = snapshot.timestamp;
+            double displayWindowSecondsDaq = 60.0;
+            if (latestTimestampDaq <= displayWindowSecondsDaq) {
+                ui->daqCustomPlot->xAxis->setRange(0, displayWindowSecondsDaq);
+            } else {
+                ui->daqCustomPlot->xAxis->setRange(latestTimestampDaq - displayWindowSecondsDaq, latestTimestampDaq);
             }
+            ui->daqCustomPlot->yAxis->rescale();
+            ui->daqCustomPlot->replot(QCustomPlot::rpQueuedReplot);
         }
     }
     
@@ -3516,100 +3511,44 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
             // 使用静态变量来保持历史数据
             static QVector<double> ecuTimeData;
             static QVector<QVector<double>> ecuValues;
-            
-            // 确保ecuValues有足够的大小
-            int numECUChannels = qMin(9, snapshot.ecuData.size()); // ECU最多9个通道
-            if (ecuValues.size() < numECUChannels) {
-                ecuValues.resize(numECUChannels);
+            const int ecuChannelCount = 9; // ECU channels are fixed
+
+            if (ecuValues.size() != ecuChannelCount) {
+                ecuValues.resize(ecuChannelCount);
             }
-            
-            // 添加新的时间点
+
             ecuTimeData.append(snapshot.timestamp);
-            
-            // 限制数据点数量
-            const int maxDataPoints = 600; // 保存更多点以显示趋势 (约60秒的数据)
-            while (ecuTimeData.size() > maxDataPoints) {
-                ecuTimeData.removeFirst();
-            }
-            
-            // 添加新的数据点
-            for (int i = 0; i < numECUChannels; ++i) {
+
+            for (int i = 0; i < ecuChannelCount && i < snapshot.ecuData.size(); ++i) {
                 ecuValues[i].append(snapshot.ecuData[i]);
-                
-                // 限制数据点数量，保持与时间数据同步
-                while (ecuValues[i].size() > ecuTimeData.size()) {
+                while (ecuValues[i].size() > maxDataPoints) {
                     ecuValues[i].removeFirst();
                 }
             }
-            
-            // 更新图表数据 - 使用实际的图表数量
-            int graphCount = qMin(ui->ECUCustomPlot->graphCount(), numECUChannels);
-            for (int i = 0; i < graphCount; ++i) {
-                if (!ecuValues[i].isEmpty()) {
-                    // 创建临时数据容器，确保时间和数据点数量匹配
-                    int dataSize = qMin(ecuTimeData.size(), ecuValues[i].size());
-                    
-                    // 确保至少有两个数据点才设置数据，避免绘图问题
-                    if (dataSize >= 2) {
-                        QVector<double> timeData = ecuTimeData.mid(ecuTimeData.size() - dataSize);
-                        QVector<double> valueData = ecuValues[i].mid(ecuValues[i].size() - dataSize);
-                        
-                        // 检查数据有效性，避免NaN或无穷大
-                        bool dataValid = true;
-                        for (double val : valueData) {
-                            if (std::isnan(val) || std::isinf(val)) {
-                                dataValid = false;
-                                break;
-                            }
-                        }
-                        
-                        if (dataValid) {
-                            // 设置图表数据
-                            ui->ECUCustomPlot->graph(i)->setData(timeData, valueData);
-                        }
+            while (ecuTimeData.size() > maxDataPoints) {
+                ecuTimeData.removeFirst();
+            }
+
+            if (!ecuTimeData.isEmpty() && ui->ECUCustomPlot->graphCount() == ecuChannelCount) { // Check if initialized
+                for (int i = 0; i < ecuChannelCount; ++i) {
+                    if (!ecuValues[i].isEmpty()) {
+                        ui->ECUCustomPlot->graph(i)->setData(ecuTimeData, ecuValues[i], true);
                     }
                 }
-            }
-            
-            // 设置X轴范围，显示最近30秒的数据
-            if (!ecuTimeData.isEmpty()) {
-                double latestTime = ecuTimeData.last();
-                double timeRange = 30.0;
-                double minX = qMax(0.0, latestTime - timeRange);
-                ui->ECUCustomPlot->xAxis->setRange(minX, latestTime);
-            }
-            
-            // 自动调整Y轴，但仅当图表中有数据时
-            bool hasData = false;
-            for (int i = 0; i < graphCount; ++i) {
-                if (ui->ECUCustomPlot->graph(i)->data()->size() > 0) {
-                    hasData = true;
-                    break;
+                // ui->ECUCustomPlot->xAxis->setRange(snapshot.timestamp - 60, snapshot.timestamp);
+                // Apply the same logic for ECU plot X-axis range
+                double latestTimestampEcu = snapshot.timestamp;
+                double displayWindowSecondsEcu = 60.0;
+                if (latestTimestampEcu <= displayWindowSecondsEcu) {
+                    ui->ECUCustomPlot->xAxis->setRange(0, displayWindowSecondsEcu);
+                } else {
+                    ui->ECUCustomPlot->xAxis->setRange(latestTimestampEcu - displayWindowSecondsEcu, latestTimestampEcu);
                 }
-            }
-            
-            if (hasData) {
-                ui->ECUCustomPlot->rescaleAxes();
-                
-                // 确保Y轴范围合理
-                double yMin = ui->ECUCustomPlot->yAxis->range().lower;
-                double yMax = ui->ECUCustomPlot->yAxis->range().upper;
-                if (qAbs(yMax - yMin) < 1.0) {
-                    // 如果范围太小，设置一个合理的默认范围
-                    double center = (yMin + yMax) / 2.0;
-                    ui->ECUCustomPlot->yAxis->setRange(center - 5.0, center + 5.0);
-                }
-            }
-            
-            // 重绘图表 - 使用立即重绘模式
-            ui->ECUCustomPlot->replot(QCustomPlot::rpImmediateRefresh);
-            
-            // 输出调试信息
-            if (snapshotCount % 10 == 0) { // 每10个快照输出一次日志
-                qDebug() << "ECU图表更新：时间点数=" << ecuTimeData.size() 
-                         << "，图表数量=" << graphCount
-                         << "，数据大小=" << (ecuValues.isEmpty() ? 0 : ecuValues[0].size())
-                         << "，最新值=" << (ecuValues.isEmpty() || ecuValues[0].isEmpty() ? 0.0 : ecuValues[0].last());
+                ui->ECUCustomPlot->yAxis->rescale();
+                ui->ECUCustomPlot->replot(QCustomPlot::rpQueuedReplot);
+            } else if (ui->ECUCustomPlot->graphCount() != ecuChannelCount) {
+                // Maybe re-initialize if graph count is wrong
+                ECUPlotInit(); 
             }
         } else {
             qDebug() << "警告：ECU图表未初始化，图表数量：" << ui->ECUCustomPlot->graphCount();
@@ -3838,6 +3777,10 @@ void MainWindow::on_btnStartAll_clicked()
         // Send config counts to SnapshotThread BEFORE enabling processing/logging
         emit sendConfigCounts(modbusCount, daqCount);
         qDebug() << "Emitted config counts: Modbus=" << modbusCount << ", DAQ=" << daqCount;
+
+        // Reset the master timer in SnapshotThread to sync start time
+        QMetaObject::invokeMethod(snpTh, "resetMasterTimer", Qt::QueuedConnection);
+        qDebug() << "通知 SnapshotThread 重置主计时器";
 
         // 更新状态
         allCaptureRunning = true;

@@ -93,6 +93,8 @@ public slots:
     // New slot to receive config
     void setupLogging(int modbusCount, int daqCount);
 
+    void resetMasterTimer();
+
 signals:
     // 数据处理完成，传回主线程进行UI更新
     void snapshotProcessed(const DataSnapshot &snapshot, int snapshotCount);
