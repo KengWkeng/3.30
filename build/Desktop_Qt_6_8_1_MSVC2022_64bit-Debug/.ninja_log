@@ -91,3 +91,12 @@
 831	5830	7661776103371795	CMakeFiles/test1.dir/mainwindow.cpp.obj	5984c6929457b2e8
 826	7000	7661776103321772	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	44f150fac0faaa69
 7000	7390	7661776165058493	test1.exe	27ba3882ecc1874d
+26	801	7661778182424951	test1_autogen/timestamp	3ccc2c62dc7625e1
+26	801	7661778182424951	test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+26	801	7661778182424951	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/timestamp	3ccc2c62dc7625e1
+26	801	7661778182424951	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+809	2526	7661778183133963	CMakeFiles/test1.dir/snapshotthread.cpp.obj	74caf63c6e172220
+805	4724	7661778183103969	CMakeFiles/test1.dir/main.cpp.obj	619fb63be5222925
+807	5568	7661778183123967	CMakeFiles/test1.dir/mainwindow.cpp.obj	5984c6929457b2e8
+802	6693	7661778183073924	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	44f150fac0faaa69
+6693	7074	7661778241982538	test1.exe	27ba3882ecc1874d

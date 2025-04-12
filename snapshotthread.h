@@ -24,10 +24,11 @@
 
 // Forward declaration or include ECUData definition here
 struct ECUData;
-struct DataSnapshot;
+class DataSnapshot; // Forward declaration
 
-// 使用与MainWindow相同的数据快照结构体
-struct DataSnapshot {
+// 使用与MainWindow相同的数据快照类
+class DataSnapshot {
+public: // 公开访问成员
     double timestamp;                   // 时间戳（秒）
     QVector<double> modbusData;         // Modbus数据(一维) - 每个寄存器的值
     QVector<double> daqData;            // DAQ数据(一维) - 修改为一维，每个通道只保留最新值
@@ -37,7 +38,7 @@ struct DataSnapshot {
     bool ecuValid;                      // ECU数据有效标志
     bool daqRunning;                    // DAQ运行状态标志
     int snapshotIndex;                  // 快照索引（序号）
-    
+
     // 构造函数，初始化所有数据
     DataSnapshot() {
         timestamp = 0.0;                // 初始化为0秒
@@ -61,10 +62,10 @@ public:
 
     // 初始化主计时器
     void setupMasterTimer();
-    
+
     // 处理结果时应用滤波
     QVector<double> applyFilterToResults(const QVector<double> &rawData, qint64 deltaT);
-    
+
     // 一阶低通滤波函数
     double applyLowPassFilter(double input, double prevOutput, double timeConstant, double deltaT);
 
@@ -74,16 +75,16 @@ public:
 public slots:
     // 处理Modbus数据
     void handleModbusData(QVector<double> resultdata, qint64 readTimeInterval);
-    
+
     // 处理DAQ数据
     void handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData);
-    
+
     // 处理ECU数据
     void handleECUData(const ECUData &data);
-    
+
     // 处理数据快照
     void processDataSnapshots();
-    
+
     // 接收ECU连接状态
     void handleECUConnectionStatus(bool connected, QString message);
 
@@ -98,7 +99,7 @@ public slots:
 signals:
     // 数据处理完成，传回主线程进行UI更新
     void snapshotProcessed(const DataSnapshot &snapshot, int snapshotCount);
-    
+
     // 向WebSocket转发Modbus数据
     void sendModbusResultToWebSocket(const QJsonObject &data, int interval);
 
@@ -109,25 +110,25 @@ private:
     QElapsedTimer *masterTimer;            // 主计时器，用于同步数据
     int maxQueueSize = 1000;               // 最大队列长度，防止内存占用过多
     int snapshotCount = 0;                 // 快照计数器
-    
+
     // Modbus相关
     bool modbusDataValid = false;          // Modbus数据有效标志
     int modbusNumRegs = 16;                // Modbus寄存器数量
     QVector<QVector<double>> modbusData;   // Modbus数据缓冲区
-    
+
     // DAQ相关
     QVector<QVector<double>> daqChannelData; // DAQ通道数据
     QVector<double> daqTimeData;             // DAQ时间数据
     int daqNumChannels = 16;                 // DAQ通道数量
     bool daqIsAcquiring = false;             // DAQ采集状态
-    
+
     // ECU相关
     QVector<QVector<double>> ecuData;      // ECU数据缓冲区
     ECUData latestECUData;                     // ECU最新数据
     bool snapEcuIsConnected = false;           // ECU连接状态
     bool ecuDataValid = false;             // ECU数据有效标志
     QMutex latestECUDataMutex;             // 保护latestECUData的互斥锁
-    
+
     // 滤波相关
     bool filterEnabled = true;             // 滤波器使能状态
     QVector<double> filteredValues;        // 存储上一次滤波后的结果
@@ -158,4 +159,4 @@ private:
 
 };
 
-#endif // SNAPSHOTTHREAD_H 
+#endif // SNAPSHOTTHREAD_H
