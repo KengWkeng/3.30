@@ -10,7 +10,7 @@
 #include <QColor>
 #include <QVector>
 #include <QMetaType>
-#include "dashboardcalculator.h" // 引入计算线程类
+// #include "dashboardcalculator.h" // 引入计算线程类
 
 // 为QVector<int>类型声明元类型，以支持属性系统
 Q_DECLARE_METATYPE(QVector<int>)
@@ -100,15 +100,15 @@ public:
     double calculateFormula(const QString &formula, const QMap<QString, double> &variables);
     
     // 设置计算线程
-    void setCalculator(DashboardCalculator *calculator);
+    // void setCalculator(DashboardCalculator *calculator);
     
 public slots:
     // 设置用于公式计算的变量值
-    void setVariableValues(const QMap<QString, double> &variables);
+    // void setVariableValues(const QMap<QString, double> &variables);
     // 接收来自计算线程的计算结果
-    void onCalculationResult(const QString &dashboardName, double result);
+    // void onCalculationResult(const QString &dashboardName, double result);
     // 接收来自计算线程的计算错误
-    void onCalculationError(const QString &dashboardName, const QString &errorMessage);
+    // void onCalculationError(const QString &dashboardName, const QString &errorMessage);
     // 刷新仪表盘UI
     void refreshUI();
 
@@ -141,11 +141,11 @@ private:
     bool m_hasValidResult = false;
     
     // 计算线程对象指针 - 由外部设置，不由Dashboard管理生命周期
-    DashboardCalculator *m_calculator;
+    // DashboardCalculator *m_calculator;
     // 最近一次计算结果
-    double m_lastCalculatedValue;
+    // double m_lastCalculatedValue;
     // 最近一次计算是否成功
-    bool m_lastCalculationSucceeded;
+    // bool m_lastCalculationSucceeded;
     
     // 核心数值属性
     double m_value;           // 当前值

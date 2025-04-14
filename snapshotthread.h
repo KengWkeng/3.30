@@ -18,6 +18,7 @@
 #include <QFile>         // Added for file logging
 #include <QTextStream>   // Added for file logging
 #include <QStringList>   // Added for CSV header
+#include <QMap>
 
 // 包含ECU数据结构的定义
 #include "ecuthread.h"
@@ -26,6 +27,15 @@
 struct ECUData;
 class DataSnapshot; // Forward declaration
 
+// +++ 新增: 校准参数结构体 +++
+struct CalibrationParams {
+    double a = 0.0;
+    double b = 0.0;
+    double c = 1.0; // 默认 y=x
+    double d = 0.0;
+};
+// +++ 结束新增 +++
+
 // 使用与MainWindow相同的数据快照类
 class DataSnapshot {
 public: // 公开访问成员
@@ -33,6 +43,7 @@ public: // 公开访问成员
     QVector<double> modbusData;         // Modbus数据(一维) - 每个寄存器的值
     QVector<double> daqData;            // DAQ数据(一维) - 修改为一维，每个通道只保留最新值
     QVector<double> ecuData;            // ECU数据(9通道)
+    QVector<double> customData;         // 新增：自定义计算数据
     bool modbusValid;                   // Modbus数据有效标志
     bool daqValid;                      // DAQ数据有效标志
     bool ecuValid;                      // ECU数据有效标志
@@ -45,6 +56,7 @@ public: // 公开访问成员
         modbusData.resize(16, 0.0);     // 16个Modbus寄存器
         daqData.resize(16, 0.0);        // 16个DAQ通道，每个通道只保存最新值
         ecuData.resize(9, 0.0);         // 9个ECU通道
+        customData.resize(5, 0.0);      // 初始化自定义数据，预留5个位置
         modbusValid = false;
         daqValid = false;
         ecuValid = false;
@@ -127,6 +139,7 @@ private:
 
     // ECU相关
     QVector<QVector<double>> ecuData;      // ECU数据缓冲区
+    QVector<double> customDataBuffer;   // 用于计算customData的临时缓冲区
     ECUData latestECUData;                     // ECU最新数据
     bool snapEcuIsConnected = false;           // ECU连接状态
     bool ecuDataValid = false;             // ECU数据有效标志
@@ -141,6 +154,16 @@ private:
 
     // Add processing enabled flag
     bool processingEnabled = false;
+
+    // +++ 新增: 存储校准参数 +++
+    QMap<QString, QMap<int, CalibrationParams>> allCalibrationParams; // Key1: SourceType ("Modbus", "DAQ", "ECU", "Custom"), Key2: Channel Index
+    // +++ 结束新增 +++
+
+    // +++ 新增: 私有辅助函数声明 +++
+    void loadCalibrationSettings(const QString& filePath);
+    double applyCalibration(double rawValue, const CalibrationParams& params);
+    CalibrationParams getCalibrationParams(const QString& sourceType, int channelIndex);
+    // +++ 结束新增 +++
 
     // Logging members
     QFile *logFile = nullptr;

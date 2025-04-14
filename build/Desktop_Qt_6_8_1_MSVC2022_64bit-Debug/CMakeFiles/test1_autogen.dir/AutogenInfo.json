@@ -1215,9 +1215,20 @@
 		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Qml/Qt6QTcpServerConnectionFactoryPluginTargets-relwithdebinfo.cmake",
 		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Qml/Qt6QTcpServerConnectionFactoryPluginAdditionalTargetInfo.cmake",
 		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Qml/Qt6QmlVersionlessAliasTargets.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatConfigVersion.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatConfigVersionImpl.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatConfig.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/CMakeFindDependencyMacro.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatDependencies.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatTargets.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatTargets-debug.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatTargets-relwithdebinfo.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatAdditionalTargetInfo.cmake",
+		"D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatVersionlessAliasTargets.cmake",
 		"D:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/GNUInstallDirs.cmake",
 		"C:/Users/80911/Documents/QT/vs_test/test1/logo.qrc",
-		"D:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/GNUInstallDirs.cmake"
+		"D:/Qt/Tools/CMake_64/share/cmake-3.29/Modules/GNUInstallDirs.cmake",
+		"C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/.qt/qml_imports/test1_conf.cmake"
 	],
 	"CMAKE_SOURCE_DIR" : "C:/Users/80911/Documents/QT/vs_test/test1",
 	"CROSS_CONFIG" : false,
@@ -1321,11 +1332,14 @@
 	"MOC_COMPILATION_FILE" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp",
 	"MOC_DEFINITIONS" : 
 	[
+		"QT_CORE5COMPAT_LIB",
 		"QT_CORE_LIB",
 		"QT_GUI_LIB",
 		"QT_NETWORK_LIB",
 		"QT_OPENGL_LIB",
 		"QT_PRINTSUPPORT_LIB",
+		"QT_QMLINTEGRATION_LIB",
+		"QT_QML_LIB",
 		"QT_SERIALBUS_LIB",
 		"QT_SERIALPORT_LIB",
 		"QT_WEBSOCKETS_LIB",
@@ -1357,7 +1371,10 @@
 		"D:/Qt/6.8.1/msvc2022_64/include/QtSerialBus",
 		"D:/Qt/6.8.1/msvc2022_64/include/QtNetwork",
 		"D:/Qt/6.8.1/msvc2022_64/include/QtPrintSupport",
-		"D:/Qt/6.8.1/msvc2022_64/include/QtWebSockets"
+		"D:/Qt/6.8.1/msvc2022_64/include/QtWebSockets",
+		"D:/Qt/6.8.1/msvc2022_64/include/QtQml",
+		"D:/Qt/6.8.1/msvc2022_64/include/QtQmlIntegration",
+		"D:/Qt/6.8.1/msvc2022_64/include/QtCore5Compat"
 	],
 	"MOC_MACRO_NAMES" : 
 	[

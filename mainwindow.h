@@ -234,7 +234,8 @@ private slots:
     // 新增：根据映射关系更新仪表盘显示
     void updateDashboardByMapping(const QVector<double> &modbusData, 
                                  const QVector<double> &daqData, 
-                                 const ECUData &ecuData);
+                                 const ECUData &ecuData,
+                                 const DataSnapshot &snapshot);
 
     // 添加从数据快照更新各种UI的函数
     void updateDashboardData(const QVector<double> &timeData, const DataSnapshot &snapshot);
@@ -264,6 +265,8 @@ private slots:
 
     // 添加一键启动所有采集任务的槽函数
     void on_btnStartAll_clicked();
+
+    void switchPage();
 
 private:
 
@@ -296,8 +299,6 @@ private:
     
     // 更新仪表盘数据
     void updateDashboards(const QVector<double> &data);
-
-    void switchPage();
 
     int channelNum;
 

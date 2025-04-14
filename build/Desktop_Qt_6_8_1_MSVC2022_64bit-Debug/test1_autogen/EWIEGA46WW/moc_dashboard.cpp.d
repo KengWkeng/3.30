@@ -1,18 +1,11 @@
 C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/EWIEGA46WW/moc_dashboard.cpp: C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h \
-  C:/Users/80911/Documents/QT/vs_test/test1/dashboardcalculator.h \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QDebug \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QList \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMap \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMetaType \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRect \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRegularExpression \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QSize \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QSizeF \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QStack \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QString \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QThread \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTimer \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QVariant \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QVector \
@@ -84,7 +77,6 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmetacontainer.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmetatype.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qminmax.h \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmutex.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnamespace.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnativeinterface.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnumeric.h \
@@ -98,7 +90,6 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qprocessordetection.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qrect.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qrefcount.h \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qregularexpression.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qscopedpointer.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qscopeguard.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qset.h \
@@ -108,7 +99,6 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qsharedpointer_impl.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qsize.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qspan.h \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qstack.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qstring.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qstringalgorithms.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qstringbuilder.h \
@@ -133,13 +123,11 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtdeprecationmarkers.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtenvironmentvariables.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtextstream.h \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qthread.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtimer.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtmetamacros.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtnoop.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtpreprocessorsupport.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtresource.h \
-  D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtsan_impl.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qttranslation.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qttypetraits.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtversion.h \

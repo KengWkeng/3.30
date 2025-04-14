@@ -341,6 +341,9 @@ Qt6ZlibPrivate_DIR:PATH=D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6ZlibPrivate
 //The directory containing a CMake configuration file for Qt6.
 Qt6_DIR:PATH=D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6
 
+//The directory containing a CMake configuration file for Qt6core5compat.
+Qt6core5compat_DIR:PATH=D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat
+
 //Path to a program.
 Vulkan_GLSLANG_VALIDATOR_EXECUTABLE:FILEPATH=Vulkan_GLSLANG_VALIDATOR_EXECUTABLE-NOTFOUND
 
@@ -586,6 +589,8 @@ QT_FEATURE_avx512vbmi2:INTERNAL=ON
 QT_FEATURE_avx512vl:INTERNAL=ON
 //Qt feature: backtrace (from target Qt6::Core)
 QT_FEATURE_backtrace:INTERNAL=OFF
+//Qt feature: big_codecs (from target Qt6::Core5Compat)
+QT_FEATURE_big_codecs:INTERNAL=ON
 //Qt feature: broken_threadlocal_dtors (from target Qt6::Core)
 QT_FEATURE_broken_threadlocal_dtors:INTERNAL=ON
 //Qt feature: brotli (from target Qt6::Network)
@@ -608,6 +613,8 @@ QT_FEATURE_clock_gettime:INTERNAL=OFF
 QT_FEATURE_clock_monotonic:INTERNAL=OFF
 //Qt feature: close_range (from target Qt6::Core)
 QT_FEATURE_close_range:INTERNAL=OFF
+//Qt feature: codecs (from target Qt6::Core5Compat)
+QT_FEATURE_codecs:INTERNAL=ON
 //Qt feature: colordialog (from target Qt6::Widgets)
 QT_FEATURE_colordialog:INTERNAL=ON
 //Qt feature: colornames (from target Qt6::Gui)
@@ -822,6 +829,8 @@ QT_FEATURE_hijricalendar:INTERNAL=ON
 QT_FEATURE_http:INTERNAL=ON
 //Qt feature: ico (from target Qt6::Gui)
 QT_FEATURE_ico:INTERNAL=ON
+//Qt feature: iconv (from target Qt6::Core5Compat)
+QT_FEATURE_iconv:INTERNAL=OFF
 //Qt feature: icu (from target Qt6::Core)
 QT_FEATURE_icu:INTERNAL=OFF
 //Qt feature: identityproxymodel (from target Qt6::Core)
@@ -1268,6 +1277,8 @@ QT_FEATURE_temporaryfile:INTERNAL=ON
 QT_FEATURE_testlib:INTERNAL=ON
 //Qt feature: textbrowser (from target Qt6::Widgets)
 QT_FEATURE_textbrowser:INTERNAL=ON
+//Qt feature: textcodec (from target Qt6::Core5Compat)
+QT_FEATURE_textcodec:INTERNAL=ON
 //Qt feature: textdate (from target Qt6::Core)
 QT_FEATURE_textdate:INTERNAL=ON
 //Qt feature: textedit (from target Qt6::Widgets)
@@ -1394,6 +1405,8 @@ QT_FEATURE_xmlstreamwriter:INTERNAL=ON
 QT_FEATURE_xrender:INTERNAL=OFF
 //Qt feature: zstd (from target Qt6::Core)
 QT_FEATURE_zstd:INTERNAL=OFF
+//Path to the wrapper of the tool commands
+QT_TOOL_COMMAND_WRAPPER_PATH:INTERNAL=C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/.qt/bin/qt_setup_tool_path.bat
 //ADVANCED property for variable: Vulkan_GLSLANG_VALIDATOR_EXECUTABLE
 Vulkan_GLSLANG_VALIDATOR_EXECUTABLE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: Vulkan_GLSLC_EXECUTABLE

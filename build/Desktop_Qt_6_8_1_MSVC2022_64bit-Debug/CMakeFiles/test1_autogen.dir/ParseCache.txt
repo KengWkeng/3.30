@@ -134,20 +134,13 @@ C:/Users/80911/Documents/QT/vs_test/test1/websocketserver.h
 C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h
  mmc:Q_OBJECT
  mdp:C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h
- mdp:C:/Users/80911/Documents/QT/vs_test/test1/dashboardcalculator.h
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QDebug
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QList
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMap
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMetaType
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRect
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRegularExpression
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QSize
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QSizeF
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QStack
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QString
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QThread
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QTimer
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QVariant
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QVector
@@ -219,7 +212,6 @@ C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmetacontainer.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmetatype.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qminmax.h
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qmutex.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnamespace.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnativeinterface.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qnumeric.h
@@ -233,7 +225,6 @@ C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qprocessordetection.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qrect.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qrefcount.h
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qregularexpression.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qscopedpointer.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qscopeguard.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qset.h
@@ -243,7 +234,6 @@ C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qsharedpointer_impl.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qsize.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qspan.h
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qstack.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qstring.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qstringalgorithms.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qstringbuilder.h
@@ -268,13 +258,11 @@ C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtdeprecationmarkers.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtenvironmentvariables.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtextstream.h
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qthread.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtimer.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtmetamacros.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtnoop.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtpreprocessorsupport.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtresource.h
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtsan_impl.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qttranslation.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qttypetraits.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/qtversion.h
@@ -719,7 +707,6 @@ C:/Users/80911/Documents/QT/vs_test/test1/mainwindow.h
  mdp:C:/Users/80911/Documents/QT/vs_test/test1/canthread.h
  mdp:C:/Users/80911/Documents/QT/vs_test/test1/daqthread.h
  mdp:C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h
- mdp:C:/Users/80911/Documents/QT/vs_test/test1/dashboardcalculator.h
  mdp:C:/Users/80911/Documents/QT/vs_test/test1/ecuthread.h
  mdp:C:/Users/80911/Documents/QT/vs_test/test1/mainwindow.h
  mdp:C:/Users/80911/Documents/QT/vs_test/test1/modbusthread.h
@@ -752,7 +739,6 @@ C:/Users/80911/Documents/QT/vs_test/test1/mainwindow.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointer
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QQueue
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRect
- mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QRegularExpression
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QScopedPointer
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QSettings
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QSharedDataPointer
@@ -2113,6 +2099,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/websocketthread.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonDocument
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonObject
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QList
+ mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMap
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutexLocker
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject
@@ -2896,6 +2883,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/snapshotthread.h
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonArray
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonDocument
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonObject
+ mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMap
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutexLocker
  mdp:D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject

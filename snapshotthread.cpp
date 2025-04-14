@@ -1,5 +1,12 @@
 #include "snapshotthread.h"
 #include <QDir> // Include for QDir::currentPath()
+#include <QSettings>   // +++ 新增 +++
+#include <QStringList> // +++ 新增 +++
+#include <cmath>       // 用于 std::pow 和 round
+#include <QCoreApplication> // <--- 添加头文件
+#include <QTextCodec> // <--- 添加头文件
+#include <QFile>       // <--- 添加头文件
+#include <QTextStream> // <--- 添加头文件
 
 SnapshotThread::SnapshotThread(QObject *parent) : QObject(parent),
     logFile(nullptr), logStream(nullptr), snapshotsSinceLastWrite(0) // Initialize new members
@@ -15,9 +22,10 @@ SnapshotThread::SnapshotThread(QObject *parent) : QObject(parent),
     // 初始化滤波相关变量
     filteredValues.resize(16, 0.0); // 默认支持16个通道
     
-
-
-
+    // +++ 新增: 加载校准设置 +++
+    QString calibFilePath = QCoreApplication::applicationDirPath() + "/calibration.ini"; // <--- 修改路径获取方式
+    loadCalibrationSettings(calibFilePath);
+    // +++ 结束新增 +++
 }
 
 SnapshotThread::~SnapshotThread()
@@ -340,20 +348,41 @@ void SnapshotThread::processDataSnapshots()
         DataSnapshot snapshot;
         snapshot.timestamp = roundedTime; // 使用整百毫秒的时间
         
-        // 获取当前的Modbus数据 - 直接从currentSnapshot获取
+        // --- Modbus Data ---
         snapshot.modbusValid = currentSnapshot.modbusValid;
         if (snapshot.modbusValid) {
             // 直接复制currentSnapshot中已滤波的Modbus数据
             snapshot.modbusData = currentSnapshot.modbusData;
-            qDebug() << "快照" << snapshotCount + 1 << "Modbus数据有效，数据:" << snapshot.modbusData;
+            // +++ 应用Modbus校准 +++
+            for(int i = 0; i < snapshot.modbusData.size(); ++i) {
+                CalibrationParams params = getCalibrationParams("Modbus", i);
+                double rawValue = snapshot.modbusData[i]; // 校准基于滤波后的数据
+
+                // +++ 新增调试 +++
+                if (i == 0 || i == 1 || i == 2) { // 只打印前三个通道
+                    qDebug() << "[Calibrate Debug] Modbus Ch" << i << "Raw:" << rawValue << "Params: a=" << params.a << "b=" << params.b << "c=" << params.c << "d=" << params.d;
+                }
+                // +++ 结束新增 +++
+
+                snapshot.modbusData[i] = applyCalibration(rawValue, params);
+
+                // +++ 新增调试 +++
+                if (i == 0 || i == 1 || i == 2) { // 只打印前三个通道
+                     qDebug() << "[Calibrate Debug] Modbus Ch" << i << "Calibrated:" << snapshot.modbusData[i];
+                }
+                // +++ 结束新增 +++
+            }
+            // +++ 结束Modbus校准 +++
+            qDebug() << "快照" << snapshotCount + 1 << "Modbus数据有效 (已校准)，数据:" << snapshot.modbusData;
         } else {
             qDebug() << "快照" << snapshotCount + 1 << "Modbus数据无效";
+            //即使无效也要给默认值，否则数组大小可能不匹配
+             snapshot.modbusData.fill(0.0, configuredModbusChannels > 0 ? configuredModbusChannels : 16); // 使用配置的数量或默认值
         }
         
-        // 获取当前的DAQ数据
+        // --- DAQ Data ---
         snapshot.daqValid = daqIsAcquiring && daqNumChannels > 0;
         snapshot.daqRunning = daqIsAcquiring;
-        
         if (snapshot.daqValid && !daqChannelData.isEmpty()) {
             // 修改：为每个通道保存最新的数据点
             snapshot.daqData.resize(daqNumChannels);
@@ -364,17 +393,25 @@ void SnapshotThread::processDataSnapshots()
                 } else {
                     snapshot.daqData[i] = 0.0;
                 }
+                 // +++ 应用DAQ校准 +++
+                 CalibrationParams params = getCalibrationParams("DAQ", i);
+                 double rawValue = snapshot.daqData[i]; // 校准基于最新原始值
+                 snapshot.daqData[i] = applyCalibration(rawValue, params);
+                 // +++ 结束DAQ校准 +++
             }
-            qDebug() << "快照" << snapshotCount + 1 << "DAQ数据有效，通道数:" << daqNumChannels << "数据:" << snapshot.daqData;
+            qDebug() << "快照" << snapshotCount + 1 << "DAQ数据有效 (已校准)，通道数:" << daqNumChannels << "数据:" << snapshot.daqData;
         } else {
             qDebug() << "快照" << snapshotCount + 1 << "DAQ数据无效，采集状态:" << daqIsAcquiring << "通道数:" << daqNumChannels;
+            //即使无效也要给默认值
+             snapshot.daqData.fill(0.0, configuredDaqChannels > 0 ? configuredDaqChannels : 16); // 使用配置的数量或默认值
         }
         
-        // 获取当前的ECU数据 - 使用基于snapEcuIsConnected和ecuDataValid的简化逻辑
+        // --- ECU Data ---
       snapshot.ecuValid = snapEcuIsConnected && latestECUData.isValid; // 直接基于连接状态和最新数据有效性
+        snapshot.ecuData.resize(9); // ECU通道数固定为9
 
     if (snapshot.ecuValid) { // 如果连接正常且最新数据有效
-        snapshot.ecuData.resize(9);
+        // 获取原始值
         snapshot.ecuData[0] = latestECUData.throttle;
         snapshot.ecuData[1] = latestECUData.engineSpeed;
         snapshot.ecuData[2] = latestECUData.cylinderTemp;
@@ -384,14 +421,52 @@ void SnapshotThread::processDataSnapshots()
         snapshot.ecuData[6] = latestECUData.intakeTemp;
         snapshot.ecuData[7] = latestECUData.atmPressure;
         snapshot.ecuData[8] = latestECUData.flightTime;
-        qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效，数据:" << snapshot.ecuData;
+
+        // +++ 应用ECU校准 +++
+        for(int i = 0; i < 9; ++i) {
+            CalibrationParams params = getCalibrationParams("ECU", i);
+             double rawValue = snapshot.ecuData[i]; // 校准基于最新原始值
+             snapshot.ecuData[i] = applyCalibration(rawValue, params);
+        }
+        // +++ 结束ECU校准 +++
+        qDebug() << "快照" << snapshotCount + 1 << "ECU数据有效 (已校准)，数据:" << snapshot.ecuData;
     } else {
         qDebug() << "快照" << snapshotCount + 1 << "ECU数据无效，ECU连接状态:" << snapEcuIsConnected << "最新数据有效:" << latestECUData.isValid;
+        snapshot.ecuData.fill(0.0); // 无效时填充0
     }
         
         // 增加快照计数
         snapshotCount++;
         snapshot.snapshotIndex = snapshotCount;
+        
+        // --- Custom Data Calculation & Calibration --- START ---
+        snapshot.customData.resize(5); // 固定大小为5
+        snapshot.customData.fill(0.0); // 先填充0
+
+        if (snapshot.daqValid && snapshot.ecuValid && snapshot.daqData.size() >= 3 && snapshot.ecuData.size() >= 9) { // ECU is fixed at 9 channels
+            // 注意：现在使用校准后的 DAQ 和 ECU 数据进行计算
+            double rawCustom0 = snapshot.daqData[0] * snapshot.ecuData[0]*10.0; // DAQ[0] * ECU[0] (Throttle)
+            double rawCustom1 = snapshot.daqData[1] * snapshot.ecuData[1]; // DAQ[1] * ECU[1] (EngineSpeed)
+            double rawCustom2 = snapshot.daqData[2] * snapshot.ecuData[2]; // DAQ[2] * ECU[2] (CylinderTemp)
+            double rawCustom3 = 0.0; // Placeholder
+            double rawCustom4 = 0.0; // Placeholder
+
+            // +++ 应用Custom校准 +++
+            snapshot.customData[0] = applyCalibration(rawCustom0, getCalibrationParams("Custom", 0));
+            snapshot.customData[1] = applyCalibration(rawCustom1, getCalibrationParams("Custom", 1));
+            snapshot.customData[2] = applyCalibration(rawCustom2, getCalibrationParams("Custom", 2));
+            snapshot.customData[3] = applyCalibration(rawCustom3, getCalibrationParams("Custom", 3));
+            snapshot.customData[4] = applyCalibration(rawCustom4, getCalibrationParams("Custom", 4));
+            // +++ 结束Custom校准 +++
+
+            qDebug() << "[SnapshotThread] Calculated and Calibrated customData:" << snapshot.customData;
+        } else {
+             qDebug() << "[SnapshotThread] Skipping customData calculation: DAQ valid:" << snapshot.daqValid 
+                      << "ECU valid:" << snapshot.ecuValid << "DAQ size:" << snapshot.daqData.size() 
+                      << "ECU size:" << snapshot.ecuData.size();
+             // customData 已被 fill(0.0)，无需再次填充
+        }
+        // --- Custom Data Calculation & Calibration --- END ---
         
         // 将当前快照添加到队列中
         snapshotQueue.enqueue(snapshot);
@@ -407,6 +482,7 @@ void SnapshotThread::processDataSnapshots()
         
         // --- Logging Logic ---
         if (logFile && logStream && logFile->isOpen()) {
+            // 注意：writeSnapshotToFile 现在写入的是 校准后 的数据
             writeSnapshotToFile(snapshot);
             snapshotsSinceLastWrite++;
 
@@ -420,10 +496,10 @@ void SnapshotThread::processDataSnapshots()
         
         // 发送数据快照到WebSocket (新增)
         // WebSocketThread 会通过信号槽连接接收这个信号
-        emit snapshotForWebSocket(snapshot, snapshotCount);
+        emit snapshotForWebSocket(snapshot, snapshotCount); // 发送校准后的数据
         
         // 发送处理好的快照，让主线程更新UI
-        emit snapshotProcessed(snapshot, snapshotCount);
+        emit snapshotProcessed(snapshot, snapshotCount); // 发送校准后的数据
         
     } catch (const std::exception& e) {
         qDebug() << "处理数据快照时出错: " << e.what();
@@ -519,6 +595,10 @@ void SnapshotThread::generateCsvHeader()
     for (int i = 0; i < MAX_ECU_CH; ++i) {
         csvHeader << QString("ECU_%1").arg(ecuNames.value(i, QString::number(i))); // Use names if available
     }
+    // Add Custom Data headers
+    for (int i = 0; i < 5; ++i) { // Fixed size of 5
+        csvHeader << QString("Custom_%1").arg(i);
+    }
 }
 
 void SnapshotThread::writeCsvHeader()
@@ -568,6 +648,14 @@ void SnapshotThread::writeSnapshotToFile(const DataSnapshot &snapshot)
             dataRow << "";
         }
     }
+    // Add Custom data (up to 5)
+    for (int i = 0; i < 5; ++i) {
+        if (i < snapshot.customData.size()) {
+             dataRow << QString::number(snapshot.customData[i], 'f', 4); // 4 decimal places for custom
+        } else {
+            dataRow << ""; // Should not happen due to fixed size
+        }
+    }
 
     *logStream << dataRow.join(",") << Qt::endl;
 }
@@ -599,5 +687,133 @@ void SnapshotThread::setupLogging(int modbusCount, int daqCount)
     configuredDaqChannels = (daqCount > 0) ? daqCount : 0;       // Ensure non-negative
     qDebug() << "[SnapshotThread] Logging configured for Modbus:" << configuredModbusChannels << "channels, DAQ:" << configuredDaqChannels << "channels.";
 }
+
+// +++ 新增: 加载校准文件实现 +++
+void SnapshotThread::loadCalibrationSettings(const QString& filePath)
+{
+    qDebug() << "[SnapshotThread] Attempting to load calibration settings from:" << filePath;
+    allCalibrationParams.clear(); // 清空旧参数
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) { // Read as raw bytes
+        qDebug() << "[SnapshotThread] Warning: Cannot open calibration file:" << filePath << file.errorString() << ". Using default calibration (y=x).";
+        return;
+    }
+
+    QByteArray fileContent = file.readAll();
+    file.close(); // Close file after reading
+
+    // Get UTF-8 codec
+    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+    QString contentString;
+    if(codec) {
+        contentString = codec->toUnicode(fileContent);
+        qDebug() << "[SnapshotThread] Read calibration file and converted to Unicode using UTF-8 codec.";
+    } else {
+        qDebug() << "[SnapshotThread] Warning: Could not find UTF-8 codec! Trying Latin1.";
+        // Fallback to Latin1 if UTF-8 is somehow unavailable
+         contentString = QString::fromLatin1(fileContent);
+    }
+
+    QStringList lines = contentString.split('\n', Qt::SkipEmptyParts); // Split content into lines
+
+    QString currentSourceType = "";
+    int lineNum = 0;
+
+    // Process lines
+    for (const QString &rawLine : lines) {
+        lineNum++;
+        QString line = rawLine.trimmed(); // Trim whitespace from each line
+
+        // Skip empty lines and comments (lines starting with ';' or '#')
+        if (line.isEmpty() || line.startsWith(';') || line.startsWith('#')) {
+            continue;
+        }
+
+        // Check for section header
+        if (line.startsWith('[') && line.endsWith(']')) {
+            currentSourceType = line.mid(1, line.length() - 2).trimmed();
+            qDebug() << "[SnapshotThread] Parsing section:" << currentSourceType;
+            continue;
+        }
+
+        // Parse key-value pairs within a section
+        if (!currentSourceType.isEmpty()) {
+            int equalsPos = line.indexOf('=');
+            if (equalsPos != -1) {
+                QString key = line.left(equalsPos).trimmed();
+                QString valueString = line.mid(equalsPos + 1).trimmed();
+                // Remove potential inline comments
+                int commentPos = valueString.indexOf(';');
+                if (commentPos != -1) {
+                    valueString = valueString.left(commentPos).trimmed();
+                }
+                int commentPosHash = valueString.indexOf('#');
+                 if (commentPosHash != -1) {
+                    valueString = valueString.left(commentPosHash).trimmed();
+                }
+
+                 qDebug() << "[SnapshotThread Debug] Reading Key:" << currentSourceType << "/" << key << "Raw Value String:'" << valueString << "'";
+
+                if (key.startsWith("Channel_")) {
+                    bool okIndex;
+                    int channelIndex = key.mid(8).toInt(&okIndex);
+
+                    if (okIndex) {
+                        QStringList coeffStrings = valueString.split(',', Qt::SkipEmptyParts);
+
+                        if (coeffStrings.size() == 4) {
+                            bool okA, okB, okC, okD;
+                            CalibrationParams params;
+                            params.a = coeffStrings[0].trimmed().toDouble(&okA);
+                            params.b = coeffStrings[1].trimmed().toDouble(&okB);
+                            params.c = coeffStrings[2].trimmed().toDouble(&okC);
+                            params.d = coeffStrings[3].trimmed().toDouble(&okD);
+
+                            if (okA && okB && okC && okD) {
+                                // Ensure the map for the sourceType exists
+                                if (!allCalibrationParams.contains(currentSourceType)) {
+                                    allCalibrationParams[currentSourceType] = QMap<int, CalibrationParams>();
+                                }
+                                allCalibrationParams[currentSourceType][channelIndex] = params;
+                                qDebug() << "[SnapshotThread] Loaded calibration for" << currentSourceType << "Channel" << channelIndex
+                                         << ": a=" << params.a << ", b=" << params.b << ", c=" << params.c << ", d=" << params.d;
+                            } else {
+                                qDebug() << "[SnapshotThread] Warning: Invalid number format in calibration for" << currentSourceType << key << "at line" << lineNum << ". Using default.";
+                            }
+                        } else {
+                            qDebug() << "[SnapshotThread] Warning: Incorrect number of coefficients for" << currentSourceType << key << "at line" << lineNum << "(found" << coeffStrings.size() << ", expected 4). Using default.";
+                        }
+                    } else {
+                         qDebug() << "[SnapshotThread] Warning: Invalid channel index format for" << currentSourceType << key << "at line" << lineNum << ". Skipping.";
+                    }
+                }
+            }
+        }
+    }
+
+    // file.close(); // Moved file close earlier
+    qDebug() << "[SnapshotThread] Finished loading calibration settings manually.";
+}
+// +++ 结束新增 +++
+
+// +++ 新增: 获取校准参数实现 +++
+CalibrationParams SnapshotThread::getCalibrationParams(const QString& sourceType, int channelIndex)
+{
+    // 如果映射中不存在该源或通道，.value() 会返回默认构造的 CalibrationParams (a=0,b=0,c=1,d=0)
+    return allCalibrationParams.value(sourceType).value(channelIndex, CalibrationParams());
+}
+// +++ 结束新增 +++
+
+// +++ 新增: 应用校准函数实现 +++
+double SnapshotThread::applyCalibration(double rawValue, const CalibrationParams& params)
+{
+    // 使用直接乘法避免 std::pow 的开销和潜在问题
+    double x = rawValue;
+    double x2 = x * x;
+    double x3 = x2 * x;
+    return params.a * x3 + params.b * x2 + params.c * x + params.d;
+}
+// +++ 结束新增 +++
 
 // ... other existing methods like setFilterEnabled ...

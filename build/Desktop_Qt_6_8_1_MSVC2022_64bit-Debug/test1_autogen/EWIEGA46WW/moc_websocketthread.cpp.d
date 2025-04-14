@@ -11,6 +11,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonDocument \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QJsonObject \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QList \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMap \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutexLocker \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject \

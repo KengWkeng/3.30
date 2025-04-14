@@ -12,7 +12,6 @@
 #include <QCoreApplication>
 #include <QScrollBar> // 添加QScrollBar头文件
 #include "dashboard.h"
-#include "dashboardcalculator.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -214,7 +213,7 @@ MainWindow::MainWindow(QWidget *parent)
     ecuThread = new QThread; // 创建ECU子线程
     
     // 创建仪表盘计算线程（现在DashboardCalculator直接继承自QThread）
-    dashboardCalculator = new DashboardCalculator(this);
+    // dashboardCalculator = new DashboardCalculator(this); // 第二处屏蔽
     // 启动线程会在需要计算时自动进行
     
     //子线程对象
@@ -330,7 +329,7 @@ MainWindow::MainWindow(QWidget *parent)
     // connect(mbTh, &modbusThread::sendModbusResult, this, &MainWindow::handleModbusData);
     
     // 2. WebSocketThread直接接收Modbus数据，处理并转发
-    connect(mbTh, &modbusThread::sendModbusResult, wsTh, &WebSocketThread::handleModbusRawData);
+    // connect(mbTh, &modbusThread::sendModbusResult, wsTh, &WebSocketThread::handleModbusRawData);
     
     // // 连接重置计时器的信号与槽
     // connect(this, &MainWindow::resetModbusTimer, mbTh, &modbusThread::resetTimer);
@@ -491,7 +490,7 @@ MainWindow::MainWindow(QWidget *parent)
             // 设置仪表盘计算器
         QList<Dashboard*> dashboards = getAllDashboards();
         foreach(Dashboard* dashboard, dashboards) {
-            dashboard->setCalculator(dashboardCalculator);
+            // dashboard->setCalculator(dashboardCalculator); // 第三处屏蔽
             }
             
             // 安全地初始化dash1plot绘图
@@ -661,12 +660,12 @@ MainWindow::~MainWindow()
     }
     
     // 停止并清理计算线程
-    if (dashboardCalculator) {
-        dashboardCalculator->stopThread();
-        // 等待线程完成
-        dashboardCalculator->wait();
-        delete dashboardCalculator;
-    }
+    // if (dashboardCalculator) { // 第四处屏蔽
+    //     dashboardCalculator->stopThread();
+    //     // 等待线程完成
+    //     dashboardCalculator->wait();
+    //     delete dashboardCalculator;
+    // }
     
     // 在析构函数中添加清理SnapshotThread的代码
     // 在清理其他线程之后
@@ -1952,10 +1951,14 @@ void MainWindow::onRandomNumberGenerated(int number)
 // 根据映射关系更新仪表盘显示
 void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData, 
                                        const QVector<double> &daqData, 
-                                       const ECUData &ecuData)
+                                       const ECUData &ecuData, // 参数不变
+                                       const DataSnapshot &snapshot) // 新增参数：传递完整快照
 {
+    // 添加调试信息：检查传入的 snapshot 中的 customData
+    qDebug() << "[updateDashboardByMapping] Received snapshot.customData:" << snapshot.customData;
+
     // 遍历所有仪表盘
-    QList<Dashboard*> dashboards = getAllDashboards();
+    QList<Dashboard*> dashboards = this->getAllDashboards(); // 使用 this-> 调用非静态成员
     
     // 创建变量表，用于计算公式
     static QMap<QString, double> persistentVarMap; // 使用静态变量保持数据持久性
@@ -2019,54 +2022,72 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
         if (!dashboardMappings.contains(dashboard->objectName()))
             continue;
             
-        DashboardMapping& mapping = dashboardMappings[dashboard->objectName()];
+        // 直接访问映射，不再需要引用初始化检查
+        const DashboardMapping& mapping = dashboardMappings.value(dashboard->objectName());
+        // 添加调试信息：打印正在处理的仪表盘及其 sourceType
+        qDebug() << "[updateDashboardByMapping] Processing:" << dashboard->objectName() << "with SourceType:" << mapping.sourceType;
+
         double currentValue = 0.0;
         bool valueUpdated = false;
         
-        // 如果是自定义变量，设置变量值后让仪表盘自行计算公式
-        if (mapping.sourceType == DataSource_Custom) {
-            dashboard->setVariableValues(persistentVarMap);
-            currentValue = dashboard->getValue();
-            valueUpdated = true;
-        } else {
-            // 根据数据源类型更新仪表盘值
-            switch (mapping.sourceType) {
-                case DataSource_Modbus:
-                    // 只有当提供了Modbus数据且数据源类型为Modbus时才更新
-                    if (!modbusData.isEmpty() && mapping.channelIndex < modbusData.size()) {
-                        currentValue = modbusData[mapping.channelIndex];
-                        dashboard->setValue(currentValue);
-                        valueUpdated = true;
-                    }
-                    break;
-                    
-                case DataSource_DAQ:
-                    // 只有当提供了DAQ数据且数据源类型为DAQ时才更新
-                    if (!daqData.isEmpty() && mapping.channelIndex < daqData.size()) {
-                        currentValue = daqData[mapping.channelIndex];
-                        dashboard->setValue(currentValue);
-                        valueUpdated = true;
-                    }
-                    break;
-                    
-                case DataSource_ECU:
-                    // 只有当数据源类型为ECU时才更新
-                    switch (mapping.channelIndex) {
-                        case 0: currentValue = ecuData.throttle; dashboard->setValue(currentValue); valueUpdated = true; break;
-                        case 1: currentValue = ecuData.engineSpeed; dashboard->setValue(currentValue); valueUpdated = true; break;
-                        case 2: currentValue = ecuData.cylinderTemp; dashboard->setValue(currentValue); valueUpdated = true; break;
-                        case 3: currentValue = ecuData.exhaustTemp; dashboard->setValue(currentValue); valueUpdated = true; break;
-                        case 4: currentValue = ecuData.axleTemp; dashboard->setValue(currentValue); valueUpdated = true; break;
-                        case 5: currentValue = ecuData.fuelPressure; dashboard->setValue(currentValue); valueUpdated = true; break;
-                        case 6: currentValue = ecuData.intakeTemp; dashboard->setValue(currentValue); valueUpdated = true; break;
-                        case 7: currentValue = ecuData.atmPressure; dashboard->setValue(currentValue); valueUpdated = true; break;
-                        case 8: currentValue = ecuData.flightTime; dashboard->setValue(currentValue); valueUpdated = true; break;
-                    }
-                    break;
-                    
-                default:
-                    break;
-            }
+        // 根据数据源类型更新仪表盘值
+        switch (mapping.sourceType) {
+            case DataSource_Modbus:
+                // 只有当提供了Modbus数据且数据源类型为Modbus时才更新
+                if (!modbusData.isEmpty() && mapping.channelIndex < modbusData.size()) {
+                    currentValue = modbusData[mapping.channelIndex];
+                    dashboard->setValue(currentValue);
+                    valueUpdated = true;
+                }
+                break;
+                
+            case DataSource_DAQ:
+                // 只有当提供了DAQ数据且数据源类型为DAQ时才更新
+                if (!daqData.isEmpty() && mapping.channelIndex < daqData.size()) {
+                    currentValue = daqData[mapping.channelIndex];
+                    dashboard->setValue(currentValue);
+                    valueUpdated = true;
+                }
+                break;
+                
+            case DataSource_ECU:
+                // 只有当数据源类型为ECU时才更新
+                switch (mapping.channelIndex) {
+                    case 0: currentValue = ecuData.throttle; dashboard->setValue(currentValue); valueUpdated = true; break;
+                    case 1: currentValue = ecuData.engineSpeed; dashboard->setValue(currentValue); valueUpdated = true; break;
+                    case 2: currentValue = ecuData.cylinderTemp; dashboard->setValue(currentValue); valueUpdated = true; break;
+                    case 3: currentValue = ecuData.exhaustTemp; dashboard->setValue(currentValue); valueUpdated = true; break;
+                    case 4: currentValue = ecuData.axleTemp; dashboard->setValue(currentValue); valueUpdated = true; break;
+                    case 5: currentValue = ecuData.fuelPressure; dashboard->setValue(currentValue); valueUpdated = true; break;
+                    case 6: currentValue = ecuData.intakeTemp; dashboard->setValue(currentValue); valueUpdated = true; break;
+                    case 7: currentValue = ecuData.atmPressure; dashboard->setValue(currentValue); valueUpdated = true; break;
+                    case 8: currentValue = ecuData.flightTime; dashboard->setValue(currentValue); valueUpdated = true; break;
+                }
+                break;
+                
+            // 新增: 在判断 case Custom 之前打印信息
+            qDebug() << "[Switch Check] Before case Custom for" << dashboard->objectName() << "Type:" << mapping.sourceType;
+            case DataSource_Custom:
+                // 新增: 进入 case Custom 时打印信息
+                qDebug() << "[Switch Enter] Entered case Custom for" << dashboard->objectName();
+                // 添加对 customData 的处理
+                if (snapshot.customData.size() > mapping.channelIndex && mapping.channelIndex >= 0)
+                {
+                    // 修改: 明确打印位置和仪表盘名称
+                    qDebug() << "[Switch Custom] Reading customData index:" << mapping.channelIndex << "for" << dashboard->objectName();
+                    currentValue = snapshot.customData[mapping.channelIndex];
+                    dashboard->setValue(currentValue);
+                    valueUpdated = true;
+                    // 新增: 打印设置的值
+                    qDebug() << "[Switch Custom] Set" << dashboard->objectName() << "to value:" << currentValue;
+                } else {
+                    // 新增: 打印索引越界错误
+                    qDebug() << "[Switch Custom] Error: customData index" << mapping.channelIndex << "out of bounds for" << dashboard->objectName() << "size:" << snapshot.customData.size();
+                 }
+                break; // 确保 Custom case 有 break
+                
+            default:
+                break;
         }
         
         // 保存dashForce的值，用于更新dash1plot
@@ -2099,7 +2120,7 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
         if (mapping.sourceType == DataSource_Custom && dashboard->isCustomVariable() && 
             !dashboard->getFormula().isEmpty() && !dashboard->getVariableName().isEmpty()) {
             // 计算公式并更新
-            dashboard->setVariableValues(persistentVarMap);
+            // dashboard->setVariableValues(persistentVarMap);
             
             // 将计算结果添加到变量表中，供其他公式使用
             QString varName = dashboard->getVariableName();
@@ -2130,7 +2151,7 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
         
         // 再次更新所有自定义变量
         if (mapping.sourceType == DataSource_Custom && dashboard->isCustomVariable()) {
-            dashboard->setVariableValues(persistentVarMap);
+            // dashboard->setVariableValues(persistentVarMap);
             
             // 再次更新变量表
             QString varName = dashboard->getVariableName();
@@ -3216,9 +3237,9 @@ void MainWindow::handleDashForceSettingsChanged(const QString &dashboardName, co
     }
     
     // 4. 确保重新初始化dashboard计算器
-    if (dashboardCalculator && ui->dashForce) {
-        ui->dashForce->setCalculator(dashboardCalculator);
-    }
+    // if (dashboardCalculator && ui->dashForce) { // 第五处屏蔽
+    //     ui->dashForce->setCalculator(dashboardCalculator);
+    // }
 }
 
 // // 添加处理数据快照的槽函数实现
@@ -3588,31 +3609,33 @@ void MainWindow::updateDashboardData(const QVector<double> &timeData, const Data
 {
     try {
         // 确保有必要的数据才更新仪表盘
-        if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid) {
+        if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid || snapshot.customData.size() > 0) { // 添加对 customData 的检查
             // 转换ECU数据
-            ECUData ecuData;
-            ecuData.isValid = snapshot.ecuValid;
+            ECUData ecuDataStruct; // 修改变量名以避免与 dashboard.h 冲突
+            ecuDataStruct.isValid = snapshot.ecuValid;
             
             // 确保ecuData向量大小符合要求
             if (snapshot.ecuValid && snapshot.ecuData.size() >= 9) {
                 // 从快照数据中提取ECU数据
-                ecuData.throttle = snapshot.ecuData[0];
-                ecuData.engineSpeed = snapshot.ecuData[1];
-                ecuData.cylinderTemp = snapshot.ecuData[2];
-                ecuData.exhaustTemp = snapshot.ecuData[3];
-                ecuData.axleTemp = snapshot.ecuData[4];
-                ecuData.fuelPressure = snapshot.ecuData[5];
-                ecuData.intakeTemp = snapshot.ecuData[6];
-                ecuData.atmPressure = snapshot.ecuData[7];
-                ecuData.flightTime = snapshot.ecuData[8];
+                ecuDataStruct.throttle = snapshot.ecuData[0];
+                ecuDataStruct.engineSpeed = snapshot.ecuData[1];
+                ecuDataStruct.cylinderTemp = snapshot.ecuData[2];
+                ecuDataStruct.exhaustTemp = snapshot.ecuData[3];
+                ecuDataStruct.axleTemp = snapshot.ecuData[4];
+                ecuDataStruct.fuelPressure = snapshot.ecuData[5];
+                ecuDataStruct.intakeTemp = snapshot.ecuData[6];
+                ecuDataStruct.atmPressure = snapshot.ecuData[7];
+                ecuDataStruct.flightTime = snapshot.ecuData[8];
             }
 
             // 更新仪表盘 - 使用当前映射关系
-            // 确保有数据可用
+            // 调用修改后的函数签名，传递 snapshot
             updateDashboardByMapping(
                 snapshot.modbusData, 
                 snapshot.daqData, 
-                ecuData);
+                ecuDataStruct, // 使用新的结构体变量
+                snapshot // 传递整个快照以便访问 customData
+                );
         }
     } catch (const std::exception& e) {
         qDebug() << "更新仪表盘数据时出错:" << e.what();

@@ -3,6 +3,7 @@ test1_autogen/timestamp: \
 	C:/Users/80911/Documents/QT/vs_test/test1/CMakeLists.txt \
 	C:/Users/80911/Documents/QT/vs_test/test1/ControlCAN.h \
 	C:/Users/80911/Documents/QT/vs_test/test1/artdaqthread.h \
+	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/.qt/qml_imports/test1_conf.cmake \
 	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/.qtc/package-manager/auto-setup.cmake \
 	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/CMakeFiles/3.29.3/CMakeCXXCompiler.cmake \
 	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/CMakeFiles/3.29.3/CMakeRCCompiler.cmake \
@@ -722,6 +723,15 @@ test1_autogen/timestamp: \
 	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core/Qt6CoreTargets-relwithdebinfo.cmake \
 	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core/Qt6CoreTargets.cmake \
 	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core/Qt6CoreVersionlessAliasTargets.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatAdditionalTargetInfo.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatConfig.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatConfigVersion.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatConfigVersionImpl.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatDependencies.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatTargets-debug.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatTargets-relwithdebinfo.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatTargets.cmake \
+	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6Core5Compat/Qt6Core5CompatVersionlessAliasTargets.cmake \
 	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6CoreTools/Qt6CoreToolsAdditionalTargetInfo.cmake \
 	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6CoreTools/Qt6CoreToolsConfig.cmake \
 	D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6CoreTools/Qt6CoreToolsConfigVersion.cmake \

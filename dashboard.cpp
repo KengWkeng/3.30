@@ -44,10 +44,7 @@ Dashboard::Dashboard(QWidget *parent) : QWidget(parent),
     m_scaleMajor(10),
     m_variableName(""),
     m_formula(""),
-    m_isCustomVariable(false),
-    m_calculator(nullptr),
-    m_lastCalculatedValue(0),
-    m_lastCalculationSucceeded(true)
+    m_isCustomVariable(false)
 {
     // 初始化界面和定时器
     setMinimumSize(200, 200);
@@ -748,7 +745,7 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
     deviceTypeCombo->addItem(tr("Modbus"), 0);
     deviceTypeCombo->addItem(tr("DAQ采集卡"), 1);  // 修正名称：DAQ才是数据采集通道
     deviceTypeCombo->addItem(tr("ECU"), 2);
-    deviceTypeCombo->addItem(tr("自定义变量"), 3);
+    deviceTypeCombo->addItem(tr("CustomData"), 3); // 修改：自定义变量改为 CustomData
     sourceLayout->addWidget(deviceTypeLabel, 0, 0);
     sourceLayout->addWidget(deviceTypeCombo, 0, 1);
 
@@ -760,28 +757,28 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
     sourceLayout->addWidget(channelCombo, 1, 1);
 
     // 公式输入框（初始为隐藏状态）
-    QLabel *formulaLabel = new QLabel(tr("公式:"), dialog);
-    formulaLabel->setObjectName("formulaLabel");
-    QLineEdit *formulaEdit = new QLineEdit(dialog);
-    formulaEdit->setObjectName("formulaEdit");
-    formulaEdit->setPlaceholderText(tr("输入计算公式，如: A_0 + B_1 * 2"));
-    formulaLabel->setVisible(false);
-    formulaEdit->setVisible(false);
-    sourceLayout->addWidget(formulaLabel, 2, 0);
-    sourceLayout->addWidget(formulaEdit, 2, 1);
+    // QLabel *formulaLabel = new QLabel(tr("公式:"), dialog); // 第十九处屏蔽
+    // formulaLabel->setObjectName("formulaLabel"); // 第十九处屏蔽
+    // QLineEdit *formulaEdit = new QLineEdit(dialog); // 第十九处屏蔽
+    // formulaEdit->setObjectName("formulaEdit"); // 第十九处屏蔽
+    // formulaEdit->setPlaceholderText(tr("输入计算公式，如: A_0 + B_1 * 2")); // 第十九处屏蔽
+    // formulaLabel->setVisible(false); // 第十九处屏蔽
+    // formulaEdit->setVisible(false); // 第十九处屏蔽
+    // sourceLayout->addWidget(formulaLabel, 2, 0); // 第十九处屏蔽
+    // sourceLayout->addWidget(formulaEdit, 2, 1); // 第十九处屏蔽
     
     // 帮助提示
-    QLabel *helpLabel = new QLabel(tr("变量格式: A_x (Modbus), B_x (DAQ), C_x (ECU), D_x (自定义)"), dialog);
-    helpLabel->setObjectName("helpLabel");
-    helpLabel->setVisible(false);
-    sourceLayout->addWidget(helpLabel, 3, 0, 1, 2);
+    // QLabel *helpLabel = new QLabel(tr("变量格式: A_x (Modbus), B_x (DAQ), C_x (ECU), D_x (自定义)"), dialog); // 第二十处屏蔽
+    // helpLabel->setObjectName("helpLabel"); // 第二十处屏蔽
+    // helpLabel->setVisible(false); // 第二十处屏蔽
+    // sourceLayout->addWidget(helpLabel, 3, 0, 1, 2); // 第二十处屏蔽
 
     // 辅助函数：更新通道列表内容
     auto updateChannelList = [=](int index) {
         channelCombo->clear();
-        formulaLabel->setVisible(false);
-        formulaEdit->setVisible(false);
-        helpLabel->setVisible(false);
+        // formulaLabel->setVisible(false); // 第二十一处屏蔽
+        // formulaEdit->setVisible(false); // 第二十一处屏蔽
+        // helpLabel->setVisible(false); // 第二十一处屏蔽
 
         // 添加通道列表，通道名包含变量名便于后续提取
         switch (index) {
@@ -858,8 +855,9 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
                 }
             }
             break;
-            case 3: // 自定义变量
+            case 3: // CustomData
             {
+                /* // 第二十二处屏蔽 - 开始
                 for (int i = 0; i < 8; i++) {
                     channelCombo->addItem(tr("变量 %1 (D_%2)").arg(i).arg(i));
                 }
@@ -872,6 +870,10 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
                 if (!m_formula.isEmpty()) {
                     formulaEdit->setText(m_formula);
                 }
+                */ // 第二十二处屏蔽 - 结束
+                 for (int i = 0; i < 5; ++i) { // customData 固定为5个通道
+                    channelCombo->addItem(tr("通道 %1 (D_%2)").arg(i).arg(i));
+                 }
             }
             break;
         }
@@ -884,9 +886,10 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
     int deviceType = 0; // 默认为Modbus
     
     // 如果是自定义变量，设置为对应的类型
-    if (m_isCustomVariable) {
-        deviceType = 3; // 自定义变量
-    } else if (!m_variableName.isEmpty()) {
+    // if (m_isCustomVariable) { // 第二十三处屏蔽
+    //     deviceType = 3; // 自定义变量
+    // } else 
+    if (!m_variableName.isEmpty()) { // 修改：不再检查 isCustomVariable
         // 根据变量名前缀设置设备类型
         if (m_variableName.startsWith("A_")) deviceType = 0; // Modbus
         else if (m_variableName.startsWith("B_")) deviceType = 1; // DAQ
@@ -914,9 +917,11 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
         }
         
         // 如果是自定义变量，设置公式
+        /* // 第二十六处屏蔽 - 开始
         if (deviceType == 3 && !m_formula.isEmpty() && formulaEdit) {
             formulaEdit->setText(m_formula);
         }
+        */ // 第二十六处屏蔽 - 结束
     });
 
     return sourceGroup;
@@ -1006,7 +1011,7 @@ void Dashboard::connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPu
     QPushButton *pointerColorButton = dialog->findChild<QPushButton*>("pointerColorButton");
     QComboBox *deviceTypeCombo = dialog->findChild<QComboBox*>("deviceTypeCombo");
     QComboBox *channelCombo = dialog->findChild<QComboBox*>("channelCombo");
-    QLineEdit *formulaEdit = dialog->findChild<QLineEdit*>("formulaEdit");
+    // QLineEdit *formulaEdit = dialog->findChild<QLineEdit*>("formulaEdit"); // 第二十四处屏蔽
 
     // 确定按钮点击事件
     QObject::connect(okButton, &QPushButton::clicked, [=]() {
@@ -1045,15 +1050,17 @@ void Dashboard::connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPu
         this->setVariableName(variableName);
         
         // 设置自定义变量属性
-        bool isCustomVar = (sourceType == 3);
-        this->setCustomVariable(isCustomVar);
+        // bool isCustomVar = (sourceType == 3); // 第二十五处屏蔽
+        // this->setCustomVariable(isCustomVar); // 第二十五处屏蔽
         
         // 如果是自定义变量，获取公式
+        /* // 第二十六处屏蔽 - 开始
         if (isCustomVar && formulaEdit) {
             QString formula = formulaEdit->text();
             this->setFormula(formula);
             emit customVariableFormulaChanged(this->objectName(), formula);
         }
+        */ // 第二十六处屏蔽 - 结束
 
         // 创建设置映射对象
         QMap<QString, QVariant> settings;
@@ -1068,10 +1075,12 @@ void Dashboard::connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPu
         settings["channelName"] = channelText;
         settings["variableName"] = variableName;
         
+        /* // 第二十七处屏蔽 - 开始
         if (isCustomVar && formulaEdit) {
             settings["formula"] = formulaEdit->text();
             settings["isCustomVariable"] = true;
         }
+        */ // 第二十七处屏蔽 - 结束
 
         // 发出信号通知主窗口保存设置
         emit dashboardSettingsChanged(this->objectName(), settings);
@@ -1086,88 +1095,9 @@ void Dashboard::connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPu
     });
 }
 
-// 实现公式计算相关功能
-
-void Dashboard::setCalculator(DashboardCalculator *calculator)
-{
-    m_calculator = calculator;
-    
-    // 连接计算结果信号
-    if (m_calculator) {
-        connect(m_calculator, &DashboardCalculator::calculationResult, 
-                this, &Dashboard::onCalculationResult);
-        connect(m_calculator, &DashboardCalculator::calculationError, 
-                this, &Dashboard::onCalculationError);
-    }
-}
-
-// 设置变量值并更新显示（如果是自定义变量，会计算公式）
-void Dashboard::setVariableValues(const QMap<QString, double> &variables)
-{
-    // 将新的变量值合并到持久化变量中
-    for (auto it = variables.begin(); it != variables.end(); ++it) {
-        if (m_lastVariableValues.contains(it.key())) {
-            // 只有当值发生变化时才更新
-            if (m_lastVariableValues[it.key()] != it.value()) {
-                m_lastVariableValues[it.key()] = it.value();
-            }
-        } else {
-            m_lastVariableValues[it.key()] = it.value();
-        }
-    }
-    
-    // 如果是自定义变量且有公式，将计算任务发送到计算线程
-    if (m_isCustomVariable && !m_formula.isEmpty()) {
-        if (m_calculator) {
-            // 使用新的接口请求异步计算
-            m_calculator->requestCalculation(objectName(), m_formula, m_lastVariableValues);
-        } else {
-            // 如果没有计算器，使用原始方法计算
-            double result = calculateFormula(m_formula, m_lastVariableValues);
-            setValue(result);
-            
-            // 如果设置了变量名，将结果存储在变量表中
-            if (!m_variableName.isEmpty()) {
-                m_lastVariableValues[m_variableName] = result;
-            }
-        }
-    }
-}
-
-// 接收计算线程的计算结果
-void Dashboard::onCalculationResult(const QString &dashboardName, double result)
-{
-    // 只处理发给本仪表盘的结果
-    if (dashboardName == objectName()) {
-        m_lastCalculatedValue = result;
-        m_lastCalculationSucceeded = true;
-        setValue(result);
-        
-        // 如果设置了变量名，将结果存储在变量表中
-        if (!m_variableName.isEmpty()) {
-            m_lastVariableValues[m_variableName] = result;
-        }
-    }
-}
-
-// 接收计算线程的计算错误
-void Dashboard::onCalculationError(const QString &dashboardName, const QString &errorMessage)
-{
-    if (dashboardName == objectName()) {
-        m_lastCalculationSucceeded = false;
-        qDebug() << "仪表盘" << objectName() << "计算错误:" << errorMessage;
-    }
-}
-
 // 保留旧的计算公式实现作为备用
 double Dashboard::calculateFormula(const QString &formula, const QMap<QString, double> &variables)
 {
-    // 如果有计算器，使用计算器异步计算
-    if (m_calculator) {
-        m_calculator->requestCalculation(objectName(), formula, variables);
-        return m_lastCalculatedValue; // 返回最后一次计算结果
-    }
-    
     // 否则使用同步计算（老方法）
     // 预处理公式，替换变量为数值
     QString processedFormula = formula;

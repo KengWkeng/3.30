@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(test1 VERSION 1.0 LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets SerialPort SerialBus PrintSupport WebSockets Network OpenGL Qml)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets SerialPort SerialBus PrintSupport WebSockets Network OpenGL Qml core5compat)
 
 qt_standard_project_setup()
 
@@ -108,13 +108,16 @@ endif()
 
 target_link_libraries(test1
     PRIVATE
-        Qt::Core
-        Qt::Widgets
-        Qt::SerialPort
-        Qt::SerialBus
-        Qt::PrintSupport
-        Qt::WebSockets
-        Qt::Network
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::SerialPort
+        Qt6::SerialBus
+        Qt6::PrintSupport
+        Qt6::WebSockets
+        Qt6::Network
+        Qt6::OpenGL
+        Qt6::Qml
+        Qt6::Core5Compat
 )
 
 include(GNUInstallDirs)

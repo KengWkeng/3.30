@@ -49,14 +49,6 @@ static constexpr auto qt_meta_stringdata_ZN9DashboardE = QtMocHelpers::stringDat
     "settings",
     "customVariableFormulaChanged",
     "formula",
-    "setVariableValues",
-    "QMap<QString,double>",
-    "variables",
-    "onCalculationResult",
-    "dashboardName",
-    "result",
-    "onCalculationError",
-    "errorMessage",
     "refreshUI",
     "updateValue",
     "minValue",
@@ -84,26 +76,23 @@ Q_CONSTINIT static const uint qt_meta_data_ZN9DashboardE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      10,   14, // methods
-      15,  104, // properties
+       7,   14, // methods
+      15,   73, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
        5,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    1,   74,    2, 0x06,   16 /* Public */,
-       4,    0,   77,    2, 0x06,   18 /* Public */,
-       5,    0,   78,    2, 0x06,   19 /* Public */,
-       6,    2,   79,    2, 0x06,   20 /* Public */,
-      10,    2,   84,    2, 0x06,   23 /* Public */,
+       1,    1,   56,    2, 0x06,   16 /* Public */,
+       4,    0,   59,    2, 0x06,   18 /* Public */,
+       5,    0,   60,    2, 0x06,   19 /* Public */,
+       6,    2,   61,    2, 0x06,   20 /* Public */,
+      10,    2,   66,    2, 0x06,   23 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-      12,    1,   89,    2, 0x0a,   26 /* Public */,
-      15,    2,   92,    2, 0x0a,   28 /* Public */,
-      18,    2,   97,    2, 0x0a,   31 /* Public */,
-      20,    0,  102,    2, 0x0a,   34 /* Public */,
-      21,    0,  103,    2, 0x08,   35 /* Private */,
+      12,    0,   71,    2, 0x0a,   26 /* Public */,
+      13,    0,   72,    2, 0x08,   27 /* Private */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::Double,    3,
@@ -113,28 +102,25 @@ Q_CONSTINIT static const uint qt_meta_data_ZN9DashboardE[] = {
     QMetaType::Void, QMetaType::QString, QMetaType::QString,    7,   11,
 
  // slots: parameters
-    QMetaType::Void, 0x80000000 | 13,   14,
-    QMetaType::Void, QMetaType::QString, QMetaType::Double,   16,   17,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,   16,   19,
     QMetaType::Void,
     QMetaType::Void,
 
  // properties: name, type, flags, notifyId, revision
        3, QMetaType::Double, 0x00015103, uint(0), 0,
-      22, QMetaType::Double, 0x00015103, uint(1), 0,
-      23, QMetaType::Double, 0x00015103, uint(1), 0,
-      24, QMetaType::Int, 0x00015103, uint(-1), 0,
-      25, QMetaType::QString, 0x00015103, uint(-1), 0,
+      14, QMetaType::Double, 0x00015103, uint(1), 0,
+      15, QMetaType::Double, 0x00015103, uint(1), 0,
+      16, QMetaType::Int, 0x00015103, uint(-1), 0,
+      17, QMetaType::QString, 0x00015103, uint(-1), 0,
+      18, QMetaType::QString, 0x00015103, uint(-1), 0,
+      19, QMetaType::QColor, 0x00015103, uint(-1), 0,
+      20, QMetaType::QColor, 0x00015103, uint(-1), 0,
+      21, 0x80000000 | 22, 0x0001510b, uint(-1), 0,
+      23, QMetaType::QColor, 0x00015103, uint(-1), 0,
+      24, QMetaType::Bool, 0x00015103, uint(-1), 0,
+      25, QMetaType::Double, 0x00015103, uint(-1), 0,
       26, QMetaType::QString, 0x00015103, uint(-1), 0,
-      27, QMetaType::QColor, 0x00015103, uint(-1), 0,
-      28, QMetaType::QColor, 0x00015103, uint(-1), 0,
-      29, 0x80000000 | 30, 0x0001510b, uint(-1), 0,
-      31, QMetaType::QColor, 0x00015103, uint(-1), 0,
-      32, QMetaType::Bool, 0x00015103, uint(-1), 0,
-      33, QMetaType::Double, 0x00015103, uint(-1), 0,
-      34, QMetaType::QString, 0x00015103, uint(-1), 0,
       11, QMetaType::QString, 0x00015103, uint(-1), 0,
-      35, QMetaType::Bool, 0x00015103, uint(-1), 0,
+      27, QMetaType::Bool, 0x00015103, uint(-1), 0,
 
        0        // eod
 };
@@ -193,17 +179,6 @@ Q_CONSTINIT const QMetaObject Dashboard::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
-        // method 'setVariableValues'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const QMap<QString,double> &, std::false_type>,
-        // method 'onCalculationResult'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
-        QtPrivate::TypeAndForceComplete<double, std::false_type>,
-        // method 'onCalculationError'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
         // method 'refreshUI'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'updateValue'
@@ -222,11 +197,8 @@ void Dashboard::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
         case 2: _t->dashboardDoubleClicked(); break;
         case 3: _t->dashboardSettingsChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QMap<QString,QVariant>>>(_a[2]))); break;
         case 4: _t->customVariableFormulaChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
-        case 5: _t->setVariableValues((*reinterpret_cast< std::add_pointer_t<QMap<QString,double>>>(_a[1]))); break;
-        case 6: _t->onCalculationResult((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<double>>(_a[2]))); break;
-        case 7: _t->onCalculationError((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
-        case 8: _t->refreshUI(); break;
-        case 9: _t->updateValue(); break;
+        case 5: _t->refreshUI(); break;
+        case 6: _t->updateValue(); break;
         default: ;
         }
     }
@@ -331,14 +303,14 @@ int Dashboard::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 7)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 7;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 7)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 10;
+        _id -= 7;
     }
     if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
             || _c == QMetaObject::ResetProperty || _c == QMetaObject::BindableProperty
