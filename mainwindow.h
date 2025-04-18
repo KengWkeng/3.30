@@ -48,8 +48,23 @@
 // 新增：引入SnapshotThread
 #include "snapshotthread.h"
 
+// 新增：引入CalibrationDialog
+#include "calibrationdialog.h"
+
 // 前向声明 DashboardCalculator
 class DashboardCalculator;
+
+// 添加ECUThread相关头文件
+#include "ecuthread.h"
+
+// 新增：引入SnapshotThread
+#include "snapshotthread.h"
+
+// 新增：引入CalibrationDialog
+#include "calibrationdialog.h"
+
+// 新增: 运行模式枚举
+enum RunMode { Idle, Normal, Calibration };
 
 // 定义数据源类型枚举
 enum DataSourceType {
@@ -106,6 +121,8 @@ namespace Ui {
 class MainWindow;
 }
 QT_END_NAMESPACE
+
+class CalibrationDialog; // 新增前向声明
 
 class MainWindow : public QMainWindow
 {
@@ -268,7 +285,27 @@ private slots:
 
     void switchPage();
 
+    // 新增校准传感器菜单动作处理槽
+    void on_actionCalibrateSensor_triggered();
+
+    // 新增：校准请求处理槽
+    void handleStartCalibrationRequest();
+    void handleStopCalibrationRequest();
+
+signals:
+    void triggerProcessDataSnapshots();
+    void sendModbusCommand(int serverAddress, int startAddress, int length);
+    void sendModbusInfo(QString portName, int baudRateIndex, int stopBitsIndex, int dataBitsIndex, int parityIndex);
+    void closeModbusConnection();
+    void resetModbusTimer();
+    void openECUPort(const QString &portName);
+    void closeECUPort();
+    void sendModbusResultToWebSocket(const QJsonObject &data, int interval);
+    void sendConfigCounts(int modbusCount, int daqCount);
+
 private:
+    // 创建校准菜单
+    void createCalibrationMenu();
 
     Ui::MainWindow *ui;
     QThread *SubThread_Modbus;
@@ -377,31 +414,14 @@ private:
     // 标记所有采集任务是否在运行中
     bool allCaptureRunning = false;
 
-signals:
-    // 添加触发数据快照处理的信号
-    void triggerProcessDataSnapshots();
+    // 校准对话框
+    CalibrationDialog *calibrationDialog = nullptr; // 初始化为nullptr
 
-    void sendModbusCommand(int serverAddress, int startAddress, int length);
-    
-    // 添加新的信号用于发送串口参数
-    void sendModbusInfo(QString portName, int baudRateIndex, int stopBitsIndex, int dataBitsIndex, int parityIndex);
-    
-    // 添加新的信号用于关闭modbus连接
-    void closeModbusConnection();
+    // 保存原始的数据记录状态
+    bool originalDataLoggingState = true;
 
-    // 添加重置ModBus计时器的信号
-    void resetModbusTimer();
-
-    // ECU相关信号
-    void openECUPort(const QString &portName);
-    void closeECUPort();
-
-    // 添加Modbus数据转发的信号
-    void sendModbusResultToWebSocket(const QJsonObject &data, int interval);
-
-    // Add signal to send config counts
-    void sendConfigCounts(int modbusCount, int daqCount);
-
+    // 新增：运行模式状态
+    RunMode currentRunMode = RunMode::Idle;
 };
 
 

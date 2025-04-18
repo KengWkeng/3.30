@@ -1,6 +1,7 @@
 C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/EWIEGA46WW/moc_mainwindow.cpp: C:/Users/80911/Documents/QT/vs_test/test1/mainwindow.h \
   C:/Users/80911/Documents/QT/vs_test/test1/Art_DAQ.h \
   C:/Users/80911/Documents/QT/vs_test/test1/ControlCAN.h \
+  C:/Users/80911/Documents/QT/vs_test/test1/calibrationdialog.h \
   C:/Users/80911/Documents/QT/vs_test/test1/canthread.h \
   C:/Users/80911/Documents/QT/vs_test/test1/daqthread.h \
   C:/Users/80911/Documents/QT/vs_test/test1/dashboard.h \
@@ -31,6 +32,7 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutex \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QMutexLocker \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QObject \
+  D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPair \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointF \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QPointer \
   D:/Qt/6.8.1/msvc2022_64/include/QtCore/QQueue \
@@ -517,14 +519,25 @@ C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-
   D:/Qt/6.8.1/msvc2022_64/include/QtWebSockets/qwebsockets_global.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtWebSockets/qwebsocketserver.h \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QApplication \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QComboBox \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QCommonStyle \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QDialog \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QDoubleSpinBox \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QFileDialog \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QGridLayout \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QGroupBox \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QHBoxLayout \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QHeaderView \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QLabel \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QLayout \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QMainWindow \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QMessageBox \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QPushButton \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QScrollerProperties \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QStatusBar \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QTableWidget \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QTableWidgetItem \
+  D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QVBoxLayout \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QWidget \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QtWidgets \
   D:/Qt/6.8.1/msvc2022_64/include/QtWidgets/QtWidgetsDepends \

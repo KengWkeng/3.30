@@ -45,6 +45,8 @@ set(PROJECT_SOURCES
         dashboardcalculator.h
         websocketthread.h
         websocketthread.cpp
+        calibrationdialog.h
+        calibrationdialog.cpp
         ${QRC_FILES}
         ${ART_DAQ_LIB_PATH}
         ${HEADERS}
@@ -77,6 +79,8 @@ qt_add_executable(test1
     dashboardcalculator.h
     websocketthread.h
     websocketthread.cpp
+    calibrationdialog.h
+    calibrationdialog.cpp
     ControlCAN.dll
     ControlCAN.h
     ControlCAN.lib

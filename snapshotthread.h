@@ -83,6 +83,17 @@ public:
 
     // 设置滤波状态和参数
     void setFilterEnabled(bool enabled, double timeConstant = 100.0);
+    
+    // 新增: 公共方法用于重新加载校准文件
+    void reloadCalibrationSettings(const QString& filePath);
+
+    // +++ 新增: 公开获取校准参数的方法 +++
+    CalibrationParams getCalibrationParams(const QString& sourceType, int channelIndex);
+    // +++ 结束新增 +++
+
+    // 新增：公共方法设置/获取数据记录状态
+    void setDataLoggingEnabled(bool enabled);
+    bool isDataLoggingEnabled() const;
 
 public slots:
     // 处理Modbus数据
@@ -106,17 +117,17 @@ public slots:
     // New slot to receive config
     void setupLogging(int modbusCount, int daqCount);
 
-    void resetMasterTimer();
+    // Public method to reset the master timer
+    Q_INVOKABLE void resetMasterTimer();
 
 signals:
-    // 数据处理完成，传回主线程进行UI更新
+    // 发送处理好的数据快照
     void snapshotProcessed(const DataSnapshot &snapshot, int snapshotCount);
-
-    // 新增：将数据快照发送到WebSocket
-    void snapshotForWebSocket(const DataSnapshot &snapshot, int snapshotCount);
-
-    // 向WebSocket转发Modbus数据
     void sendModbusResultToWebSocket(const QJsonObject &data, int interval);
+    // 发送给WebSocket线程的统一快照信号 (新增)
+    void snapshotForWebSocket(const DataSnapshot &snapshot, int snapshotCount);
+    // +++ 新增: 发送原始数据快照信号 +++
+    void rawSnapshotReady(const DataSnapshot &rawSnapshot);
 
 private:
     // 数据存储相关变量
@@ -125,6 +136,9 @@ private:
     QElapsedTimer *masterTimer;            // 主计时器，用于同步数据
     int maxQueueSize = 1000;               // 最大队列长度，防止内存占用过多
     int snapshotCount = 0;                 // 快照计数器
+    
+    // 新增：控制是否记录数据到文件
+    bool enableDataLogging = true;         // 默认启用数据记录
 
     // Modbus相关
     bool modbusDataValid = false;          // Modbus数据有效标志
@@ -162,7 +176,6 @@ private:
     // +++ 新增: 私有辅助函数声明 +++
     void loadCalibrationSettings(const QString& filePath);
     double applyCalibration(double rawValue, const CalibrationParams& params);
-    CalibrationParams getCalibrationParams(const QString& sourceType, int channelIndex);
     // +++ 结束新增 +++
 
     // Logging members

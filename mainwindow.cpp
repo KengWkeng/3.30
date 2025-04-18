@@ -12,6 +12,7 @@
 #include <QCoreApplication>
 #include <QScrollBar> // 添加QScrollBar头文件
 #include "dashboard.h"
+#include "calibrationdialog.h" // 添加校准对话框头文件
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,6 +22,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ecuIsConnected(false) // 默认ECU未连接
     , myScrollArea(nullptr) // 初始化滚动区域指针
     , myPlot(nullptr)       // 初始化图表指针为空
+    , calibrationDialog(nullptr) // 初始化校准对话框指针为nullptr
+    , currentRunMode(RunMode::Idle) // Initialize run mode
 {
     // 移除latestECUData初始化，已迁移至SnapshotThread
     
@@ -621,6 +624,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ... 对其他可能存在的 QCustomPlot 实例执行相同操作 ...
     
+    // 创建校准菜单
+    createCalibrationMenu();
 }
 
 MainWindow::~MainWindow()
@@ -674,6 +679,12 @@ MainWindow::~MainWindow()
         snapshotThread->wait();
         delete snpTh;
         delete snapshotThread;
+    }
+    
+    // 清理校准对话框指针
+    if (calibrationDialog) {
+        delete calibrationDialog;
+        calibrationDialog = nullptr;
     }
 }
 
@@ -1556,6 +1567,14 @@ void MainWindow::on_actionSetupInitial_triggered()
     ui->btnSaveData->setEnabled(true);
     ui->btnReadData->setEnabled(true);
     
+    // +++ Enable Calibration Menu +++
+    QAction *calibrateSensorAction = findChild<QAction*>("actionCalibrateSensor");
+    if (calibrateSensorAction) {
+        calibrateSensorAction->setEnabled(true);
+        qDebug() << "Calibrate Sensor action enabled via Setup Initial.";
+    }
+    // +++ End Enable +++
+    
     // 显示提示消息
     QMessageBox::information(this, "初始化已启用", "初始化页面已启用，您可以进行通信设置");
     
@@ -1592,6 +1611,14 @@ void MainWindow::on_actionLoadInitial_triggered()
         ui->btnPageData->setEnabled(true);
         ui->btnSaveData->setEnabled(true);
         ui->btnReadData->setEnabled(true);
+        
+        // +++ Enable Calibration Menu +++
+        QAction *calibrateSensorAction = findChild<QAction*>("actionCalibrateSensor");
+        if (calibrateSensorAction) {
+            calibrateSensorAction->setEnabled(true);
+            qDebug() << "Calibrate Sensor action enabled via Load Initial.";
+        }
+        // +++ End Enable +++
         
         // 显示提示消息
         QMessageBox::information(this, "读取成功", "已成功从文件加载初始化设置");
@@ -3379,6 +3406,10 @@ void MainWindow::handleDashForceSettingsChanged(const QString &dashboardName, co
 // 新增函数：更新所有图表
 void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
 {
+    // +++ Add check for calibration mode +++
+    if (currentRunMode == RunMode::Calibration) {
+        return; // Don't update main window plots during calibration
+    }
     const int maxDataPoints = 600; // Increase buffer size to ~60 seconds
 
     // 更新Modbus图表
@@ -3607,6 +3638,10 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
 // 更新仪表盘数据（从快照）
 void MainWindow::updateDashboardData(const QVector<double> &timeData, const DataSnapshot &snapshot)
 {
+     // +++ Add check for calibration mode +++
+     if (currentRunMode == RunMode::Calibration) {
+         return; // Don't update dashboards during calibration
+     }
     try {
         // 确保有必要的数据才更新仪表盘
         if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid || snapshot.customData.size() > 0) { // 添加对 customData 的检查
@@ -3766,110 +3801,125 @@ void MainWindow::handleModbusData(QVector<double> resultdata, qint64 readTimeInt
 void MainWindow::on_btnStartAll_clicked()
 {
     // 根据当前状态决定是启动还是停止所有采集
-    if (!allCaptureRunning) {
-        // 启动所有采集任务
+    // 修改：检查 currentRunMode 而不是 allCaptureRunning
+    if (currentRunMode == RunMode::Idle) {
+        // === 启动所有采集任务 (Normal Mode) ===
+        currentRunMode = RunMode::Normal; // 设置为正常模式
+        qDebug() << "[MainWindow] Starting Normal Run...";
 
-        
-        // 1. 首先检查并打开Modbus串口
+        // --- Start Modbus ---
         if (ui->btnOpenPort->text() == "打开串口") {
-            // 串口未打开，先点击打开串口按钮
             ui->btnOpenPort->click();
-            qDebug() << "正在打开Modbus串口...";
-            
-            // 等待短暂时间让串口连接完成
+            qDebug() << "Opening Modbus port for Normal Run...";
             QTimer::singleShot(500, this, [this]() {
-                // 检查串口是否已连接成功
                 if (ui->radioButton->isChecked() && ui->btnSend->isEnabled()) {
-                    // 串口已连接，点击"读取"按钮
                     if (ui->btnSend->text() == "读取") {
                         ui->btnSend->click();
-                        qDebug() << "启动Modbus采集";
+                        qDebug() << "Modbus collection started (Normal).";
                     }
                 } else {
-                    qDebug() << "Modbus串口连接失败或未就绪，无法启动Modbus采集";
+                    qDebug() << "Modbus port failed to open or ready, cannot start Modbus (Normal).";
+                    // Optionally revert state if critical components fail
+                    // currentRunMode = RunMode::Idle;
+                    // ui->btnStartAll->setText("一键开始");
                 }
             });
         } else if (ui->radioButton->isChecked() && ui->btnSend->isEnabled()) {
-            // 如果串口已连接，且读取按钮可用，则点击"读取"按钮
             if (ui->btnSend->text() == "读取") {
                 ui->btnSend->click();
-                qDebug() << "启动Modbus采集";
+                qDebug() << "Modbus collection started (Normal).";
             }
         } else {
-            qDebug() << "Modbus串口未连接，无法启动Modbus采集";
+            qDebug() << "Modbus port not connected, cannot start Modbus (Normal).";
         }
-        
-        // 3. 启动ECU采集
-        if (ui->comboSerialECU->count() > 0 && ui->btnECUStart->isEnabled()) {
-            // 如果有可用串口，且启动按钮可用，则点击启动按钮
+
+        // --- Start ECU ---
+        if (ui->comboSerialECU && ui->comboSerialECU->count() > 0) {
             if (ui->btnECUStart->text() == "开始采集") {
                 ui->btnECUStart->click();
-                qDebug() << "启动ECU采集";
+                qDebug() << "ECU collection started (Normal).";
             }
         } else {
-            qDebug() << "ECU串口未连接，无法启动ECU采集";
+            qDebug() << "ECU not available, cannot start ECU (Normal).";
         }
-        
-        // 4. 启动DAQ采集
+
+        // --- Start DAQ ---
         if (ui->startDAQButton->isEnabled()) {
-            // 如果启动按钮可用，则点击启动按钮
             ui->startDAQButton->click();
-            qDebug() << "启动DAQ采集";
+            qDebug() << "DAQ collection started (Normal).";
         } else {
-            qDebug() << "DAQ设备未准备好，无法启动DAQ采集";
+            qDebug() << "DAQ not ready, cannot start DAQ (Normal).";
         }
-        
-        // Get current config counts
+
+        // --- Configure SnapshotThread ---
         int modbusCount = ui->lineSegNum->text().toInt();
         QStringList daqParts = ui->channelsEdit->text().split('/', Qt::SkipEmptyParts);
         int daqCount = daqParts.size();
-
-        // Send config counts to SnapshotThread BEFORE enabling processing/logging
         emit sendConfigCounts(modbusCount, daqCount);
-        qDebug() << "Emitted config counts: Modbus=" << modbusCount << ", DAQ=" << daqCount;
-
-        // Reset the master timer in SnapshotThread to sync start time
         QMetaObject::invokeMethod(snpTh, "resetMasterTimer", Qt::QueuedConnection);
-        qDebug() << "通知 SnapshotThread 重置主计时器";
 
-        // 更新状态
-        allCaptureRunning = true;
-        ui->btnStartAll->setText("停止所有采集");
-        mainTimer->start(); // <--- START the main timer
-        qDebug() << "所有采集任务已启动，主定时器已启动";
-        // Enable processing and START logging in SnapshotThread
+        // +++ Explicitly enable logging for Normal mode +++
+        if (snpTh) {
+            snpTh->setDataLoggingEnabled(true);
+            qDebug() << "[MainWindow] Data logging ENABLED for Normal Run.";
+        }
+
+        // Enable processing in SnapshotThread
         QMetaObject::invokeMethod(snpTh, "setProcessingEnabled", Qt::QueuedConnection, Q_ARG(bool, true));
-        qDebug() << "通知 SnapshotThread 启用处理和日志记录";
-    } else {
-        // 停止所有采集任务
-        // Disable processing and STOP logging in SnapshotThread FIRST
-        QMetaObject::invokeMethod(snpTh, "setProcessingEnabled", Qt::QueuedConnection, Q_ARG(bool, false));
-        qDebug() << "通知 SnapshotThread 禁用处理和日志记录";
-        mainTimer->stop(); // <--- STOP the main timer
-        qDebug() << "主定时器已停止";
+        qDebug() << "[MainWindow] SnapshotThread processing enabled.";
 
-        // 1. 停止Modbus采集
+        // --- Start Timers and Update UI ---
+        allCaptureRunning = true; // Keep this flag for internal logic if needed, but mode is primary
+        mainTimer->start(10); // Ensure timer interval is set
+        ui->btnStartAll->setText("停止所有采集");
+        statusBar()->showMessage("所有采集任务已启动 (正常模式)", 3000);
+        qDebug() << "[MainWindow] All tasks started for Normal Run.";
+
+    } else { // If currentRunMode is Normal or Calibration
+        // === 停止所有采集任务 ===
+        RunMode previousMode = currentRunMode;
+        currentRunMode = RunMode::Idle; // Set to Idle regardless of previous state
+        qDebug() << "[MainWindow] Stopping all tasks from mode:" << previousMode;
+
+        // --- Stop Processing and Timers FIRST ---
+        mainTimer->stop();
+        if (snpTh) {
+            // Disable processing FIRST to prevent further snapshot handling
+            QMetaObject::invokeMethod(snpTh, "setProcessingEnabled", Qt::QueuedConnection, Q_ARG(bool, false));
+            // Disable logging (SnapshotThread might close the file)
+            snpTh->setDataLoggingEnabled(false);
+            qDebug() << "[MainWindow] SnapshotThread processing and logging disabled.";
+        }
+        qDebug() << "[MainWindow] Main timer stopped.";
+
+        // --- Stop Modbus ---
         if (ui->btnSend->text() == "结束") {
             ui->btnSend->click();
-            qDebug() << "停止Modbus采集";
+            qDebug() << "Modbus collection stopped.";
         }
-        
-        // 2. 停止ECU采集
+
+        // --- Stop ECU ---
         if (ui->btnECUStart->text() == "停止采集") {
             ui->btnECUStart->click();
-            qDebug() << "停止ECU采集";
+            qDebug() << "ECU collection stopped.";
         }
-        
-        // 3. 停止DAQ采集
+
+        // --- Stop DAQ ---
         if (ui->stopDAQButton->isEnabled()) {
             ui->stopDAQButton->click();
-            qDebug() << "停止DAQ采集";
+            qDebug() << "DAQ collection stopped.";
         }
-        
-        // 更新状态
+
+        // --- Update UI ---
         allCaptureRunning = false;
-        ui->btnStartAll->setText("启动所有采集");
-        qDebug() << "所有采集任务已停止";
+        ui->btnStartAll->setText("一键开始");
+        // Enable calibration button again if it exists
+        QAction *calibrateSensorAction = findChild<QAction*>("actionCalibrateSensor");
+         if (calibrateSensorAction) {
+            calibrateSensorAction->setEnabled(true); // Re-enable after stopping
+         }
+        statusBar()->showMessage("所有采集任务已停止", 3000);
+        qDebug() << "[MainWindow] All tasks stopped.";
     }
 }
 
@@ -3900,5 +3950,227 @@ void MainWindow::handleSnapshotProcessed(const DataSnapshot &snapshot, int snaps
     } catch (...) {
         qDebug() << "处理快照数据时发生未知错误";
     }
+}
+
+// 创建校准菜单
+void MainWindow::createCalibrationMenu()
+{
+    // 查找现有的菜单，如果不存在则创建
+    QMenu *calibrationMenu = nullptr;
+    QList<QMenu*> menus = ui->menubar->findChildren<QMenu*>();
+    for(QMenu* menu : menus) {
+        if(menu->title() == tr("传感器校准")) {
+            calibrationMenu = menu;
+            break;
+        }
+    }
+    
+    if (!calibrationMenu) {
+        calibrationMenu = new QMenu(tr("传感器校准"), this);
+        ui->menubar->addMenu(calibrationMenu);
+    }
+    
+    // 检查动作是否已存在
+    QAction *calibrateSensorAction = findChild<QAction*>("actionCalibrateSensor");
+    if (!calibrateSensorAction) {
+        calibrateSensorAction = new QAction(tr("校准传感器"), this);
+        calibrateSensorAction->setObjectName("actionCalibrateSensor");
+        
+        // 默认禁用校准选项，等待初始化完成后启用
+        calibrateSensorAction->setEnabled(false);
+        
+        calibrationMenu->addAction(calibrateSensorAction);
+        
+        // 连接校准菜单动作
+        connect(calibrateSensorAction, &QAction::triggered, this, &MainWindow::on_actionCalibrateSensor_triggered);
+    }
+}
+
+// 校准传感器菜单动作处理槽
+void MainWindow::on_actionCalibrateSensor_triggered()
+{
+    if (!snpTh) {
+        QMessageBox::warning(this, tr("错误"), tr("数据采集线程未初始化，无法进行校准!"));
+        return;
+    }
+    qDebug() << "Calibration action triggered.";
+
+    if (!calibrationDialog) {
+        calibrationDialog = new CalibrationDialog(snpTh, this);
+        qDebug() << "Created CalibrationDialog instance.";
+        // +++ Connect calibration signals +++
+        connect(calibrationDialog, &CalibrationDialog::startCalibrationRequested,
+                this, &MainWindow::handleStartCalibrationRequest);
+        connect(calibrationDialog, &CalibrationDialog::stopCalibrationRequested,
+                this, &MainWindow::handleStopCalibrationRequest);
+        // Handle dialog closing potentially needing to stop calibration
+        connect(calibrationDialog, &QDialog::rejected, this, [this](){
+             qDebug() << "Calibration dialog rejected.";
+            if(currentRunMode == RunMode::Calibration) {
+                qDebug() << "-- Stopping calibration run due to dialog rejection.";
+                handleStopCalibrationRequest(); // Stop if calibration is running
+            }
+            // Optional: Clean up dialog pointer if it won't be reused
+            // calibrationDialog->deleteLater();
+            // calibrationDialog = nullptr;
+        });
+         connect(calibrationDialog, &QDialog::accepted, this, [this](){
+             qDebug() << "Calibration dialog accepted (closed via 'Close' button).";
+            if(currentRunMode == RunMode::Calibration) {
+                qDebug() << "-- Stopping calibration run due to dialog acceptance.";
+                handleStopCalibrationRequest(); // Stop if calibration is running
+            }
+            // Optional: Clean up dialog pointer
+            // calibrationDialog->deleteLater();
+            // calibrationDialog = nullptr;
+        });
+    }
+
+    calibrationDialog->show(); // Show non-modally
+    calibrationDialog->raise(); // Bring to front
+    calibrationDialog->activateWindow(); // Activate
+}
+
+// ... (handleStartCalibrationRequest, handleStopCalibrationRequest implementations) ...
+
+// +++ Implement new slots for calibration requests +++
+void MainWindow::handleStartCalibrationRequest()
+{
+    if (currentRunMode != RunMode::Idle) {
+        qWarning() << "[MainWindow] Cannot start calibration run while in mode:" << currentRunMode;
+        // Optionally inform the user or calibration dialog
+        return;
+    }
+
+    currentRunMode = RunMode::Calibration;
+    qDebug() << "[MainWindow] Starting Calibration Run...";
+
+    // --- Disable Logging in SnapshotThread --- (CRITICAL STEP)
+    if (snpTh) {
+        snpTh->setDataLoggingEnabled(false);
+        qDebug() << "[MainWindow] Data logging DISABLED for Calibration Run.";
+    } else {
+        qWarning() << "[MainWindow] SnapshotThread is null! Cannot disable logging.";
+        currentRunMode = RunMode::Idle; // Revert state if thread is invalid
+        return;
+    }
+
+    // --- Start Devices (Similar to Normal Run, but without enabling logging) ---
+    // Start Modbus
+    if (ui->btnOpenPort->text() == "打开串口") {
+        ui->btnOpenPort->click();
+        qDebug() << "Opening Modbus port for Calibration Run...";
+        QTimer::singleShot(500, this, [this]() {
+            if (ui->radioButton->isChecked() && ui->btnSend->isEnabled()) {
+                if (ui->btnSend->text() == "读取") {
+                    ui->btnSend->click();
+                    qDebug() << "Modbus collection started (Calibration).";
+                }
+            } else {
+                qDebug() << "Modbus port failed to open or ready, cannot start Modbus (Calibration).";
+                // Consider stopping if essential components fail
+            }
+        });
+    } else if (ui->radioButton->isChecked() && ui->btnSend->isEnabled()) {
+        if (ui->btnSend->text() == "读取") {
+            ui->btnSend->click();
+            qDebug() << "Modbus collection started (Calibration).";
+        }
+    } else {
+        qDebug() << "Modbus port not connected, cannot start Modbus (Calibration).";
+    }
+
+    // Start ECU
+    if (ui->comboSerialECU && ui->comboSerialECU->count() > 0) {
+        if (ui->btnECUStart->text() == "开始采集") {
+            ui->btnECUStart->click();
+            qDebug() << "ECU collection started (Calibration).";
+        }
+    } else {
+        qDebug() << "ECU not available, cannot start ECU (Calibration).";
+    }
+
+    // Start DAQ
+    if (ui->startDAQButton->isEnabled()) {
+        ui->startDAQButton->click();
+        qDebug() << "DAQ collection started (Calibration).";
+    } else {
+        qDebug() << "DAQ not ready, cannot start DAQ (Calibration).";
+    }
+
+    // --- Configure SnapshotThread (Counts & Timer Reset) ---
+    int modbusCount = ui->lineSegNum->text().toInt();
+    QStringList daqParts = ui->channelsEdit->text().split('/', Qt::SkipEmptyParts);
+    int daqCount = daqParts.size();
+    emit sendConfigCounts(modbusCount, daqCount);
+    if (snpTh) {
+       QMetaObject::invokeMethod(snpTh, "resetMasterTimer", Qt::QueuedConnection);
+    }
+
+    // --- Enable Processing in SnapshotThread (Logging remains disabled) ---
+    if (snpTh) {
+        QMetaObject::invokeMethod(snpTh, "setProcessingEnabled", Qt::QueuedConnection, Q_ARG(bool, true));
+        qDebug() << "[MainWindow] SnapshotThread processing enabled (Calibration).";
+    }
+
+    // --- Start Timers and Update UI ---
+    allCaptureRunning = true;
+    mainTimer->start(10);
+    ui->btnStartAll->setText("采集中 (校准模式)");
+    ui->btnStartAll->setEnabled(false); // Disable main start/stop during calibration
+    QAction *calibrateSensorAction = findChild<QAction*>("actionCalibrateSensor");
+     if (calibrateSensorAction) {
+        calibrateSensorAction->setEnabled(false);
+     }
+    statusBar()->showMessage("校准运行中...", 0);
+    qDebug() << "[MainWindow] All tasks started for Calibration Run.";
+}
+
+void MainWindow::handleStopCalibrationRequest()
+{
+    if (currentRunMode != RunMode::Calibration) {
+        qWarning() << "[MainWindow] Received stop calibration request but not in calibration mode.";
+        return;
+    }
+
+    qDebug() << "[MainWindow] Stopping Calibration Run...";
+    currentRunMode = RunMode::Idle;
+
+    // --- Stop Processing and Timers FIRST ---
+    mainTimer->stop();
+    if (snpTh) {
+        QMetaObject::invokeMethod(snpTh, "setProcessingEnabled", Qt::QueuedConnection, Q_ARG(bool, false));
+        snpTh->setDataLoggingEnabled(false); // Ensure logging is off
+         qDebug() << "[MainWindow] SnapshotThread processing disabled after calibration.";
+    }
+    qDebug() << "[MainWindow] Main timer stopped after calibration.";
+
+    // --- Stop Devices ---
+    // Stop Modbus
+    if (ui->btnSend->text() == "结束") {
+        ui->btnSend->click();
+        qDebug() << "Modbus collection stopped (Calibration).";
+    }
+    // Stop ECU
+    if (ui->btnECUStart->text() == "停止采集") {
+        ui->btnECUStart->click();
+        qDebug() << "ECU collection stopped (Calibration).";
+    }
+    // Stop DAQ
+    if (ui->stopDAQButton->isEnabled()) {
+        ui->stopDAQButton->click();
+        qDebug() << "DAQ collection stopped (Calibration).";
+    }
+
+    // --- Update UI ---
+    allCaptureRunning = false;
+    ui->btnStartAll->setText("一键开始");
+    ui->btnStartAll->setEnabled(true); // Re-enable main button
+    QAction *calibrateSensorAction = findChild<QAction*>("actionCalibrateSensor");
+     if (calibrateSensorAction) {
+        calibrateSensorAction->setEnabled(true);
+     }
+    statusBar()->showMessage("校准运行停止", 3000);
+    qDebug() << "[MainWindow] All tasks stopped after Calibration Run.";
 }
 

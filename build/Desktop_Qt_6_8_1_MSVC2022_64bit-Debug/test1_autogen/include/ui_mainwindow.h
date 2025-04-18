@@ -487,7 +487,7 @@ public:
         font1.setPointSize(10);
         font1.setBold(true);
         labelForce->setFont(font1);
-        labelForce->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        labelForce->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
 
         horizontalLayout_Force->addWidget(labelForce);
 
@@ -525,7 +525,7 @@ public:
         sizePolicy5.setHeightForWidth(labelTorque->sizePolicy().hasHeightForWidth());
         labelTorque->setSizePolicy(sizePolicy5);
         labelTorque->setFont(font1);
-        labelTorque->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        labelTorque->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
 
         horizontalLayout_Torque->addWidget(labelTorque);
 
@@ -560,7 +560,7 @@ public:
         sizePolicy5.setHeightForWidth(labelRPM->sizePolicy().hasHeightForWidth());
         labelRPM->setSizePolicy(sizePolicy5);
         labelRPM->setFont(font1);
-        labelRPM->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        labelRPM->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
 
         horizontalLayout_RPM->addWidget(labelRPM);
 
@@ -595,7 +595,7 @@ public:
         sizePolicy5.setHeightForWidth(labelThrust->sizePolicy().hasHeightForWidth());
         labelThrust->setSizePolicy(sizePolicy5);
         labelThrust->setFont(font1);
-        labelThrust->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        labelThrust->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
 
         horizontalLayout_Thrust->addWidget(labelThrust);
 
@@ -630,7 +630,7 @@ public:
         sizePolicy5.setHeightForWidth(labelFuelConsumption->sizePolicy().hasHeightForWidth());
         labelFuelConsumption->setSizePolicy(sizePolicy5);
         labelFuelConsumption->setFont(font1);
-        labelFuelConsumption->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        labelFuelConsumption->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
 
         horizontalLayout_FuelConsumption->addWidget(labelFuelConsumption);
 
@@ -665,7 +665,7 @@ public:
         sizePolicy5.setHeightForWidth(labelSparkPlugTemp->sizePolicy().hasHeightForWidth());
         labelSparkPlugTemp->setSizePolicy(sizePolicy5);
         labelSparkPlugTemp->setFont(font1);
-        labelSparkPlugTemp->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        labelSparkPlugTemp->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
 
         horizontalLayout_SparkPlugTemp->addWidget(labelSparkPlugTemp);
 
@@ -700,7 +700,7 @@ public:
         sizePolicy5.setHeightForWidth(labelPower->sizePolicy().hasHeightForWidth());
         labelPower->setSizePolicy(sizePolicy5);
         labelPower->setFont(font1);
-        labelPower->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+        labelPower->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
 
         horizontalLayout_Power->addWidget(labelPower);
 
@@ -1366,7 +1366,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        stackedWidget->setCurrentIndex(1);
+        stackedWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);

@@ -479,7 +479,7 @@ QStackedWidget {
                    <string>拉力</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -491,12 +491,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>60</width>
+                    <height>20</height>
+                   </size>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -541,7 +541,7 @@ QStackedWidget {
                    <string>扭矩</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -553,12 +553,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>60</width>
+                    <height>20</height>
+                   </size>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -603,7 +603,7 @@ QStackedWidget {
                    <string>转速</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -615,12 +615,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>60</width>
+                    <height>20</height>
+                   </size>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -665,7 +665,7 @@ QStackedWidget {
                    <string>推力</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -677,12 +677,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>60</width>
+                    <height>20</height>
+                   </size>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -727,7 +727,7 @@ QStackedWidget {
                    <string>油耗</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -739,12 +739,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>60</width>
+                    <height>20</height>
+                   </size>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -789,7 +789,7 @@ QStackedWidget {
                    <string>火花塞温度</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -801,12 +801,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>60</width>
+                    <height>20</height>
+                   </size>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -851,7 +851,7 @@ QStackedWidget {
                    <string>功率</string>
                   </property>
                   <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -863,12 +863,12 @@ QStackedWidget {
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>20</height>
-                    </size>
-                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>60</width>
+                    <height>20</height>
+                   </size>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -896,7 +896,7 @@ QStackedWidget {
          </size>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="page">
          <property name="sizePolicy">

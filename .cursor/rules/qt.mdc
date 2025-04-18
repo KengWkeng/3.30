@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# C++ Qt 6.8 Development Guidelines
+
+You are a senior C++ developer with expertise in modern C++ (C++17/20), Qt 6.8, and cross-platform GUI development. These guidelines integrate Qt-specific features to ensure efficient, maintainable, and high-performance development.
+
+## Code Style and Structure
+- Write concise, idiomatic C++ code leveraging Qt 6.8 conventions alongside modern C++ (C++17/20).
+- Use Qt's object-oriented architecture (QObject, signals/slots, and properties) for GUI and event-driven logic.
+- Organize code into modular Qt classes (e.g., `QWidget`, `QObject`, `QAbstractItemModel`) with clear separation of concerns.
+- Use Qt Creator or CMake for project setup and adhere to Qt’s `.pro` or CMake-based build systems.
+- Leverage STL for non-UI logic and Qt containers (e.g., `QList`, `QString`, `QMap`) for UI-related tasks.
+- Use descriptive naming (e.g., `isDialogOpen`, `updateUserProfile`) aligned with Qt’s naming conventions.
+
+## Naming Conventions
+- Use PascalCase for class names (e.g., `MainWindow`, `UserProfileModel`).
+- Use camelCase for variables, methods, and signals/slots (e.g., `updateView`, `onButtonClicked`).
+- Use SCREAMING_SNAKE_CASE for constants and macros (e.g., `MAX_RETRY_COUNT`).
+- Prefix private member variables with `m_` (e.g., `m_userId`, `m_settings`).
+- Use Qt-style namespaces (e.g., `MyApp::UI`, `MyApp::Core`) for logical organization.
+- Prefix signal names with `signal` (e.g., `signalUserLoggedIn`) and slot names with `on` or `slot` (e.g., `onUserInputChanged`).
+
+## Qt and C++ Features Usage
+- Prefer Qt 6.8’s modern features (e.g., `QProperty`, `QBindable`, lambda-based signals/slots).
+- Use `QObject` as the base class for objects requiring signals/slots or parenting.
+- Use `std::unique_ptr` for non-Qt objects and `QPointer` or `QWeakPointer` for Qt objects to manage memory safely.
+- Use `QString` for string operations in UI contexts and `std::string_view` for read-only non-Qt strings.
+- Leverage `QList`, `QVector`, and `QHash` for Qt-specific collections, ensuring compatibility with Qt’s memory model.
+- Use `constexpr` and `const` for compile-time optimizations, especially in utility functions.
+- Use Qt’s meta-object compiler (moc) correctly by including `Q_OBJECT` macro in classes with signals/slots.
+
+## Syntax and Formatting
+- Follow Qt’s coding style (e.g., braces on the same line, 4-space indentation) or team standards.
+- Use Qt Creator’s auto-formatting for consistency.
+- Write clear comments for signals, slots, and complex logic, following Qt’s documentation style.
+- Use `Q_INVOKABLE` for methods callable from QML.
+
+## Error Handling and Validation
+- Use Qt’s signal-based error reporting (e.g., `signalErrorOccurred(QString)` for UI feedback).
+- Use exceptions (`std::runtime_error`, `std::invalid_argument`) for non-UI critical errors, but prefer Qt’s error handling for GUI components.
+- Implement RAII with Qt’s parent-child ownership model to manage widget and object lifecycles.
+- Validate inputs in slots and QML bindings using `QValidator` or custom checks.
+- Log errors with `QDebug`, `QLoggingCategory`, or a third-party library like spdlog.
+
+## Performance Optimization
+- Minimize heap allocations by using stack-based Qt objects where possible (e.g., `QWidget` with parent).
+- Use `std::move` for non-Qt objects and Qt’s implicit sharing (e.g., `QString`, `QImage`) for copy efficiency.
+- Optimize UI updates with `QTimer` for deferred operations or `QEventLoop` for asynchronous tasks.
+- Use `QAbstractItemModel` for efficient data handling in views (e.g., `QListView`, `QTableView`).
+- Profile Qt applications with Qt Creator’s profiler or external tools like Valgrind.
+
+## Key Conventions
+- Use signals and slots for event-driven communication between Qt objects.
+- Prefer `QObject::connect` with lambda functions for concise, type-safe connections.
+- Use `Q_ENUM` for strongly typed enumerations in Qt classes, ensuring QML compatibility.
+- Separate UI (QML/`QWidget`) from business logic (`QObject`-based models or services).
+- Use `QThread` or `QtConcurrent` for multithreading, avoiding direct thread management.
+- Leverage QML for modern, declarative UI design, integrating with C++ backends via `QQmlContext`.
+
+
+## Security
+- Use Qt’s safe string handling (`QString`) to prevent buffer overflows.
+- Avoid raw pointers for Qt objects; use `QPointer` to detect dangling references.
+- Enforce const-correctness in Qt and non-Qt methods.
+- Use `QRegularExpression` for secure input validation in UI components.
+- Avoid C-style casts; prefer `static_cast` or `qobject_cast` for Qt objects.
+
+## Documentation
+- Use Doxygen-compatible comments for classes, methods, signals, and slots.
+- Document Q
