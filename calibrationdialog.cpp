@@ -424,21 +424,45 @@ void CalibrationDialog::updateChannelComboBox()
 
         // 查找有效通道（只显示有效的）
         QVector<int> deviceValidChannels;
-        if (internalDeviceType == "DAQ" && latestRawSnapshot.daqValid) {
-            for (int i = 0; i < qMin(count, latestRawSnapshot.daqData.size()); ++i) {
-                double val = latestRawSnapshot.daqData[i];
-                if (val != 0.0 && !std::isnan(val) && !std::isinf(val)) {
-                    deviceValidChannels.append(i);
+        if (internalDeviceType == "DAQ") {
+            // For DAQ, always show all configured channels
+            qDebug() << "[CalibrationDialog] DAQ channel count:" << count;
+            qDebug() << "[CalibrationDialog] DAQ data valid:" << latestRawSnapshot.daqValid;
+            if (latestRawSnapshot.daqValid) {
+                qDebug() << "[CalibrationDialog] DAQ data size:" << latestRawSnapshot.daqData.size();
+            }
+
+            // Get DAQ channels from MainWindow
+            QMainWindow *mainWindow = qobject_cast<QMainWindow*>(parent());
+            if (mainWindow) {
+                QLineEdit *channelsEdit = mainWindow->findChild<QLineEdit*>("channelsEdit");
+                if (channelsEdit) {
+                    QString channelStr = channelsEdit->text();
+                    QStringList parts = channelStr.split('/', Qt::SkipEmptyParts);
+                    count = parts.size();
+                    qDebug() << "[CalibrationDialog] DAQ channels from MainWindow:" << channelStr << "Count:" << count;
                 }
             }
-        } else if (internalDeviceType == "ECU" && latestRawSnapshot.ecuValid) {
-            for (int i = 0; i < qMin(count, latestRawSnapshot.ecuData.size()); ++i) {
-                double val = latestRawSnapshot.ecuData[i];
-                if (val != 0.0 && !std::isnan(val) && !std::isinf(val)) {
-                    deviceValidChannels.append(i);
-                }
+
+            // Always add all channels
+            for (int i = 0; i < count; ++i) {
+                deviceValidChannels.append(i);
             }
-        } else if (internalDeviceType == "Custom") {
+        }
+        else if (internalDeviceType == "ECU") {
+            // For ECU, always show all 9 standard channels
+            qDebug() << "[CalibrationDialog] ECU channel count:" << count;
+            qDebug() << "[CalibrationDialog] ECU data valid:" << latestRawSnapshot.ecuValid;
+            if (latestRawSnapshot.ecuValid) {
+                qDebug() << "[CalibrationDialog] ECU data size:" << latestRawSnapshot.ecuData.size();
+            }
+
+            // Always add all ECU channels
+            for (int i = 0; i < count; ++i) {
+                deviceValidChannels.append(i);
+            }
+        }
+        else if (internalDeviceType == "Custom") {
             for (int i = 0; i < qMin(count, latestRawSnapshot.customData.size()); ++i) {
                 deviceValidChannels.append(i); // Custom数据通常是计算出来的，都视为有效
             }
@@ -483,30 +507,52 @@ int CalibrationDialog::getChannelCount(const QString &deviceType)
 // Get display name for a channel
 QString CalibrationDialog::getChannelName(const QString &deviceType, int index)
 {
-    if (deviceType == "ECU") {
-            QStringList ecuNames = {"Throttle(节气门)", "EngineSpeed(转速)", "CylinderTemp(缸温)",
-                                   "ExhaustTemp(排气温度)", "AxleTemp(轴温)", "FuelPressure(油压)",
-                                   "IntakeTemp(进气温度)", "AtmPressure(大气压)", "FlightTime(飞行时间)"};
+    if (deviceType == "Modbus") {
+        return QString(tr("通道 %1")).arg(index);
+    }
+    else if (deviceType == "DAQ") {
+        return QString(tr("力传感器通道 %1")).arg(index);
+    }
+    else if (deviceType == "ECU") {
+        QStringList ecuNames = {
+            tr("节气门开度"),       // Throttle
+            tr("发动机转速"),       // Engine Speed
+            tr("缸温"),                   // Cylinder Temp
+            tr("排气温度"),           // Exhaust Temp
+            tr("轴温"),                   // Axle Temp
+            tr("燃油压力"),           // Fuel Pressure
+            tr("进气温度"),           // Intake Temp
+            tr("大气压力"),           // Atm Pressure
+            tr("飞行时间")            // Flight Time
+        };
+
         if (index >= 0 && index < ecuNames.size()) {
             return ecuNames.at(index);
         }
     }
-    // Default name for other types or invalid ECU index
-    return QString("Channel %1").arg(index);
+    else if (deviceType == "Custom") {
+        return QString(tr("自定义数据 %1")).arg(index);
+    }
+
+    // Default name for other types or invalid index
+    return QString(tr("通道 %1")).arg(index);
 }
 
 // Slot called when device selection changes
 void CalibrationDialog::onDeviceChanged(int index)
 {
     currentDeviceType = deviceComboBox->itemText(index);
-    qDebug() << "[CalibrationDialog] Device changed to:" << currentDeviceType;
+    QString internalDeviceType = getDeviceInternalName(currentDeviceType);
+    qDebug() << "[CalibrationDialog] Device changed to:" << currentDeviceType
+             << "(internal name:" << internalDeviceType << ")";
 
     // Clear existing calibration points when device type changes
     calibrationPoints.clear();
     channelCalibrationPoints.clear();
+    excludedColumns.clear();
 
     // For temperature sensors (Modbus), we need to handle batch calibration
-    if (getDeviceInternalName(currentDeviceType) == "Modbus") {
+    if (internalDeviceType == "Modbus") {
         // Find valid channels first
         findValidChannels();
 
@@ -522,22 +568,62 @@ void CalibrationDialog::onDeviceChanged(int index)
         plot->clearGraphs();
 
         // Create a graph for each valid channel with different colors
-        QVector<QColor> colors = {Qt::blue, Qt::red, Qt::green, Qt::magenta, Qt::cyan,
-                                 Qt::yellow, Qt::darkBlue, Qt::darkRed, Qt::darkGreen};
-
         for (int i = 0; i < validChannels.size(); ++i) {
             int ch = validChannels[i];
             plot->addGraph();
-            plot->graph(i)->setPen(QPen(colors[i % colors.size()]));
-            plot->graph(i)->setName(QString("Channel %1").arg(ch));
+            plot->graph(i)->setPen(QPen(channelColors[i % channelColors.size()]));
+            plot->graph(i)->setName(QString(tr("通道 %1")).arg(ch));
         }
 
         // Set plot properties
-        plot->xAxis->setLabel(tr("Time (s)"));
-        plot->yAxis->setLabel(tr("Temperature Values"));
+        plot->xAxis->setLabel(tr("时间 (s)"));
+        plot->yAxis->setLabel(tr("温度值"));
         plot->legend->setVisible(true);
         plot->replot();
-    } else {
+    }
+    else if (internalDeviceType == "DAQ") {
+        // For DAQ, use single channel mode by default
+        isBatchCalibration = false;
+
+        // Reset to single graph
+        plot->clearGraphs();
+        plot->addGraph();
+        plot->graph(0)->setPen(QPen(Qt::blue));
+        plot->graph(0)->setName(tr("力传感器"));
+        plot->xAxis->setLabel(tr("时间 (s)"));
+        plot->yAxis->setLabel(tr("力值"));
+        plot->legend->setVisible(true);
+        plot->replot();
+
+        // Check if DAQ data is valid
+        if (!latestRawSnapshot.daqValid) {
+            qDebug() << "[CalibrationDialog] Warning: DAQ data is not valid in the latest snapshot";
+        } else {
+            qDebug() << "[CalibrationDialog] DAQ data is valid, channels:" << latestRawSnapshot.daqData.size();
+        }
+    }
+    else if (internalDeviceType == "ECU") {
+        // For ECU, use single channel mode by default
+        isBatchCalibration = false;
+
+        // Reset to single graph
+        plot->clearGraphs();
+        plot->addGraph();
+        plot->graph(0)->setPen(QPen(Qt::green));
+        plot->graph(0)->setName(tr("ECU数据"));
+        plot->xAxis->setLabel(tr("时间 (s)"));
+        plot->yAxis->setLabel(tr("ECU值"));
+        plot->legend->setVisible(true);
+        plot->replot();
+
+        // Check if ECU data is valid
+        if (!latestRawSnapshot.ecuValid) {
+            qDebug() << "[CalibrationDialog] Warning: ECU data is not valid in the latest snapshot";
+        } else {
+            qDebug() << "[CalibrationDialog] ECU data is valid, channels:" << latestRawSnapshot.ecuData.size();
+        }
+    }
+    else {
         // For other device types, use single channel mode
         isBatchCalibration = false;
 
@@ -545,7 +631,7 @@ void CalibrationDialog::onDeviceChanged(int index)
         plot->clearGraphs();
         plot->addGraph();
         plot->graph(0)->setPen(QPen(Qt::blue));
-        plot->graph(0)->setName(getDeviceInternalName(currentDeviceType));
+        plot->graph(0)->setName(internalDeviceType);
         plot->legend->setVisible(false);
         plot->replot();
     }
@@ -743,13 +829,19 @@ double CalibrationDialog::getRawValueFromSnapshot(const DataSnapshot& snapshot)
 {
     if (currentChannelIndex < 0) return 0.0; // Return 0 if channel is invalid
 
-    if (currentDeviceType == "Modbus" && snapshot.modbusValid && currentChannelIndex < snapshot.modbusData.size()) {
+    QString deviceType = getDeviceInternalName(currentDeviceType);
+
+    if (deviceType == "Modbus" && snapshot.modbusValid && currentChannelIndex < snapshot.modbusData.size()) {
         return snapshot.modbusData.at(currentChannelIndex);
     }
-    if (currentDeviceType == "DAQ" && snapshot.daqValid && currentChannelIndex < snapshot.daqData.size()) {
+    else if (deviceType == "DAQ" && snapshot.daqValid && currentChannelIndex < snapshot.daqData.size()) {
+        qDebug() << "[CalibrationDialog] Getting DAQ raw value for channel" << currentChannelIndex
+                 << "from snapshot:" << snapshot.daqData.at(currentChannelIndex);
         return snapshot.daqData.at(currentChannelIndex);
     }
-    if (currentDeviceType == "ECU" && snapshot.ecuValid && currentChannelIndex < snapshot.ecuData.size()) {
+    else if (deviceType == "ECU" && snapshot.ecuValid && currentChannelIndex < snapshot.ecuData.size()) {
+        qDebug() << "[CalibrationDialog] Getting ECU raw value for channel" << currentChannelIndex
+                 << "from snapshot:" << snapshot.ecuData.at(currentChannelIndex);
         return snapshot.ecuData.at(currentChannelIndex);
     }
      if (currentDeviceType == "Custom" && currentChannelIndex < snapshot.customData.size()) {
