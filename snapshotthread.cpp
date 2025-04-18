@@ -15,14 +15,14 @@ SnapshotThread::SnapshotThread(QObject *parent) : QObject(parent),
     // 初始化计时器
     masterTimer = new QElapsedTimer();
     masterTimer->start();
-    
+
     realTimer = new QElapsedTimer();
     realTimer->start();
     lastTimestamp = realTimer->elapsed();
-    
+
     // 初始化滤波相关变量
     filteredValues.resize(16, 0.0); // 默认支持16个通道
-    
+
     // +++ 新增: 加载校准设置 +++
     QString calibFilePath = QCoreApplication::applicationDirPath() + "/calibration.ini"; // <--- 修改路径获取方式
     loadCalibrationSettings(calibFilePath);
@@ -37,7 +37,7 @@ SnapshotThread::~SnapshotThread()
         delete masterTimer;
         masterTimer = nullptr;
     }
-    
+
     if (realTimer) {
         delete realTimer;
         realTimer = nullptr;
@@ -51,11 +51,11 @@ void SnapshotThread::setupMasterTimer()
     if (masterTimer) {
         delete masterTimer;
     }
-    
+
     // 创建新的主计时器并立即启动
     masterTimer = new QElapsedTimer();
     masterTimer->start();
-    
+
     qDebug() << "主计时器已初始化并启动";
 }
 
@@ -68,11 +68,11 @@ void SnapshotThread::resetMasterTimer()
     } else {
         qDebug() << "[SnapshotThread] Warning: resetMasterTimer called but masterTimer is null!";
         // Optionally recreate it if necessary
-        setupMasterTimer(); 
+        setupMasterTimer();
     }
     snapshotCount = 0; // Also reset snapshot count
     // Reset data buffers if needed, e.g., snapshotQueue.clear(); - uncomment if desired
-    // snapshotQueue.clear(); 
+    // snapshotQueue.clear();
 }
 
 // 应用一阶低通滤波器
@@ -88,7 +88,7 @@ double SnapshotThread::applyLowPassFilter(double input, double prevOutput, doubl
 QVector<double> SnapshotThread::applyFilterToResults(const QVector<double> &rawData, qint64 deltaT)
 {
     QVector<double> filtered = rawData;
-    
+
     // 确保filteredValues大小与rawData大小一致
     if (filteredValues.size() != rawData.size()) {
         filteredValues.resize(rawData.size());
@@ -96,7 +96,7 @@ QVector<double> SnapshotThread::applyFilterToResults(const QVector<double> &rawD
             filteredValues[i] = 0.0;
         }
     }
-    
+
     // 对每个通道分别应用滤波器
     if (filterEnabled) {
         for (int i = 0; i < rawData.size(); i++) {
@@ -104,13 +104,13 @@ QVector<double> SnapshotThread::applyFilterToResults(const QVector<double> &rawD
             double prevOutput = filteredValues[i];
             double input = rawData[i];
             double output = applyLowPassFilter(input, prevOutput, filterTimeConstant, deltaT / 1000.0);
-            
+
             // 更新滤波后的值
             filtered[i] = output;
             filteredValues[i] = output;
         }
     }
-    
+
     return filtered;
 }
 
@@ -128,31 +128,31 @@ void SnapshotThread::handleModbusData(QVector<double> resultdata, qint64 readTim
         qDebug() << "警告: 主计时器未初始化，无法处理Modbus数据";
         return;
     }
-    
+
     try {
         // 检查数据是否有效
         if (resultdata.isEmpty()) {
             qDebug() << "警告: 收到空的Modbus数据";
             return;
         }
-        
+
         qDebug() << "处理Modbus数据: " << resultdata;
-        
+
         // 确保modbusNumRegs与数据大小一致
         if (modbusNumRegs != resultdata.size()) {
             modbusNumRegs = resultdata.size();
         }
-        
+
         // 应用滤波处理 - 不管UI控制，直接进行滤波
         QVector<double> filteredData = applyFilterToResults(resultdata, readTimeInterval);
-        
+
         // 标记Modbus数据有效
         modbusDataValid = true;
-        
+
         // 更新currentSnapshot使用滤波后的数据
         currentSnapshot.modbusValid = true;
         currentSnapshot.modbusData = filteredData;
-        
+
         // 保持数据到modbusData，用于兼容其他可能使用它的代码
         // 确保modbusData已经初始化为正确大小
         if (modbusData.size() != resultdata.size()) {
@@ -161,18 +161,18 @@ void SnapshotThread::handleModbusData(QVector<double> resultdata, qint64 readTim
                 modbusData[i].clear();
             }
         }
-        
+
         // 将滤波后的数据添加到数据缓冲区
         for (int i = 0; i < filteredData.size(); i++) {
             // 添加数据到存储
             modbusData[i].append(filteredData[i]);
-            
+
             // 限制数据点数量，避免内存占用过多
             while (modbusData[i].size() > 10000) {
                 modbusData[i].removeFirst();
             }
         }
-        
+
         // 如果需要，你可以在这里添加将数据发送到WebSocket的代码
         // 创建JSON对象，包含Modbus数据
         QJsonObject modbusJson;
@@ -184,7 +184,7 @@ void SnapshotThread::handleModbusData(QVector<double> resultdata, qint64 readTim
         }
         modbusJson["data"] = dataArray;
         emit sendModbusResultToWebSocket(modbusJson, readTimeInterval);
-        
+
     } catch (const std::exception& e) {
         qDebug() << "处理Modbus数据时出错: " << e.what();
     } catch (...) {
@@ -200,35 +200,35 @@ void SnapshotThread::handleDAQData(const QVector<double> &timeData, const QVecto
             qDebug() << "警告: 收到空的DAQ数据";
             return;
         }
-        
+
         // 更新DAQ状态
         daqIsAcquiring = true;
         daqNumChannels = channelData.size();
-        
+
         // 保存时间数据
         daqTimeData = timeData;
-        
+
         // 确保daqChannelData大小正确
         if (daqChannelData.size() != daqNumChannels) {
             daqChannelData.resize(daqNumChannels);
         }
-        
+
         // 保存通道数据
         for (int i = 0; i < daqNumChannels; i++) {
             // 追加新数据
             daqChannelData[i].append(channelData[i]);
-            
+
             // 限制数据点数量
             const int maxPoints = 10000;
             while (daqChannelData[i].size() > maxPoints) {
                 daqChannelData[i].removeFirst();
             }
         }
-        
+
         // 更新当前快照中的DAQ数据
         currentSnapshot.daqValid = true;
         currentSnapshot.daqRunning = true;
-        
+
         // 如果daqChannelData不为空，更新快照中的DAQ数据
         if (!daqChannelData.isEmpty()) {
             currentSnapshot.daqData.resize(daqNumChannels);
@@ -241,7 +241,7 @@ void SnapshotThread::handleDAQData(const QVector<double> &timeData, const QVecto
                 }
             }
         }
-        
+
     } catch (const std::exception& e) {
         qDebug() << "处理DAQ数据时出错: " << e.what();
     } catch (...) {
@@ -281,22 +281,22 @@ void SnapshotThread::handleECUData(const ECUData &data)
         ecuValues[6] = data.intakeTemp;
         ecuValues[7] = data.atmPressure;
         ecuValues[8] = data.flightTime;
-        
 
-        
 
-        
+
+
+
         // 注意：不再直接更新图表，统一由processDataSnapshots处理
         // 更新当前快照，以便processDataSnapshots能够获取最新数据
         currentSnapshot.ecuValid = true;
         currentSnapshot.ecuData = ecuValues;
-        
+
         // 调试信息
-        qDebug() << "收到ECU数据: 节气门=" << data.throttle 
+        qDebug() << "收到ECU数据: 节气门=" << data.throttle
                  << "%, 转速=" << data.engineSpeed << "rpm"
                  << ", ecuDataValid=" << ecuDataValid
                  << ", snapEcuIsConnected=" << snapEcuIsConnected;
-        
+
     } catch (const std::exception& e) {
         qDebug() << "处理ECU数据时出错: " << e.what();
     } catch (...) {
@@ -309,21 +309,21 @@ void SnapshotThread::handleECUConnectionStatus(bool connected, QString message)
 {
     // 添加详细调试信息，帮助追踪函数是否被调用
     qDebug() << "===> [SnapshotThread] handleECUConnectionStatus called: connected=" << connected << ", message=" << message;
-    
+
     // 更新ECU连接状态
     snapEcuIsConnected = connected;
     qDebug() << "===> [SnapshotThread] snapEcuIsConnected set to:" << snapEcuIsConnected;
-    
+
     // 如果连接断开，则标记ECU数据无效
     if (!connected) {
         ecuDataValid = false;
-        
+
         // 更新当前快照中的ECU状态
         currentSnapshot.ecuValid = false;
     }
-    
+
     qDebug() << "===> 更新后的ECU状态: 已连接=" << snapEcuIsConnected << ", 数据有效=" << ecuDataValid;
-    
+
     // 手动触发数据快照处理，确保状态变化立即反映
     QMetaObject::invokeMethod(this, &SnapshotThread::processDataSnapshots, Qt::QueuedConnection);
 }
@@ -393,7 +393,7 @@ void SnapshotThread::processDataSnapshots()
         }
 
         // Custom Data (计算基于 *原始* DAQ 和 ECU 数据)
-        rawSnapshot.customData.resize(5); 
+        rawSnapshot.customData.resize(5);
         rawSnapshot.customData.fill(0.0);
         if (rawSnapshot.daqValid && rawSnapshot.ecuValid && rawSnapshot.daqData.size() >= 3 && rawSnapshot.ecuData.size() >= 9) {
             rawSnapshot.customData[0] = rawSnapshot.daqData[0] * rawSnapshot.ecuData[0]*10.0;
@@ -450,7 +450,7 @@ void SnapshotThread::processDataSnapshots()
         // --- End Apply Calibration ---
 
         // 增加快照计数 (移到此处，确保在处理完成后增加)
-        snapshotCount++; 
+        snapshotCount++;
         snapshot.snapshotIndex = snapshotCount; // Update index in the final snapshot
 
         // 将 *校准后* 的快照添加到队列中
@@ -491,18 +491,18 @@ void SnapshotThread::processDataSnapshots()
 void SnapshotThread::setFilterEnabled(bool enabled, double timeConstant)
 {
     filterEnabled = enabled;
-    
+
     // 如果禁用滤波器，则清除之前的滤波数据
     if (!filterEnabled) {
         filteredValues.clear();
     }
-    
+
     // 更新滤波时间常数
     if (timeConstant > 0) {
         filterTimeConstant = timeConstant / 1000.0; // 转换为秒
     }
-    
-    qDebug() << "SnapshotThread: 滤波状态已更新为" << (enabled ? "启用" : "禁用") 
+
+    qDebug() << "SnapshotThread: 滤波状态已更新为" << (enabled ? "启用" : "禁用")
              << "时间常数:" << filterTimeConstant << "秒";
 }
 
@@ -727,19 +727,19 @@ void SnapshotThread::loadCalibrationSettings(const QString& filePath)
             if (equalsPos != -1) {
                 QString key = line.left(equalsPos).trimmed();
                 QString valueString = line.mid(equalsPos + 1).trimmed();
-                
+
                 // 移除引号（如果存在）
                 if (valueString.startsWith('"') && valueString.endsWith('"')) {
                     valueString = valueString.mid(1, valueString.length() - 2);
                 }
-                
-                // 移除最后的时间戳（如果存在）
-                // 时间戳格式如：|2023-05-20 14:30:45|
-                int timeStampStart = valueString.indexOf('|');
+
+                // 移除时间戳（如果存在）
+                // 时间戳格式如：; Timestamp: 2023-05-20 14:30:45
+                int timeStampStart = valueString.indexOf(QString("; Timestamp:"));
                 if (timeStampStart != -1) {
                     valueString = valueString.left(timeStampStart).trimmed();
                 }
-                
+
                 // Remove potential inline comments
                 int commentPos = valueString.indexOf(';');
                 if (commentPos != -1) {
