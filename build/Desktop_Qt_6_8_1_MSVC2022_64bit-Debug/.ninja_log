@@ -60,3 +60,10 @@
 150	4329	7667683256298864	CMakeFiles/test1.dir/calibrationdialog.cpp.obj	c3d1619710c84105
 149	4890	7667683256278864	CMakeFiles/test1.dir/mainwindow.cpp.obj	c64a661f0414e6b2
 4890	5190	7667683303691209	test1.exe	29da4d36f96c0f3b
+34	156	7667863677660316	test1_autogen/timestamp	3ccc2c62dc7625e1
+34	156	7667863677660316	test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+34	156	7667863677660316	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/timestamp	3ccc2c62dc7625e1
+34	156	7667863677660316	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+159	4347	7667863678900306	CMakeFiles/test1.dir/calibrationdialog.cpp.obj	c3d1619710c84105
+157	4937	7667863678890307	CMakeFiles/test1.dir/mainwindow.cpp.obj	c64a661f0414e6b2
+4937	5260	7667863726685434	test1.exe	29da4d36f96c0f3b

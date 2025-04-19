@@ -1322,71 +1322,9 @@ void CalibrationDialog::onRemovePointClicked()
         int row = selectedItem->row();
         int col = selectedItem->column();
 
-        // Check if header row or standard value row is selected (column exclusion)
-        if ((row == 0 || row == 1) && col > 0) {
-            // User selected a column header or standard value - ask if they want to exclude this column
-            QTableWidgetItem *headerItem = calibrationTable->item(0, col); // Column header
-            QTableWidgetItem *stdValueItem = calibrationTable->item(1, col); // Standard value
-            if (!headerItem || !stdValueItem) {
-                QMessageBox::warning(this, tr("警告"), tr("无法获取标准值信息!"));
-                return;
-            }
-
-            double standardValue = stdValueItem->data(Qt::UserRole).toDouble();
-            int columnIndex = headerItem->data(Qt::UserRole + 1).toInt();
-
-            // Check if this column is already excluded
-            bool isExcluded = excludedColumns.contains(col);
-
-            QMessageBox::StandardButton reply;
-            if (isExcluded) {
-                // Ask if user wants to include this column again
-                reply = QMessageBox::question(this, tr("确认"),
-                                            tr("标准值 %1 (列 #%2) 当前已被排除。\n\n是否要重新包含该列数据？")
-                                            .arg(standardValue)
-                                            .arg(columnIndex),
-                                            QMessageBox::Yes | QMessageBox::No);
-
-                if (reply == QMessageBox::Yes) {
-                    // Remove from excluded list
-                    excludedColumns.remove(col);
-
-                    // Update header and standard value appearance
-                    headerItem->setBackground(QBrush(QColor(240, 240, 240))); // Reset background
-                    headerItem->setForeground(QBrush(QColor(0, 0, 0))); // Black text for header
-                    stdValueItem->setBackground(QBrush(QColor(240, 240, 240))); // Reset background
-                    stdValueItem->setForeground(QBrush(QColor(0, 0, 180))); // Blue text for standard values
-
-                    qDebug() << "[CalibrationDialog] Re-included column" << col << "with standard value" << standardValue;
-                }
-            } else {
-                // Ask if user wants to exclude this column
-                reply = QMessageBox::question(this, tr("确认"),
-                                            tr("是否要排除标准值 %1 (列 #%2) 的数据？\n\n排除后该列数据将不会用于校准计算。")
-                                            .arg(standardValue)
-                                            .arg(columnIndex),
-                                            QMessageBox::Yes | QMessageBox::No);
-
-                if (reply == QMessageBox::Yes) {
-                    // Add to excluded list
-                    excludedColumns.insert(col);
-
-                    // Update header and standard value appearance to indicate exclusion
-                    headerItem->setBackground(QBrush(QColor(255, 200, 200))); // Light red background
-                    headerItem->setForeground(QBrush(QColor(150, 0, 0))); // Dark red text
-                    stdValueItem->setBackground(QBrush(QColor(255, 200, 200))); // Light red background
-                    stdValueItem->setForeground(QBrush(QColor(150, 0, 0))); // Dark red text
-
-                    qDebug() << "[CalibrationDialog] Excluded column" << col << "with standard value" << standardValue;
-                }
-            }
-
-            return;
-        }
-
-        // 如果选中的是通道列，则不允许删除
+        // 如果选中的是通道列（第一列），则不允许删除
         if (col == 0) {
-            QMessageBox::warning(this, tr("警告"), tr("请选择数据单元格或标准值列标题!"));
+            QMessageBox::warning(this, tr("警告"), tr("请选择数据列！不能删除通道列。"));
             return;
         }
 
@@ -1399,38 +1337,34 @@ void CalibrationDialog::onRemovePointClicked()
 
         double standardValue = stdValueItem->data(Qt::UserRole).toDouble();
 
-        // 获取通道编号（从行标题）
-        QTableWidgetItem *channelItem = calibrationTable->item(row, 0);
-        if (!channelItem) {
-            QMessageBox::warning(this, tr("警告"), tr("无法获取通道信息!"));
-            return;
-        }
-
-        int channelIndex = channelItem->data(Qt::UserRole).toInt();
-
-        // 确认删除
+        // 确认删除整列
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(this, tr("确认"),
-                                    tr("是否要删除通道 %1 的标准值 %2 的校准点？")
-                                    .arg(channelIndex)
+                                    tr("是否要删除标准值 %1 的所有校准点？\n\n这将删除所有通道在该标准值下的数据。")
                                     .arg(standardValue),
                                     QMessageBox::Yes | QMessageBox::No);
 
         if (reply == QMessageBox::Yes) {
-            // 从数据结构中移除该通道的该标准值的校准点
-            if (channelCalibrationPoints.contains(channelIndex)) {
-                QVector<QPair<double, double>> &points = channelCalibrationPoints[channelIndex];
+            // 从所有通道的数据结构中移除该标准值的校准点
+            for (auto it = channelCalibrationPoints.begin(); it != channelCalibrationPoints.end(); ++it) {
+                int channelIndex = it.key();
+                QVector<QPair<double, double>> &points = it.value();
                 for (int i = points.size() - 1; i >= 0; --i) {
                     if (qFuzzyCompare(points[i].second, standardValue)) {
                         points.remove(i);
                         qDebug() << "[CalibrationDialog] Removed calibration point for channel" << channelIndex
                                 << "with standard value" << standardValue;
-                        break;
                     }
                 }
             }
 
-            // 更新表格
+            // 从排除列表中移除该列（如果存在）
+            if (excludedColumns.contains(col)) {
+                excludedColumns.remove(col);
+                qDebug() << "[CalibrationDialog] Removed column" << col << "from excluded columns list";
+            }
+
+            // 完全重建表格
             updateMultiChannelCalibrationTable();
         }
     } else {
@@ -1492,6 +1426,7 @@ bool CalibrationDialog::saveMultiChannelCalibration()
     QString calibFilePath = QCoreApplication::applicationDirPath() + "/calibration.ini";
     qDebug() << "[CalibrationDialog] Attempting to save batch calibration to:" << calibFilePath;
 
+    // 首先读取现有的配置文件，以保留其他通道的设置
     QSettings settings(calibFilePath, QSettings::IniFormat);
 
     // 检查文件是否可写
@@ -1523,6 +1458,7 @@ bool CalibrationDialog::saveMultiChannelCalibration()
     // 写入每个通道的校准系数
     QString internalDeviceType = getDeviceInternalName(currentDeviceType);
 
+    // 只更新当前校准的通道，而不是整个INI文件
     for (auto it = channelCalibrationResults.begin(); it != channelCalibrationResults.end(); ++it) {
         int ch = it.key();
         const CalibrationParams &params = it.value();
@@ -1538,9 +1474,9 @@ bool CalibrationDialog::saveMultiChannelCalibration()
         // 构造键（例如：Modbus/Channel_0）
         QString key = QString("%1/Channel_%2").arg(internalDeviceType).arg(ch);
 
-        qDebug() << "[CalibrationDialog] Saving batch calibration - Key:" << key << "Value:" << coeffsString;
+        qDebug() << "[CalibrationDialog] Saving calibration for channel" << ch << "- Key:" << key << "Value:" << coeffsString;
 
-        // 写入值
+        // 只更新当前通道的值
         settings.setValue(key, coeffsString);
     }
 
@@ -1556,8 +1492,8 @@ bool CalibrationDialog::saveMultiChannelCalibration()
     if (snapshotThread) {
         QMetaObject::invokeMethod(snapshotThread, "reloadCalibrationSettings", Qt::QueuedConnection,
                                   Q_ARG(QString, calibFilePath));
-        qDebug() << "[CalibrationDialog] Requested SnapshotThread to reload calibration settings after batch save.";
-        } else {
+        qDebug() << "[CalibrationDialog] Requested SnapshotThread to reload calibration settings after save.";
+    } else {
         qWarning() << "[CalibrationDialog] SnapshotThread is null, cannot trigger settings reload!";
     }
 
@@ -1868,6 +1804,7 @@ bool CalibrationDialog::saveCalibrationToFile()
     QString calibFilePath = QCoreApplication::applicationDirPath() + "/calibration.ini";
     qDebug() << "[CalibrationDialog] Attempting to save calibration to:" << calibFilePath;
 
+    // 首先读取现有的配置文件，以保留其他通道的设置
     QSettings settings(calibFilePath, QSettings::IniFormat);
 
     // Check if the file could be opened for writing
@@ -1879,15 +1816,15 @@ bool CalibrationDialog::saveCalibrationToFile()
              if (!file.open(QIODevice::WriteOnly)) {
                  qWarning() << "[CalibrationDialog] Could not create calibration file.";
                  return false;
-    }
-    file.close();
+             }
+             file.close();
              // Retry opening with QSettings
              settings.sync(); // Force reload
              if (!settings.isWritable()) {
                  qWarning() << "[CalibrationDialog] Still cannot write to calibration file after creation attempt.";
                  return false;
              }
-    } else {
+         } else {
               qWarning() << "[CalibrationDialog] Calibration file exists but is not writable.";
               return false; // File exists but isn't writable
          }
@@ -1907,9 +1844,9 @@ bool CalibrationDialog::saveCalibrationToFile()
     // Construct the key (e.g., Modbus/Channel_0)
     QString key = QString("%1/Channel_%2").arg(getDeviceInternalName(currentDeviceType)).arg(currentChannelIndex);
 
-    qDebug() << "[CalibrationDialog] Saving Key:" << key << "Value:" << coeffsString;
+    qDebug() << "[CalibrationDialog] Saving calibration for channel" << currentChannelIndex << "- Key:" << key << "Value:" << coeffsString;
 
-    // Write the value
+    // 只更新当前通道的值，而不是整个INI文件
     settings.setValue(key, coeffsString);
 
     // Ensure data is written to disk
@@ -1925,7 +1862,7 @@ bool CalibrationDialog::saveCalibrationToFile()
         // Use QMetaObject::invokeMethod to ensure it's called in the SnapshotThread's context if needed
         QMetaObject::invokeMethod(snapshotThread, "reloadCalibrationSettings", Qt::QueuedConnection,
                                   Q_ARG(QString, calibFilePath));
-        qDebug() << "[CalibrationDialog] Requested SnapshotThread to reload calibration settings.";
+        qDebug() << "[CalibrationDialog] Requested SnapshotThread to reload calibration settings after save.";
     } else {
          qWarning() << "[CalibrationDialog] SnapshotThread is null, cannot trigger settings reload!";
     }
@@ -1993,10 +1930,14 @@ void CalibrationDialog::updateMultiChannelCalibrationTable()
     }
     std::sort(sortedCalibValues.begin(), sortedCalibValues.end());
 
-    // Clear the table completely
+    // Clear the table completely and reset it
     calibrationTable->clear();
     calibrationTable->setRowCount(0);
     calibrationTable->setColumnCount(0);
+    calibrationTable->clearContents();
+    calibrationTable->clearSpans();
+    calibrationTable->clearSelection();
+    calibrationTable->clearFocus();
 
     // If no calibration values, return after clearing
     if (sortedCalibValues.isEmpty()) {
@@ -2105,6 +2046,9 @@ void CalibrationDialog::updateMultiChannelCalibrationTable()
     // Resize columns to content
     calibrationTable->resizeColumnsToContents();
     calibrationTable->resizeRowsToContents();
+
+    // Force a complete repaint to eliminate any visual artifacts
+    calibrationTable->repaint();
 }
 
 // 为每个通道执行三次函数拟合
