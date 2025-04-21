@@ -58,3 +58,12 @@
 1809	8213	7669237218020063	CMakeFiles/test1.dir/qcustomplot.cpp.obj	8b8aca417a651ee2
 1798	8303	7669237217900013	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	7aa77aab2124051b
 8304	8771	7669237282960952	test1.exe	29da4d36f96c0f3b
+42	886	7669325792471712	test1_autogen/timestamp	3ccc2c62dc7625e1
+42	886	7669325792471712	test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+42	886	7669325792471712	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/timestamp	3ccc2c62dc7625e1
+42	886	7669325792471712	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+896	2090	7669325793471724	CMakeFiles/test1.dir/daqthread.cpp.obj	3fb5d60088e00368
+891	4907	7669325793421729	CMakeFiles/test1.dir/main.cpp.obj	f93de1dcca96acc2
+893	5883	7669325793441734	CMakeFiles/test1.dir/mainwindow.cpp.obj	c64a661f0414e6b2
+888	6767	7669325793391721	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	7aa77aab2124051b
+6768	7235	7669325852189942	test1.exe	29da4d36f96c0f3b

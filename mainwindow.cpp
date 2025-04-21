@@ -708,7 +708,56 @@ MainWindow::~MainWindow()
 // DAQ相关实现
 void MainWindow::setupDAQPlot()
 {
+    // 创建DAQ滤波器控制面板
+    QGroupBox *daqFilterGroupBox = new QGroupBox("DAQ滤波器设置", ui->groupBoxDAQ);
+    QVBoxLayout *daqFilterLayout = new QVBoxLayout(daqFilterGroupBox);
 
+    // 创建启用/禁用滤波器的复选框
+    QCheckBox *daqFilterEnabledCheckBox = new QCheckBox("启用FIR低通滤波器");
+    daqFilterEnabledCheckBox->setObjectName("daqFilterEnabledCheckBox");
+    daqFilterLayout->addWidget(daqFilterEnabledCheckBox);
+
+    // 创建截止频率设置控件
+    QHBoxLayout *cutoffLayout = new QHBoxLayout();
+    QLabel *cutoffLabel = new QLabel("截止频率 (Hz):");
+    QLineEdit *cutoffEdit = new QLineEdit();
+    cutoffEdit->setObjectName("daqCutoffEdit");
+    cutoffEdit->setText("100"); // 默认100Hz
+    cutoffEdit->setValidator(new QDoubleValidator(1.0, 5000.0, 1, cutoffEdit)); // 限制输入范围
+    cutoffLayout->addWidget(cutoffLabel);
+    cutoffLayout->addWidget(cutoffEdit);
+    daqFilterLayout->addLayout(cutoffLayout);
+
+    // 创建应用按钮
+    QPushButton *applyFilterBtn = new QPushButton("应用滤波器设置");
+    applyFilterBtn->setObjectName("daqApplyFilterBtn");
+    daqFilterLayout->addWidget(applyFilterBtn);
+
+    // 将滤波器控制面板添加到DAQ组框布局中
+    ui->horizontalLayout_daq->addWidget(daqFilterGroupBox);
+
+    // 连接信号和槽
+    connect(daqFilterEnabledCheckBox, &QCheckBox::stateChanged, this, [this](int state) {
+        bool enabled = (state == Qt::Checked);
+        if (daqTh) {
+            daqTh->setFilterEnabled(enabled);
+            statusBar()->showMessage(QString("DAQ FIR滤波器已%1").arg(enabled ? "启用" : "禁用"), 3000);
+        }
+    });
+
+    connect(applyFilterBtn, &QPushButton::clicked, this, [this]() {
+        QLineEdit *cutoffEdit = findChild<QLineEdit*>("daqCutoffEdit");
+        if (cutoffEdit && daqTh) {
+            bool ok;
+            double frequency = cutoffEdit->text().toDouble(&ok);
+            if (ok && frequency > 0) {
+                daqTh->setCutoffFrequency(frequency);
+                statusBar()->showMessage(QString("DAQ FIR滤波器截止频率已设置为 %1 Hz").arg(frequency), 3000);
+            } else {
+                statusBar()->showMessage("无效的截止频率值", 3000);
+            }
+        }
+    });
 }
 
 
@@ -879,6 +928,22 @@ void MainWindow::on_startDAQButton_clicked()
     QTimer::singleShot(100, this, [=]() {
         // 初始化DAQ任务
         daqTh->initDAQ(deviceName, channelStr, sampleRate, 1000);
+
+        // 应用滤波器设置
+        QCheckBox *daqFilterEnabledCheckBox = findChild<QCheckBox*>("daqFilterEnabledCheckBox");
+        QLineEdit *cutoffEdit = findChild<QLineEdit*>("daqCutoffEdit");
+
+        if (daqFilterEnabledCheckBox && cutoffEdit) {
+            bool filterEnabled = daqFilterEnabledCheckBox->isChecked();
+            double cutoffFrequency = cutoffEdit->text().toDouble();
+
+            // 设置滤波器参数
+            daqTh->setFilterEnabled(filterEnabled);
+            daqTh->setCutoffFrequency(cutoffFrequency);
+
+            qDebug() << "DAQ FIR滤波器状态:" << (filterEnabled ? "启用" : "禁用")
+                     << "截止频率:" << cutoffFrequency << "Hz";
+        }
 
         // 使用QTimer确保initDAQ完成后再开始采集
         QTimer::singleShot(50, this, [=]() {
@@ -1720,6 +1785,12 @@ bool MainWindow::saveInitialSettings(const QString &filename)
     if (ui->deviceNameEdit) settings.setValue("DeviceName", ui->deviceNameEdit->text());
     if (ui->channelsEdit) settings.setValue("Channels", ui->channelsEdit->text());
     if (ui->sampleRateEdit) settings.setValue("SampleRate", ui->sampleRateEdit->text());
+
+    // 保存DAQ滤波器设置
+    QCheckBox *daqFilterEnabledCheckBox = findChild<QCheckBox*>("daqFilterEnabledCheckBox");
+    QLineEdit *cutoffEdit = findChild<QLineEdit*>("daqCutoffEdit");
+    if (daqFilterEnabledCheckBox) settings.setValue("FilterEnabled", daqFilterEnabledCheckBox->isChecked());
+    if (cutoffEdit) settings.setValue("CutoffFrequency", cutoffEdit->text());
     settings.endGroup();
 
     // 保存滤波器设置
@@ -1813,6 +1884,22 @@ bool MainWindow::loadInitialSettings(const QString &filename)
         updateDashboardDAQChannels(channels);
     }
     if (ui->sampleRateEdit) ui->sampleRateEdit->setText(settings.value("SampleRate", "10000").toString());
+
+    // 加载DAQ滤波器设置
+    QCheckBox *daqFilterEnabledCheckBox = findChild<QCheckBox*>("daqFilterEnabledCheckBox");
+    QLineEdit *cutoffEdit = findChild<QLineEdit*>("daqCutoffEdit");
+    if (daqFilterEnabledCheckBox) daqFilterEnabledCheckBox->setChecked(settings.value("FilterEnabled", false).toBool());
+    if (cutoffEdit) cutoffEdit->setText(settings.value("CutoffFrequency", "100").toString());
+
+    // 如果已初始化DAQ线程，则应用滤波器设置
+    if (daqTh && daqFilterEnabledCheckBox && cutoffEdit) {
+        bool filterEnabled = daqFilterEnabledCheckBox->isChecked();
+        double cutoffFrequency = cutoffEdit->text().toDouble();
+        daqTh->setFilterEnabled(filterEnabled);
+        daqTh->setCutoffFrequency(cutoffFrequency);
+        qDebug() << "[加载设置] DAQ FIR滤波器状态:" << (filterEnabled ? "启用" : "禁用")
+                 << "截止频率:" << cutoffFrequency << "Hz";
+    }
     settings.endGroup();
 
     // 加载滤波器设置

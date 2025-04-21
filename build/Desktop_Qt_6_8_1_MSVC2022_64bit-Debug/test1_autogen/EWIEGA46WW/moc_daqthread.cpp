@@ -57,7 +57,13 @@ static constexpr auto qt_meta_stringdata_ZN9DAQThreadE = QtMocHelpers::stringDat
     "sampleRate",
     "samplesPerChannel",
     "startAcquisition",
-    "stopAcquisition"
+    "stopAcquisition",
+    "setFilterEnabled",
+    "enabled",
+    "setCutoffFrequency",
+    "frequency",
+    "isFilterEnabled",
+    "getCutoffFrequency"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -69,7 +75,7 @@ Q_CONSTINIT static const uint qt_meta_data_ZN9DAQThreadE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-       6,   14, // methods
+      10,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -77,14 +83,18 @@ Q_CONSTINIT static const uint qt_meta_data_ZN9DAQThreadE[] = {
        3,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    3,   50,    2, 0x06,    1 /* Public */,
-       8,    2,   57,    2, 0x06,    5 /* Public */,
-      11,    1,   62,    2, 0x06,    8 /* Public */,
+       1,    3,   74,    2, 0x06,    1 /* Public */,
+       8,    2,   81,    2, 0x06,    5 /* Public */,
+      11,    1,   86,    2, 0x06,    8 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-      13,    4,   65,    2, 0x0a,   10 /* Public */,
-      18,    0,   74,    2, 0x0a,   15 /* Public */,
-      19,    0,   75,    2, 0x0a,   16 /* Public */,
+      13,    4,   89,    2, 0x0a,   10 /* Public */,
+      18,    0,   98,    2, 0x0a,   15 /* Public */,
+      19,    0,   99,    2, 0x0a,   16 /* Public */,
+      20,    1,  100,    2, 0x0a,   17 /* Public */,
+      22,    1,  103,    2, 0x0a,   19 /* Public */,
+      24,    0,  106,    2, 0x10a,   21 /* Public | MethodIsConst  */,
+      25,    0,  107,    2, 0x10a,   22 /* Public | MethodIsConst  */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3, 0x80000000 | 5, QMetaType::Int,    4,    6,    7,
@@ -95,6 +105,10 @@ Q_CONSTINIT static const uint qt_meta_data_ZN9DAQThreadE[] = {
     QMetaType::Void, QMetaType::QString, QMetaType::QString, QMetaType::Double, QMetaType::Int,   14,   15,   16,   17,
     QMetaType::Void,
     QMetaType::Void,
+    QMetaType::Void, QMetaType::Bool,   21,
+    QMetaType::Void, QMetaType::Double,   23,
+    QMetaType::Bool,
+    QMetaType::Double,
 
        0        // eod
 };
@@ -129,7 +143,17 @@ Q_CONSTINIT const QMetaObject DAQThread::staticMetaObject = { {
         // method 'startAcquisition'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'stopAcquisition'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'setFilterEnabled'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>,
+        // method 'setCutoffFrequency'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<double, std::false_type>,
+        // method 'isFilterEnabled'
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>,
+        // method 'getCutoffFrequency'
+        QtPrivate::TypeAndForceComplete<double, std::false_type>
     >,
     nullptr
 } };
@@ -145,6 +169,12 @@ void DAQThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
         case 3: _t->initDAQ((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<double>>(_a[3])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[4]))); break;
         case 4: _t->startAcquisition(); break;
         case 5: _t->stopAcquisition(); break;
+        case 6: _t->setFilterEnabled((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
+        case 7: _t->setCutoffFrequency((*reinterpret_cast< std::add_pointer_t<double>>(_a[1]))); break;
+        case 8: { bool _r = _t->isFilterEnabled();
+            if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
+        case 9: { double _r = _t->getCutoffFrequency();
+            if (_a[0]) *reinterpret_cast< double*>(_a[0]) = std::move(_r); }  break;
         default: ;
         }
     }
@@ -207,14 +237,14 @@ int DAQThread::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 6)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 10;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 6)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 10;
     }
     return _id;
 }
