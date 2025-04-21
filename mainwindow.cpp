@@ -189,6 +189,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->btnPagePlot->setEnabled(false);
     ui->btnPageData->setEnabled(false);
     ui->btnSaveData->setEnabled(false);
+    ui->btnStartAll->setEnabled(false); // 默认禁用“一键开始”按钮，等待初始化完成后启用
 
     // 默认禁用读取按钮，直到串口成功打开
     ui->btnSend->setEnabled(false);
@@ -380,6 +381,8 @@ MainWindow::MainWindow(QWidget *parent)
     QAction *actionSetupInitial = new QAction("设置初始化", this);
     QAction *actionLoadInitial = new QAction("读取初始化文件", this);
     QAction *actionSaveInitial = new QAction("保存初始化文件", this);
+    actionSaveInitial->setObjectName("actionSaveInitial"); // 设置对象名便于后续查找
+    actionSaveInitial->setEnabled(false); // 默认禁用，等待初始化完成后启用
 
     initMenu->addAction(actionSetupInitial);
     initMenu->addAction(actionLoadInitial);
@@ -393,6 +396,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 连接Dashboard双击信号
     QList<Dashboard*> dashboards = this->findChildren<Dashboard*>();
     for (Dashboard* dashboard : dashboards) {
+        // 设置初始化状态为未初始化
+        dashboard->setInitializationStatus(false);
+
         connect(dashboard, &Dashboard::dashboardDoubleClicked, this, [=]() {
             qDebug() << "Dashboard双击信号已接收: " << dashboard->objectName();
         });
@@ -1641,6 +1647,26 @@ void MainWindow::on_actionSetupInitial_triggered()
     }
     // +++ End Enable +++
 
+    // 标记初始化已完成
+    initializationCompleted = true;
+
+    // 启用“保存初始化”菜单项
+    QAction *actionSaveInitial = findChild<QAction*>("actionSaveInitial");
+    if (actionSaveInitial) {
+        actionSaveInitial->setEnabled(true);
+    }
+
+    // 启用“一键开始”按钮
+    if (ui->btnStartAll) {
+        ui->btnStartAll->setEnabled(true);
+    }
+
+    // 启用所有仪表盘的双击功能
+    QList<Dashboard*> dashboards = this->findChildren<Dashboard*>();
+    for (Dashboard* dashboard : dashboards) {
+        dashboard->setInitializationStatus(true);
+    }
+
     // 显示提示消息
     QMessageBox::information(this, "初始化已启用", "初始化页面已启用，您可以进行通信设置");
 
@@ -1686,6 +1712,26 @@ void MainWindow::on_actionLoadInitial_triggered()
         }
         // +++ End Enable +++
 
+        // 标记初始化已完成
+        initializationCompleted = true;
+
+        // 启用“保存初始化”菜单项
+        QAction *actionSaveInitial = findChild<QAction*>("actionSaveInitial");
+        if (actionSaveInitial) {
+            actionSaveInitial->setEnabled(true);
+        }
+
+        // 启用“一键开始”按钮
+        if (ui->btnStartAll) {
+            ui->btnStartAll->setEnabled(true);
+        }
+
+        // 启用所有仪表盘的双击功能
+        QList<Dashboard*> dashboards = this->findChildren<Dashboard*>();
+        for (Dashboard* dashboard : dashboards) {
+            dashboard->setInitializationStatus(true);
+        }
+
         // 显示提示消息
         QMessageBox::information(this, "读取成功", "已成功从文件加载初始化设置");
 
@@ -1699,6 +1745,12 @@ void MainWindow::on_actionLoadInitial_triggered()
 // 新增：保存初始化文件菜单项槽函数
 void MainWindow::on_actionSaveInitial_triggered()
 {
+    // 检查初始化状态
+    if (!initializationCompleted) {
+        QMessageBox::warning(this, "保存失败", "请先完成初始化设置或读取初始化文件");
+        return;
+    }
+
     // 检查初始化页面是否已启用
     if (!ui->page->isEnabled()) {
         QMessageBox::warning(this, "保存失败", "请先启用初始化页面或加载初始化设置");
@@ -3899,6 +3951,12 @@ void MainWindow::handleModbusData(QVector<double> resultdata, qint64 readTimeInt
 
 void MainWindow::on_btnStartAll_clicked()
 {
+    // 检查初始化状态
+    if (!initializationCompleted) {
+        QMessageBox::warning(this, "操作被禁用", "请先完成初始化设置或读取初始化文件");
+        return;
+    }
+
     // 根据当前状态决定是启动还是停止所有采集
     // 修改：检查 currentRunMode 而不是 allCaptureRunning
     if (currentRunMode == RunMode::Idle) {

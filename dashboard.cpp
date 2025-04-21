@@ -22,6 +22,7 @@
 #include <cmath>
 #include <QRegularExpression>
 #include <QStack>
+#include <QMessageBox>
 
 Dashboard::Dashboard(QWidget *parent) : QWidget(parent),
     m_value(0),
@@ -48,7 +49,7 @@ Dashboard::Dashboard(QWidget *parent) : QWidget(parent),
 {
     // 初始化界面和定时器
     setMinimumSize(200, 200);
-    
+
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(updateValue()));
 
@@ -347,7 +348,7 @@ void Dashboard::drawBackground(QPainter *painter)
     const int width = this->width();
     const int height = this->height();
     const int side = qMin(width, height);
-    
+
     // 获取绘制区域
     QRect drawingRect = rect();
     if (width > height) {
@@ -357,15 +358,15 @@ void Dashboard::drawBackground(QPainter *painter)
         drawingRect.setTop((height - width) / 2);
         drawingRect.setHeight(width);
     }
-    
+
     QPointF center = drawingRect.center();
     int radius = side / 2;
-    
+
     // 绘制背景圆
     painter->setPen(Qt::NoPen);
     painter->setBrush(m_backgroundColor);
     painter->drawEllipse(center, radius - 5, radius - 5);
-    
+
     // // 绘制外环
     // painter->setPen(QPen(m_foregroundColor, side * 0.02));
     // painter->setBrush(Qt::NoBrush);
@@ -386,13 +387,13 @@ void Dashboard::drawScale(QPainter *painter)
     const int width = this->width();
     const int height = this->height();
     const int side = qMin(width, height);
-    
+
     // 获取绘制区域中心点
     QPointF center = rect().center();
-    
+
     // 计算半径
     const double radius = side / 2.0;
-    
+
     // 设置刻度参数
     int startAngle = 130;   // 起始角度
     int endAngle = 50;      // 结束角度
@@ -415,7 +416,7 @@ void Dashboard::drawScale(QPainter *painter)
         painter->drawLine(radius * 0.8, 0, radius * 0.95, 0);
         painter->restore();
     }
-    
+
     // 绘制副刻度
     for (int i = 0; i < tickCount; ++i) {
         for (int j = 1; j < subTickCount; ++j) {
@@ -443,20 +444,20 @@ void Dashboard::drawScaleNum(QPainter *painter)
     const int width = this->width();
     const int height = this->height();
     const int side = qMin(width, height);
-    
+
     // 获取绘制区域中心点
     QPointF center = rect().center();
-    
+
     // 计算半径
     const double radius = side / 2.0 - 10;
-    
+
     // 设置刻度参数
     int startAngle = 130;   // 起始角度
     int endAngle = 50;      // 结束角度
     int range = 280;        // 角度范围
-    
+
     int tickCount = m_scaleMajor;    // 主刻度数
-    
+
     // 设置字体
     QFont font = painter->font();
     font.setPointSize(side * 0.05);
@@ -468,28 +469,28 @@ void Dashboard::drawScaleNum(QPainter *painter)
         // 计算刻度角度
         double angle = startAngle + range * i / tickCount;
         if (angle > 360) angle -= 360;  // 保持角度在0-360°
-        
+
         // 计算刻度值
         double value = m_minValue + (m_maxValue - m_minValue) * i / tickCount;
         QString text = QString::number(value, 'f', m_precision);
-        
+
         // 获取文本大小
         QFontMetricsF metrics(font);
         double textWidth = metrics.horizontalAdvance(text);
         double textHeight = metrics.height();
-        
+
         // 计算文本位置
         double angleRad = qDegreesToRadians(angle);
         double x = center.x() + radius * 0.65 * qCos(angleRad) - textWidth/2;
         double y = center.y() + radius * 0.65 * qSin(angleRad) + textHeight/4;
-        
+
         // 调整文本位置以提高可读性
         if (angle > 90 && angle < 270) {
             x -= textWidth * 0.1;
         } else {
             x += textWidth * 0.1;
         }
-        
+
         // 绘制文本
         painter->drawText(QPointF(x, y), text);
     }
@@ -523,7 +524,7 @@ void Dashboard::drawTitle(QPainter *painter)
 
     // 计算文本矩形
     QRectF textRect(width / 2 - textWidth / 2, height * 0.25, textWidth, fontSize * 1.5);
-    
+
     // 绘制标题文本
     painter->drawText(textRect, Qt::AlignCenter, m_title);
 
@@ -601,18 +602,18 @@ void Dashboard::drawPointer(QPainter *painter)
     const int width = this->width();
     const int height = this->height();
     const int side = qMin(width, height);
-    
+
     // 获取绘制区域中心点
     QPointF center = rect().center();
-    
+
     // 计算半径
     const double radius = side / 2.0;
-    
+
     // 设置刻度参数
     int startAngle = 130;   // 起始角度
     int endAngle = 50;      // 结束角度
     int range = 280;        // 角度范围
-    
+
     // 确保当前值在范围内
     double currentValue = qBound(m_minValue, m_currentValue, m_maxValue);
 
@@ -622,21 +623,21 @@ void Dashboard::drawPointer(QPainter *painter)
         fraction = (currentValue - m_minValue) / (m_maxValue - m_minValue);
     }
     fraction = qBound(0.0, fraction, 1.0);
-    
+
     // 计算指针角度
     double valueAngle = startAngle + range * fraction;
-    
+
     // 旋转画笔
     painter->translate(center);
     painter->rotate(valueAngle);
-    
+
     // 计算指针参数
     const double pointerWidth = side / 20.0*2;
-    
+
     // 设置画笔和画刷
     painter->setPen(Qt::NoPen);
     painter->setBrush(m_pointerColor);
-    
+
     // 绘制指针 - 将指针长度增加到原来的1.5倍
     QPainterPath needlePath;
     needlePath.moveTo(-pointerWidth / 2, 0);
@@ -644,9 +645,9 @@ void Dashboard::drawPointer(QPainter *painter)
     needlePath.lineTo(radius* 0.9, 0); // 增加指针长度为原来的1.5倍
     needlePath.lineTo(0, pointerWidth / 4);
     needlePath.lineTo(-pointerWidth / 2, 0);
-    
+
     painter->drawPath(needlePath);
-    
+
     painter->restore();
 }
 
@@ -658,7 +659,7 @@ void Dashboard::drawCenter(QPainter *painter)
     const int width = this->width();
     const int height = this->height();
     const int side = qMin(width, height);
-    
+
     // 获取中心点
     QPointF center = rect().center();
 
@@ -682,8 +683,15 @@ void Dashboard::mouseDoubleClickEvent(QMouseEvent *event)
     // 处理左键双击事件
     if (event->button() == Qt::LeftButton) {
         qDebug() << "Dashboard双击: " << this->objectName();
+
+        // 检查初始化状态
+        if (!m_initialized) {
+            qDebug() << "Dashboard双击被忽略: 系统未初始化";
+            QMessageBox::warning(this, "操作被禁用", "请先完成初始化设置或读取初始化文件");
+            return;
+        }
+
         emit dashboardDoubleClicked();
-        
         createSettingsDialog();
     }
 
@@ -766,7 +774,7 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
     // formulaEdit->setVisible(false); // 第十九处屏蔽
     // sourceLayout->addWidget(formulaLabel, 2, 0); // 第十九处屏蔽
     // sourceLayout->addWidget(formulaEdit, 2, 1); // 第十九处屏蔽
-    
+
     // 帮助提示
     // QLabel *helpLabel = new QLabel(tr("变量格式: A_x (Modbus), B_x (DAQ), C_x (ECU), D_x (自定义)"), dialog); // 第二十处屏蔽
     // helpLabel->setObjectName("helpLabel"); // 第二十处屏蔽
@@ -849,7 +857,7 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
                     tr("大气压力 (C_7)"),
                     tr("飞行时间 (C_8)")
                 };
-                
+
                 for (int i = 0; i < ecuFields.size(); i++) {
                     channelCombo->addItem(ecuFields[i]);
                 }
@@ -865,7 +873,7 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
                 formulaLabel->setVisible(true);
                 formulaEdit->setVisible(true);
                 helpLabel->setVisible(true);
-                
+
                 // 如果有已保存的公式，则显示
                 if (!m_formula.isEmpty()) {
                     formulaEdit->setText(m_formula);
@@ -884,11 +892,11 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
 
     // 确定初始设备类型
     int deviceType = 0; // 默认为Modbus
-    
+
     // 如果是自定义变量，设置为对应的类型
     // if (m_isCustomVariable) { // 第二十三处屏蔽
     //     deviceType = 3; // 自定义变量
-    // } else 
+    // } else
     if (!m_variableName.isEmpty()) { // 修改：不再检查 isCustomVariable
         // 根据变量名前缀设置设备类型
         if (m_variableName.startsWith("A_")) deviceType = 0; // Modbus
@@ -896,13 +904,13 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
         else if (m_variableName.startsWith("C_")) deviceType = 2; // ECU
         else if (m_variableName.startsWith("D_")) deviceType = 3; // 自定义变量
     }
-    
+
     // 先初始化通道列表
     updateChannelList(deviceType);
-    
+
     // 然后设置设备类型（这将触发信号，但由于已经初始化了通道列表，所以不会有问题）
     deviceTypeCombo->setCurrentIndex(deviceType);
-    
+
     // 在对话框显示后，设置正确的通道选择
     QTimer::singleShot(100, dialog, [=]() {
         // 根据当前变量名选择正确的通道索引
@@ -915,7 +923,7 @@ QGroupBox* Dashboard::createDataSourceGroup(QDialog *dialog)
                 }
             }
         }
-        
+
         // 如果是自定义变量，设置公式
         /* // 第二十六处屏蔽 - 开始
         if (deviceType == 3 && !m_formula.isEmpty() && formulaEdit) {
@@ -1021,7 +1029,7 @@ void Dashboard::connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPu
         this->setMinValue(minValueSpinBox->value());
         this->setMaxValue(maxValueSpinBox->value());
         this->setPointerStyle((PointerStyle)pointerStyleCombo->currentData().toInt());
-        
+
         // 刷新UI以显示新标题和单位
         this->refreshUI();
 
@@ -1030,12 +1038,12 @@ void Dashboard::connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPu
         if (color.isValid()) {
             this->setPointerColor(color);
         }
-        
+
         // 获取设备类型和通道
         int sourceType = deviceTypeCombo->currentIndex();
         int sourceChannel = channelCombo->currentIndex();
         QString channelText = channelCombo->currentText();
-        
+
         // 提取变量名
         QString variableName;
         QRegularExpression rx("\\(([A-Z]_[0-9]+)\\)"); // 匹配 (A_0), (B_1), (C_2), (D_0) 等格式
@@ -1046,13 +1054,13 @@ void Dashboard::connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPu
             // 为新变量生成名称
             variableName = QString("D_%1").arg(channelCombo->currentIndex());
         }
-        
+
         this->setVariableName(variableName);
-        
+
         // 设置自定义变量属性
         // bool isCustomVar = (sourceType == 3); // 第二十五处屏蔽
         // this->setCustomVariable(isCustomVar); // 第二十五处屏蔽
-        
+
         // 如果是自定义变量，获取公式
         /* // 第二十六处屏蔽 - 开始
         if (isCustomVar && formulaEdit) {
@@ -1074,7 +1082,7 @@ void Dashboard::connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPu
         settings["channelIndex"] = sourceChannel;
         settings["channelName"] = channelText;
         settings["variableName"] = variableName;
-        
+
         /* // 第二十七处屏蔽 - 开始
         if (isCustomVar && formulaEdit) {
             settings["formula"] = formulaEdit->text();
@@ -1101,19 +1109,19 @@ double Dashboard::calculateFormula(const QString &formula, const QMap<QString, d
     // 否则使用同步计算（老方法）
     // 预处理公式，替换变量为数值
     QString processedFormula = formula;
-    
+
     // 使用正则表达式查找变量模式（如A_0, B_1等）
     static QRegularExpression varPattern("([A-Z]_[0-9]+)");
     QRegularExpressionMatchIterator matches = varPattern.globalMatch(formula);
-    
+
     // 记录变量替换前后的情况，帮助诊断问题
     bool hasUnknownVars = false;
     QMap<QString, double> usedVars;
-    
+
     while (matches.hasNext()) {
         QRegularExpressionMatch match = matches.next();
         QString varName = match.captured(1);
-        
+
         if (variables.contains(varName)) {
             // 使用变量表中的值替换变量名
             double value = variables[varName];
@@ -1134,27 +1142,27 @@ double Dashboard::calculateFormula(const QString &formula, const QMap<QString, d
             }
         }
     }
-    
+
     // 输出处理后的公式，帮助调试
     qDebug() << "处理后的公式:" << processedFormula;
-    
+
     try {
         // 保存当前使用的变量值，用于下次计算
         for (auto it = usedVars.begin(); it != usedVars.end(); ++it) {
             m_lastVariableValues[it.key()] = it.value();
         }
-        
+
         // 如果所有变量都是未知的，并且之前没有有效的计算结果，返回0
         if (hasUnknownVars && !m_hasValidResult) {
             return 0;
         }
-        
+
         // 计算表达式
         double result = evaluateExpression(processedFormula);
-        
+
         // 标记有了有效结果
         m_hasValidResult = true;
-        
+
         return result;
     } catch (const std::exception &e) {
         qDebug() << "公式计算错误:" << e.what();
@@ -1167,12 +1175,12 @@ double Dashboard::evaluateExpression(const QString &expression)
 {
     QStack<double> values;
     QStack<QChar> ops;
-    
+
     for (int i = 0; i < expression.length(); i++) {
         // 跳过空格
         if (expression[i].isSpace())
             continue;
-            
+
         // 处理数字
         if (expression[i].isDigit() || expression[i] == '.') {
             QString numStr;
@@ -1181,7 +1189,7 @@ double Dashboard::evaluateExpression(const QString &expression)
                 i++;
             }
             i--; // 回退一位，因为循环会自增
-            
+
             bool ok;
             double num = numStr.toDouble(&ok);
             if (ok) {
@@ -1199,19 +1207,19 @@ double Dashboard::evaluateExpression(const QString &expression)
         else if (expression[i] == ')') {
             while (!ops.isEmpty() && ops.top() != '(') {
                 QChar op = ops.pop();
-                
+
                 // 需要两个操作数
                 if (values.size() < 2) {
                     qDebug() << "表达式格式错误：" << expression;
                     return 0.0;
                 }
-                
+
                 double b = values.pop();
                 double a = values.pop();
-                
+
                 values.push(applyOperator(a, b, op));
             }
-            
+
             if (!ops.isEmpty())
                 ops.pop(); // 弹出左括号
         }
@@ -1219,19 +1227,19 @@ double Dashboard::evaluateExpression(const QString &expression)
         else if (isOperator(expression[i])) {
             while (!ops.isEmpty() && precedence(ops.top()) >= precedence(expression[i]) && ops.top() != '(') {
                 QChar op = ops.pop();
-                
+
                 // 需要两个操作数
                 if (values.size() < 2) {
                     qDebug() << "表达式格式错误：" << expression;
                     return 0.0;
                 }
-                
+
                 double b = values.pop();
                 double a = values.pop();
-                
+
                 values.push(applyOperator(a, b, op));
             }
-            
+
             ops.push(expression[i]);
         }
         // 处理其他字符（可能是错误）
@@ -1240,23 +1248,23 @@ double Dashboard::evaluateExpression(const QString &expression)
             return 0.0;
         }
     }
-    
+
     // 处理剩余的操作符
     while (!ops.isEmpty()) {
         QChar op = ops.pop();
-        
+
         // 需要两个操作数
         if (values.size() < 2) {
             qDebug() << "表达式格式错误：" << expression;
             return 0.0;
         }
-        
+
         double b = values.pop();
         double a = values.pop();
-        
+
         values.push(applyOperator(a, b, op));
     }
-    
+
     // 最终结果应该是values栈中唯一的值
     if (values.size() == 1) {
         return values.top();
@@ -1275,9 +1283,9 @@ bool Dashboard::isOperator(const QChar &c)
 // 获取操作符优先级
 int Dashboard::precedence(const QChar &op)
 {
-    if (op == '+' || op == '-') 
+    if (op == '+' || op == '-')
         return 1;
-    if (op == '*' || op == '/') 
+    if (op == '*' || op == '/')
         return 2;
     return 0;
 }

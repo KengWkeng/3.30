@@ -31,7 +31,7 @@ enum PointerStyle {
 /**
  * @class Dashboard
  * @brief 自定义仪表盘控件
- * 
+ *
  * 仪表盘使用Qt的角度坐标系（0度在右侧，逆时针为正方向）
  * 刻度起始角度为130度
  * 刻度结束角度为50度
@@ -40,7 +40,7 @@ enum PointerStyle {
 class Dashboard : public QWidget
 {
     Q_OBJECT
-    
+
     // 使用Qt属性系统
     Q_PROPERTY(double value READ getValue WRITE setValue NOTIFY valueChanged)
     Q_PROPERTY(double minValue READ getMinValue WRITE setMinValue NOTIFY rangeChanged)
@@ -95,13 +95,16 @@ public:
     void setVariableName(const QString &name) { m_variableName = name; }
     void setFormula(const QString &formula) { m_formula = formula; }
     void setCustomVariable(bool isCustom) { m_isCustomVariable = isCustom; }
-    
+
     // 添加公式计算功能 - 保留公共接口，但修改内部实现使用计算线程
     double calculateFormula(const QString &formula, const QMap<QString, double> &variables);
-    
+
     // 设置计算线程
     // void setCalculator(DashboardCalculator *calculator);
-    
+
+    // 设置初始化状态
+    void setInitializationStatus(bool initialized) { m_initialized = initialized; }
+
 public slots:
     // 设置用于公式计算的变量值
     // void setVariableValues(const QMap<QString, double> &variables);
@@ -135,18 +138,18 @@ private:
     int precedence(const QChar &op);
     bool isOperator(const QChar &c);
     double applyOperator(double a, double b, QChar op);
-    
+
     // 变量值持久化
     QMap<QString, double> m_lastVariableValues;
     bool m_hasValidResult = false;
-    
+
     // 计算线程对象指针 - 由外部设置，不由Dashboard管理生命周期
     // DashboardCalculator *m_calculator;
     // 最近一次计算结果
     // double m_lastCalculatedValue;
     // 最近一次计算是否成功
     // bool m_lastCalculationSucceeded;
-    
+
     // 核心数值属性
     double m_value;           // 当前值
     double m_currentValue;    // 用于动画的当前值
@@ -157,7 +160,7 @@ private:
     QString m_unit;           // 单位
     QString m_title;          // 标题
     QColor m_titleColor;      // 标题颜色
-    
+
     // 视觉样式属性
     QColor m_backgroundColor; // 背景颜色
     QColor m_foregroundColor; // 前景颜色（外环）
@@ -165,11 +168,11 @@ private:
     QColor m_textColor;       // 文字颜色
     QColor m_pointerColor;    // 指针颜色
     PointerStyle m_pointerStyle; // 指针样式
-    
+
     // 动画相关
     bool m_animation;         // 是否启用动画
     QTimer *m_timer;          // 动画定时器
-    
+
     // 刻度相关
     int m_scaleMinor;         // 小刻度数量
     int m_scaleMajor;         // 大刻度数量
@@ -180,6 +183,9 @@ private:
     bool m_isCustomVariable;  // 是否为自定义变量
     QMap<QString, double> m_variables; // 存储公式中用到的变量值
 
+    // 初始化状态
+    bool m_initialized = false; // 默认为未初始化
+
     // 界面绘制方法
     void drawBackground(QPainter *painter);
     void drawScale(QPainter *painter);
@@ -189,7 +195,7 @@ private:
     void drawValue(QPainter *painter);
     void drawPointer(QPainter *painter);
     void drawCenter(QPainter *painter);
-    
+
     // 对话框相关方法
     void createSettingsDialog();
     QGroupBox* createDataSourceGroup(QDialog *dialog);
@@ -197,4 +203,4 @@ private:
     void connectDialogButtons(QDialog *dialog, QPushButton *okButton, QPushButton *cancelButton);
 };
 
-#endif // DASHBOARD_H 
+#endif // DASHBOARD_H

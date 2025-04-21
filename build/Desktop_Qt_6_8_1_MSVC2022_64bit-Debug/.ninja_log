@@ -69,3 +69,12 @@
 37	180	7669617960317898	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
 181	5165	7669617961767985	CMakeFiles/test1.dir/mainwindow.cpp.obj	c64a661f0414e6b2
 5165	5505	7669618011601193	test1.exe	29da4d36f96c0f3b
+54	2060	7669638963592582	test1_autogen/timestamp	3ccc2c62dc7625e1
+54	2060	7669638963592582	test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+54	2060	7669638963592582	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/timestamp	3ccc2c62dc7625e1
+54	2060	7669638963592582	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/test1_autogen/mocs_compilation.cpp	3ccc2c62dc7625e1
+2070	3845	7669638964532569	CMakeFiles/test1.dir/dashboard.cpp.obj	4389ea9cf6083f9
+2064	6152	7669638964482571	CMakeFiles/test1.dir/main.cpp.obj	f93de1dcca96acc2
+2067	7159	7669638964512570	CMakeFiles/test1.dir/mainwindow.cpp.obj	c64a661f0414e6b2
+2062	8060	7669638964462579	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	7aa77aab2124051b
+8060	8689	7669639024441771	test1.exe	29da4d36f96c0f3b

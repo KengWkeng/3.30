@@ -1165,7 +1165,7 @@ QStackedWidget {
          </size>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="page">
          <property name="sizePolicy">
@@ -1196,7 +1196,7 @@ QStackedWidget {
              <item row="0" column="0" rowspan="2" colspan="2">
               <layout class="QVBoxLayout" name="verticalLayout">
                <property name="sizeConstraint">
-                <enum>QLayout::SetMinimumSize</enum>
+                <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
                </property>
                <item>
                 <widget class="QLabel" name="labelPort">
@@ -1368,7 +1368,7 @@ QStackedWidget {
              <item row="0" column="2" rowspan="3" colspan="2">
               <layout class="QVBoxLayout" name="verticalLayout_2">
                <property name="sizeConstraint">
-                <enum>QLayout::SetMinimumSize</enum>
+                <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
                </property>
                <item>
                 <widget class="QLabel" name="labelPort_3">
@@ -1892,16 +1892,6 @@ QStackedWidget {
         <widget class="QWidget" name="page_2">
          <layout class="QVBoxLayout" name="pageLayout_2">
           <item>
-           <widget class="QLabel" name="labelVisualizer">
-            <property name="text">
-             <string>数据可视化</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QGroupBox" name="groupBox_4">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -2120,7 +2110,6 @@ QStackedWidget {
       </item>
      </layout>
     </item>
-
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">

@@ -100,7 +100,7 @@ struct DashboardMapping {
 //     bool ecuValid;                      // ECU数据有效标志
 //     bool daqRunning;                    // DAQ运行状态标志
 //     int snapshotIndex;                  // 快照索引（序号）
-    
+
 //     // 构造函数，初始化所有数据
 //     DataSnapshot() {
 //         timestamp = 0.0;                // 初始化为0秒
@@ -141,7 +141,7 @@ public:
 protected:
     // 添加窗口尺寸调整事件处理函数
     void resizeEvent(QResizeEvent *event) override;
-    
+
     // 添加事件过滤器，处理图表大小变化
     bool eventFilter(QObject *watched, QEvent *event) override;
 
@@ -174,13 +174,13 @@ private slots:
     void on_btnPagePlot_clicked();
 
     void on_btnPageData_clicked();
-    
+
     // 添加保存数据按钮槽函数
     void on_btnSaveData_clicked();
-    
+
     // 添加读取数据按钮槽函数
     void on_btnReadData_clicked();
-    
+
     // 注释掉已移至SnapshotThread的函数
     // void handleDAQData(const QVector<double> &timeData, const QVector<QVector<double>> &channelData);
     void handleDAQStatus(bool isRunning, QString message);
@@ -198,47 +198,47 @@ private slots:
     void handleECUError(QString errorMessage);
 
     void on_btnPageInitial_clicked();
-    
+
     // 添加启用/禁用初始化页面控件的辅助函数
     void enableInitialPage(bool enable);
 
     void onRandomNumberGenerated(int number);
-    
+
     // WebSocket相关槽函数
     void handleWebSocketServerStarted(bool success, QString message);
     void handleWebSocketClientConnected(const QString &clientInfo);
     void handleWebSocketClientDisconnected(const QString &clientInfo);
     void handleWebSocketMessage(QString message);
     void testWebSocketConnection();
-    
+
     // 添加WebSocket控制按钮的槽函数
     void on_btnWebSocketControl_clicked();
 
     // WebSocket相关槽函数
     void on_btnWebSocketTest_clicked();
-    
+
     // 主计时器超时槽函数
     void onMainTimerTimeout();
-    
+
     // 新增菜单项槽函数
     void on_actionSetupInitial_triggered();
     void on_actionLoadInitial_triggered();
     void on_actionSaveInitial_triggered();
-    
+
     // 新增：处理仪表盘设置变更的槽函数
     void handleDashboardSettingsChanged(const QString &dashboardName, const QMap<QString, QVariant> &settings);
-    
+
     // 专门处理dashForce仪表盘设置变更
     void handleDashForceSettingsChanged(const QString &dashboardName, const QMap<QString, QVariant> &settings);
 
 
     // 新增：应用仪表盘设置到界面
     void applyDashboardMappings();
-    
+
     // 新增：保存和加载仪表盘映射关系
     void saveDashboardMappings(QSettings &settings);
     void loadDashboardMappings(QSettings &settings);
-    
+
     // 新增：初始化默认的仪表盘映射关系
     void initDefaultDashboardMappings();
 
@@ -249,14 +249,14 @@ private slots:
     void updateModbusChannels();
 
     // 新增：根据映射关系更新仪表盘显示
-    void updateDashboardByMapping(const QVector<double> &modbusData, 
-                                 const QVector<double> &daqData, 
+    void updateDashboardByMapping(const QVector<double> &modbusData,
+                                 const QVector<double> &daqData,
                                  const ECUData &ecuData,
                                  const DataSnapshot &snapshot);
 
     // 添加从数据快照更新各种UI的函数
     void updateDashboardData(const QVector<double> &timeData, const DataSnapshot &snapshot);
-   
+
 
     // DAQ相关函数
     void setupDAQPlot();
@@ -268,11 +268,11 @@ private slots:
 
     // ECU相关
     void ECUPlotInit();
-    
+
     // dash1plot相关方法
     void setupDash1Plot();                 // 初始化dash1plot
     void updateDash1Plot(double value);    // 更新dash1plot数据
-    
+
     // 注释掉已移至SnapshotThread的函数
     // void processDataSnapshots();           // 处理数据快照队列的槽函数
     void updateAllPlots(const DataSnapshot &snapshot, int snapshotCount); // 更新所有图表
@@ -317,7 +317,7 @@ private:
 
     // 仅保留用于UI参考的变量
     int modbusNumRegs = 16;            // Modbus寄存器数量，保留用于UI参考
-    
+
     QVector<double> ecudataMap;        // ECU数据映射
 
     //绘图控件指针
@@ -333,7 +333,7 @@ private:
     double realPlotTime;
 
     void myplotInit(QCustomPlot *customplot);
-    
+
     // 更新仪表盘数据
     void updateDashboards(const QVector<double> &data);
 
@@ -347,17 +347,17 @@ private:
     // 添加DAQ相关成员
     QThread *daqThread;
     DAQThread *daqTh;
-    
+
     // 仅保留用于UI参考的变量
     int daqNumChannels;           // 保留，用于UI参考
     double daqSampleRate;
     bool daqIsAcquiring;          // 保留，用于UI状态
     QStandardItemModel *daqDataModel;
-    
+
     // 保存初始窗口大小和控件位置
     QSize initialSize;
     QMap<QWidget*, QRect> initialGeometries;
-    
+
     // 标志是否初始化了控件位置信息
     bool geometriesInitialized;
 
@@ -377,10 +377,10 @@ private:
     // 新增保存和加载初始化文件的函数
     bool saveInitialSettings(const QString &filename);
     bool loadInitialSettings(const QString &filename);
-    
+
     // 新增：获取仪表盘对象列表的辅助函数
     QList<Dashboard*> getAllDashboards();
-    
+
     // 新增：仪表盘与数据源映射
     QMap<QString, DashboardMapping> dashboardMappings;
 
@@ -399,7 +399,7 @@ private:
     QLabel *dashForceValueLabel;           // 右上角值显示标签
     QLabel *dashForceArrowLabel;           // 右侧游标标签
     double dashPlotTimeCounter;            // 时间计数器
-    
+
     QTimer *snapshotTimer;                 // 数据快照定时器，保留用于触发信号
     int maxQueueSize = 1000;               // 最大队列长度，防止内存占用过多
 
@@ -422,6 +422,9 @@ private:
 
     // 新增：运行模式状态
     RunMode currentRunMode = RunMode::Idle;
+
+    // 标记初始化状态（通过设置初始化或读取初始化文件）
+    bool initializationCompleted = false;
 };
 
 
