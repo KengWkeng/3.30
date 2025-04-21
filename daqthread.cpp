@@ -15,14 +15,16 @@ DAQThread::DAQThread(QObject *parent)
     , numChannels(0)
     , isAcquiring(false)
     , filterEnabled(false)
-    , cutoffFrequency(100.0)  // 默认截止频率100Hz
-    , filterOrder(64)         // 默认滤波器阶数
+    , cutoffFrequency(50.0)   // 默认截止频率设置为50Hz，适合低频滤波
+    , filterOrder(128)        // 默认滤波器阶数增加到128，提高低频滤波效果
 {
     // 设置全局指针
     g_daqThread = this;
 
     // 初始化滤波器系数
     calculateFilterCoefficients();
+
+    qDebug() << "[DAQThread] 初始化完成，默认滤波器设置: 截止频率=" << cutoffFrequency << "Hz, 阶数=" << filterOrder;
 }
 
 DAQThread::~DAQThread()
@@ -185,9 +187,10 @@ void DAQThread::processData(float64 *data, int32 read)
     if (filterBuffers.size() != numChannels) {
         filterBuffers.resize(numChannels);
         for (int ch = 0; ch < numChannels; ++ch) {
-            filterBuffers[ch].resize(filterOrder);
+            filterBuffers[ch].resize(filterOrder + 1); // 确保缓冲区大小与滤波器阶数匹配
             filterBuffers[ch].fill(0.0); // 初始化为0
         }
+        qDebug() << "[DAQThread] 初始化滤波缓冲区: " << numChannels << "个通道, 每通道" << (filterOrder + 1) << "个样本";
     }
 
     // 每个通道的数据是交错存储的，需要解交错
@@ -355,14 +358,25 @@ double DAQThread::getCutoffFrequency() const
     return cutoffFrequency;
 }
 
-// 计算FIR滤波器系数 - 使用汉宁窗函数
+// 计算FIR滤波器系数 - 使用Hamming窗函数
 void DAQThread::calculateFilterCoefficients()
 {
+    // 使用更高的滤波器阶数来提高低频滤波效果
+    // 对于50Hz以下的低频滤波，需要更高的阶数
+    filterOrder = 128; // 增加滤波器阶数以提高低频滤波效果
+
     // 重置滤波器系数
     filterCoefficients.resize(filterOrder + 1);
 
     // 归一化截止频率
     double normalizedCutoff = cutoffFrequency / sampleRate;
+
+    // 限制截止频率在合理范围内
+    if (normalizedCutoff > 0.45) {
+        normalizedCutoff = 0.45; // 防止截止频率过高
+        cutoffFrequency = normalizedCutoff * sampleRate;
+        qDebug() << "[DAQThread] 截止频率过高，已调整为:" << cutoffFrequency << "Hz";
+    }
 
     // 计算滤波器系数
     double sum = 0.0;
@@ -378,9 +392,10 @@ void DAQThread::calculateFilterCoefficients()
             coef = qSin(x) / x;
         }
 
-        // 应用汉宁窗函数
-        double hannWindow = 0.5 * (1.0 - qCos(2.0 * M_PI * i / filterOrder));
-        filterCoefficients[i] = coef * hannWindow;
+        // 应用Hamming窗函数 - 比汉宁窗有更好的侧带抑制
+        // Hamming窗函数: 0.54 - 0.46 * cos(2πn/N)
+        double hammingWindow = 0.54 - 0.46 * qCos(2.0 * M_PI * i / filterOrder);
+        filterCoefficients[i] = coef * hammingWindow;
         sum += filterCoefficients[i];
     }
 
@@ -389,10 +404,11 @@ void DAQThread::calculateFilterCoefficients()
         filterCoefficients[i] /= sum;
     }
 
-    qDebug() << "[DAQThread] 已计算" << (filterOrder + 1) << "阶FIR滤波器系数，截止频率:" << cutoffFrequency << "Hz";
+    qDebug() << "[DAQThread] 已计算" << (filterOrder + 1) << "阶FIR滤波器系数，使用Hamming窗函数";
+    qDebug() << "[DAQThread] 截止频率:" << cutoffFrequency << "Hz，采样率:" << sampleRate << "Hz";
 }
 
-// 应用滤波器到单个样本
+// 应用滤波器到单个样本 - 优化版本
 double DAQThread::applyFilter(double sample, int channelIndex)
 {
     // 检查通道索引是否有效
@@ -400,20 +416,33 @@ double DAQThread::applyFilter(double sample, int channelIndex)
         return sample; // 如果无效，返回原始样本
     }
 
-    // 移动缓冲区数据
-    for (int i = filterOrder - 1; i > 0; i--) {
-        filterBuffers[channelIndex][i] = filterBuffers[channelIndex][i-1];
+    // 确保缓冲区大小正确
+    if (filterBuffers[channelIndex].size() != filterOrder + 1) {
+        filterBuffers[channelIndex].resize(filterOrder + 1);
+        filterBuffers[channelIndex].fill(sample); // 初始化为当前样本值，减少初始瞬态
     }
+
+    // 移动缓冲区数据 - 使用更高效的方式
+    memmove(&filterBuffers[channelIndex][1], &filterBuffers[channelIndex][0], filterOrder * sizeof(double));
 
     // 将新样本添加到缓冲区开头
     filterBuffers[channelIndex][0] = sample;
 
-    // 应用FIR滤波器
+    // 应用FIR滤波器 - 使用向量化计算提高效率
     double result = 0.0;
-    for (int i = 0; i <= filterOrder; i++) {
-        if (i < filterBuffers[channelIndex].size()) {
-            result += filterBuffers[channelIndex][i] * filterCoefficients[i];
+
+    // 将卷积计算分成多个块以提高缓存命中率
+    const int blockSize = 16; // 适合现代CPU缓存线的块大小
+
+    for (int i = 0; i <= filterOrder; i += blockSize) {
+        double blockSum = 0.0;
+        int blockEnd = qMin(i + blockSize, filterOrder + 1);
+
+        for (int j = i; j < blockEnd; j++) {
+            blockSum += filterBuffers[channelIndex][j] * filterCoefficients[j];
         }
+
+        result += blockSum;
     }
 
     return result;

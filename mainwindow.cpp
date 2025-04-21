@@ -712,6 +712,11 @@ void MainWindow::setupDAQPlot()
     QGroupBox *daqFilterGroupBox = new QGroupBox("DAQ滤波器设置", ui->groupBoxDAQ);
     QVBoxLayout *daqFilterLayout = new QVBoxLayout(daqFilterGroupBox);
 
+    // 添加滤波器说明标签
+    QLabel *filterInfoLabel = new QLabel("使用Hamming窗函数的FIR低通滤波器，优化用于50Hz以下的低频信号");
+    filterInfoLabel->setWordWrap(true);
+    daqFilterLayout->addWidget(filterInfoLabel);
+
     // 创建启用/禁用滤波器的复选框
     QCheckBox *daqFilterEnabledCheckBox = new QCheckBox("启用FIR低通滤波器");
     daqFilterEnabledCheckBox->setObjectName("daqFilterEnabledCheckBox");
@@ -722,8 +727,8 @@ void MainWindow::setupDAQPlot()
     QLabel *cutoffLabel = new QLabel("截止频率 (Hz):");
     QLineEdit *cutoffEdit = new QLineEdit();
     cutoffEdit->setObjectName("daqCutoffEdit");
-    cutoffEdit->setText("100"); // 默认100Hz
-    cutoffEdit->setValidator(new QDoubleValidator(1.0, 5000.0, 1, cutoffEdit)); // 限制输入范围
+    cutoffEdit->setText("50"); // 默认50Hz，适合低频滤波
+    cutoffEdit->setValidator(new QDoubleValidator(1.0, 100.0, 1, cutoffEdit)); // 限制输入范围到100Hz以下
     cutoffLayout->addWidget(cutoffLabel);
     cutoffLayout->addWidget(cutoffEdit);
     daqFilterLayout->addLayout(cutoffLayout);
