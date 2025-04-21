@@ -47,10 +47,10 @@ MainWindow::MainWindow(QWidget *parent)
     // 设置默认状态栏信息
     statusBar()->showMessage("欢迎使用工业数据采集与监控系统，请点击通信初始化按钮加载配置", 5000);
 
-    // 设置初始尺寸
-    initialSize = QSize(1280, 800);
+    // 设置默认尺寸
+    initialSize = QSize(2150, 1200);
     resize(initialSize);
-    setMinimumSize(1024, 768);  // 设置最小窗口尺寸
+    setMinimumSize(2150, 1200);  // 设置最小窗口尺寸
 
     // 手动设置主布局的拉伸因子
     QHBoxLayout* contentLayout = qobject_cast<QHBoxLayout*>(ui->centralwidget->layout()->itemAt(1)->layout());
@@ -135,41 +135,25 @@ MainWindow::MainWindow(QWidget *parent)
     ui->dashPower->setPointerColor(QColor(100, 50, 200));
     ui->dashPower->setValue(0);
 
-    // 初始化LCD显示
-    ui->lcdForce->setDigitCount(5);
-    ui->lcdForce->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdForce->setStyleSheet("background-color: black; color: #24bd9b;");
-    ui->lcdForce->display(0);
+    // 压力仪表盘
+    ui->dashPressure->setTitle("压力");
+    ui->dashPressure->setUnit("MPa");
+    ui->dashPressure->setMinValue(0);
+    ui->dashPressure->setMaxValue(10);
+    ui->dashPressure->setPrecision(2);
+    ui->dashPressure->setPointerStyle(PointerStyle_Indicator);
+    ui->dashPressure->setPointerColor(QColor(50, 168, 82));
+    ui->dashPressure->setValue(0);
 
-    ui->lcdTorque->setDigitCount(5);
-    ui->lcdTorque->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdTorque->setStyleSheet("background-color: black; color: #d95656;");
-    ui->lcdTorque->display(0);
-
-    ui->lcdRPM->setDigitCount(5);
-    ui->lcdRPM->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdRPM->setStyleSheet("background-color: black; color: #ff6400;");
-    ui->lcdRPM->display(0);
-
-    ui->lcdThrust->setDigitCount(5);
-    ui->lcdThrust->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdThrust->setStyleSheet("background-color: black; color: #0064c8;");
-    ui->lcdThrust->display(0);
-
-    ui->lcdFuelConsumption->setDigitCount(5);
-    ui->lcdFuelConsumption->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdFuelConsumption->setStyleSheet("background-color: black; color: #c8b400;");
-    ui->lcdFuelConsumption->display(0);
-
-    ui->lcdSparkPlugTemp->setDigitCount(5);
-    ui->lcdSparkPlugTemp->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdSparkPlugTemp->setStyleSheet("background-color: black; color: #fa3232;");
-    ui->lcdSparkPlugTemp->display(0);
-
-    ui->lcdPower->setDigitCount(5);
-    ui->lcdPower->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdPower->setStyleSheet("background-color: black; color: #6432c8;");
-    ui->lcdPower->display(0);
+    // 初始化数值标签
+    ui->valueForce->setText("0.000");
+    ui->valueTorque->setText("0.000");
+    ui->valueRPM->setText("0.000");
+    ui->valueThrust->setText("0.000");
+    ui->valueFuelConsumption->setText("0.000");
+    ui->valueSparkPlugTemp->setText("0.000");
+    ui->valuePower->setText("0.000");
+    ui->valuePressure->setText("0.000");
 
     // 设置logo图片
     QPixmap pixmap(":/logo.png");
@@ -711,11 +695,6 @@ void MainWindow::setupDAQPlot()
     // 创建DAQ滤波器控制面板
     QGroupBox *daqFilterGroupBox = new QGroupBox("DAQ滤波器设置", ui->groupBoxDAQ);
     QVBoxLayout *daqFilterLayout = new QVBoxLayout(daqFilterGroupBox);
-
-    // 添加滤波器说明标签
-    QLabel *filterInfoLabel = new QLabel("使用Hamming窗函数的FIR低通滤波器，优化用于50Hz以下的低频信号");
-    filterInfoLabel->setWordWrap(true);
-    daqFilterLayout->addWidget(filterInfoLabel);
 
     // 创建启用/禁用滤波器的复选框
     QCheckBox *daqFilterEnabledCheckBox = new QCheckBox("启用FIR低通滤波器");
@@ -2232,13 +2211,13 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
             dashForceUpdated = true;
         }
 
-        // 更新对应的LCD显示
+        // 更新对应的数值标签
         if (valueUpdated) {
-            QString lcdName = "lcd" + dashboard->objectName().mid(4); // 例如 dashForce -> lcdForce
-            QLCDNumber* lcd = findChild<QLCDNumber*>(lcdName);
-            if (lcd) {
-                // 保留三位小数显示到LCD
-                lcd->display(QString::number(currentValue, 'f', 3));
+            QString valueLabelName = "value" + dashboard->objectName().mid(4); // 例如 dashForce -> valueForce
+            QLabel* valueLabel = findChild<QLabel*>(valueLabelName);
+            if (valueLabel) {
+                // 保留三位小数显示到标签
+                valueLabel->setText(QString::number(currentValue, 'f', 3));
             }
         }
     }
@@ -2269,11 +2248,11 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
                 dashForceUpdated = true;
             }
 
-            // 更新对应的LCD显示
-            QString lcdName = "lcd" + dashboard->objectName().mid(4);
-            QLCDNumber* lcd = findChild<QLCDNumber*>(lcdName);
-            if (lcd) {
-                lcd->display(QString::number(dashboard->getValue(), 'f', 3));
+            // 更新对应的数值标签
+            QString valueLabelName = "value" + dashboard->objectName().mid(4);
+            QLabel* valueLabel = findChild<QLabel*>(valueLabelName);
+            if (valueLabel) {
+                valueLabel->setText(QString::number(dashboard->getValue(), 'f', 3));
             }
         }
     }
@@ -2299,11 +2278,11 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
                 dashForceUpdated = true;
             }
 
-            // 更新对应的LCD显示
-            QString lcdName = "lcd" + dashboard->objectName().mid(4);
-            QLCDNumber* lcd = findChild<QLCDNumber*>(lcdName);
-            if (lcd) {
-                lcd->display(QString::number(dashboard->getValue(), 'f', 3));
+            // 更新对应的数值标签
+            QString valueLabelName = "value" + dashboard->objectName().mid(4);
+            QLabel* valueLabel = findChild<QLabel*>(valueLabelName);
+            if (valueLabel) {
+                valueLabel->setText(QString::number(dashboard->getValue(), 'f', 3));
             }
         }
     }
@@ -2460,6 +2439,19 @@ void MainWindow::initDefaultDashboardMappings()
     thrustMapping.pointerStyle = PointerStyle_Indicator;
     dashboardMappings["dashThrust"] = thrustMapping;
 
+    // 初始化压力仪表盘
+    DashboardMapping pressureMapping;
+    pressureMapping.dashboardName = "dashPressure";
+    pressureMapping.sourceType = DataSource_Modbus;
+    pressureMapping.channelIndex = 7;
+    pressureMapping.labelText = "压力";
+    pressureMapping.unit = "MPa";
+    pressureMapping.minValue = 0;
+    pressureMapping.maxValue = 10;
+    pressureMapping.pointerColor = QColor("#32a852");
+    pressureMapping.pointerStyle = PointerStyle_Indicator;
+    dashboardMappings["dashPressure"] = pressureMapping;
+
     // 应用初始映射设置到仪表盘
     applyDashboardMappings();
 }
@@ -2516,19 +2508,17 @@ void MainWindow::applyDashboardMappings()
             qDebug() << "找不到标签对象:" << labelName;
         }
 
-        // 新增: 更新对应的QLCDNumber设置
-        QString lcdName = "lcd" + dashboardName.mid(4); // 例如dashForce -> lcdForce
-        QLCDNumber* lcd = findChild<QLCDNumber*>(lcdName);
-        if (lcd) {
-            // 设置LCD显示白色背景
-            lcd->setStyleSheet(QString("background-color: white; color: %1;").arg(mapping.pointerColor.name()));
+        // 新增: 更新对应的数值标签设置
+        QString valueLabelName = "value" + dashboardName.mid(4); // 例如dashForce -> valueForce
+        QLabel* valueLabel = findChild<QLabel*>(valueLabelName);
+        if (valueLabel) {
+            // 设置标签颜色
+            valueLabel->setStyleSheet(QString("color: %1;").arg(mapping.pointerColor.name()));
 
-            // 设置小数位数为3
-            lcd->setDigitCount(8); // 设置足够显示带3位小数的数字
-            lcd->setSmallDecimalPoint(true);
-            lcd->setSegmentStyle(QLCDNumber::Flat); // 使用扁平风格，更清晰
+            // 设置初始值
+            valueLabel->setText("0.000");
         } else {
-            qDebug() << "找不到LCD对象:" << lcdName;
+            qDebug() << "找不到数值标签对象:" << valueLabelName;
         }
     }
 }
@@ -2639,11 +2629,11 @@ void MainWindow::handleDashboardSettingsChanged(const QString &dashboardName, co
         mapping.pointerColor = settings["pointerColor"].value<QColor>();
         needSave = true;
 
-        // 更新对应的LCD数字颜色
-        QString lcdName = "lcd" + dashboardName.mid(4); // 例如 dashForce -> lcdForce
-        QLCDNumber* lcd = findChild<QLCDNumber*>(lcdName);
-        if (lcd) {
-            lcd->setStyleSheet(QString("background-color: white; color: %1;").arg(mapping.pointerColor.name()));
+        // 更新对应的数值标签颜色
+        QString valueLabelName = "value" + dashboardName.mid(4); // 例如 dashForce -> valueForce
+        QLabel* valueLabel = findChild<QLabel*>(valueLabelName);
+        if (valueLabel) {
+            valueLabel->setStyleSheet(QString("color: %1;").arg(mapping.pointerColor.name()));
         }
     }
 

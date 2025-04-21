@@ -17,7 +17,6 @@
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
-#include <QtWidgets/QLCDNumber>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
@@ -52,6 +51,9 @@ public:
     QPushButton *btnStartAll;
     QPushButton *btnSaveData;
     QPushButton *btnReadData;
+    QLabel *labelWebSocketStatus;
+    QPushButton *btnTestWebSocket;
+    QPushButton *btnWebSocketControl;
     QSpacerItem *verticalSpacer;
     QWidget *widgetDashBoard;
     QVBoxLayout *monitorLayout;
@@ -64,37 +66,42 @@ public:
     Dashboard *dashForce;
     QHBoxLayout *horizontalLayout_Force;
     QLabel *labelForce;
-    QLCDNumber *lcdForce;
+    QLabel *valueForce;
     QVBoxLayout *verticalLayout_Torque;
     Dashboard *dashTorque;
     QHBoxLayout *horizontalLayout_Torque;
     QLabel *labelTorque;
-    QLCDNumber *lcdTorque;
+    QLabel *valueTorque;
     QVBoxLayout *verticalLayout_RPM;
     Dashboard *dashRPM;
     QHBoxLayout *horizontalLayout_RPM;
     QLabel *labelRPM;
-    QLCDNumber *lcdRPM;
+    QLabel *valueRPM;
     QVBoxLayout *verticalLayout_Thrust;
     Dashboard *dashThrust;
     QHBoxLayout *horizontalLayout_Thrust;
     QLabel *labelThrust;
-    QLCDNumber *lcdThrust;
+    QLabel *valueThrust;
     QVBoxLayout *verticalLayout_FuelConsumption;
     Dashboard *dashFuelConsumption;
     QHBoxLayout *horizontalLayout_FuelConsumption;
     QLabel *labelFuelConsumption;
-    QLCDNumber *lcdFuelConsumption;
+    QLabel *valueFuelConsumption;
     QVBoxLayout *verticalLayout_SparkPlugTemp;
     Dashboard *dashSparkPlugTemp;
     QHBoxLayout *horizontalLayout_SparkPlugTemp;
     QLabel *labelSparkPlugTemp;
-    QLCDNumber *lcdSparkPlugTemp;
+    QLabel *valueSparkPlugTemp;
     QVBoxLayout *verticalLayout_Power;
     Dashboard *dashPower;
     QHBoxLayout *horizontalLayout_Power;
     QLabel *labelPower;
-    QLCDNumber *lcdPower;
+    QLabel *valuePower;
+    QVBoxLayout *verticalLayout_Pressure;
+    Dashboard *dashPressure;
+    QHBoxLayout *horizontalLayout_Pressure;
+    QLabel *labelPressure;
+    QLabel *valuePressure;
     QStackedWidget *stackedWidget;
     QWidget *page;
     QVBoxLayout *pageLayout;
@@ -207,11 +214,6 @@ public:
     QGroupBox *groupBoxCustomData;
     QVBoxLayout *verticalLayout_12;
     QTableView *customVarTableView;
-    QHBoxLayout *bottomLayout;
-    QLabel *labelWebSocketStatus;
-    QSpacerItem *horizontalSpacer;
-    QPushButton *btnTestWebSocket;
-    QPushButton *btnWebSocketControl;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -225,6 +227,7 @@ public:
         sizePolicy.setVerticalStretch(0);
         sizePolicy.setHeightForWidth(MainWindow->sizePolicy().hasHeightForWidth());
         MainWindow->setSizePolicy(sizePolicy);
+        MainWindow->setMinimumSize(QSize(2150, 1200));
         MainWindow->setStyleSheet(QString::fromUtf8("QMainWindow {\n"
 "    background-color: #f0f0f0;\n"
 "}\n"
@@ -418,6 +421,36 @@ public:
 
         leftLayout->addLayout(verticalLayout_5);
 
+        labelWebSocketStatus = new QLabel(centralwidget);
+        labelWebSocketStatus->setObjectName("labelWebSocketStatus");
+        sizePolicy1.setHeightForWidth(labelWebSocketStatus->sizePolicy().hasHeightForWidth());
+        labelWebSocketStatus->setSizePolicy(sizePolicy1);
+        labelWebSocketStatus->setMinimumSize(QSize(120, 25));
+        labelWebSocketStatus->setFont(font);
+        labelWebSocketStatus->setStyleSheet(QString::fromUtf8("color: red; font-weight: bold;"));
+        labelWebSocketStatus->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        leftLayout->addWidget(labelWebSocketStatus);
+
+        btnTestWebSocket = new QPushButton(centralwidget);
+        btnTestWebSocket->setObjectName("btnTestWebSocket");
+        sizePolicy2.setHeightForWidth(btnTestWebSocket->sizePolicy().hasHeightForWidth());
+        btnTestWebSocket->setSizePolicy(sizePolicy2);
+        btnTestWebSocket->setMinimumSize(QSize(120, 35));
+        btnTestWebSocket->setFont(font);
+
+        leftLayout->addWidget(btnTestWebSocket);
+
+        btnWebSocketControl = new QPushButton(centralwidget);
+        btnWebSocketControl->setObjectName("btnWebSocketControl");
+        sizePolicy2.setHeightForWidth(btnWebSocketControl->sizePolicy().hasHeightForWidth());
+        btnWebSocketControl->setSizePolicy(sizePolicy2);
+        btnWebSocketControl->setMinimumSize(QSize(120, 35));
+        btnWebSocketControl->setFont(font);
+        btnWebSocketControl->setStyleSheet(QString::fromUtf8("background-color: #2d904c;"));
+
+        leftLayout->addWidget(btnWebSocketControl);
+
         verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
 
         leftLayout->addItem(verticalSpacer);
@@ -491,16 +524,19 @@ public:
 
         horizontalLayout_Force->addWidget(labelForce);
 
-        lcdForce = new QLCDNumber(groupBox_11);
-        lcdForce->setObjectName("lcdForce");
-        QSizePolicy sizePolicy6(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        valueForce = new QLabel(groupBox_11);
+        valueForce->setObjectName("valueForce");
+        QSizePolicy sizePolicy6(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
         sizePolicy6.setHorizontalStretch(2);
         sizePolicy6.setVerticalStretch(0);
-        sizePolicy6.setHeightForWidth(lcdForce->sizePolicy().hasHeightForWidth());
-        lcdForce->setSizePolicy(sizePolicy6);
-        lcdForce->setMinimumSize(QSize(60, 20));
+        sizePolicy6.setHeightForWidth(valueForce->sizePolicy().hasHeightForWidth());
+        valueForce->setSizePolicy(sizePolicy6);
+        valueForce->setMinimumSize(QSize(60, 20));
+        valueForce->setFont(font1);
+        valueForce->setStyleSheet(QString::fromUtf8("color: #24bd9b;"));
+        valueForce->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        horizontalLayout_Force->addWidget(lcdForce);
+        horizontalLayout_Force->addWidget(valueForce);
 
 
         verticalLayout_Force->addLayout(horizontalLayout_Force);
@@ -529,13 +565,16 @@ public:
 
         horizontalLayout_Torque->addWidget(labelTorque);
 
-        lcdTorque = new QLCDNumber(groupBox_11);
-        lcdTorque->setObjectName("lcdTorque");
-        sizePolicy6.setHeightForWidth(lcdTorque->sizePolicy().hasHeightForWidth());
-        lcdTorque->setSizePolicy(sizePolicy6);
-        lcdTorque->setMinimumSize(QSize(60, 20));
+        valueTorque = new QLabel(groupBox_11);
+        valueTorque->setObjectName("valueTorque");
+        sizePolicy6.setHeightForWidth(valueTorque->sizePolicy().hasHeightForWidth());
+        valueTorque->setSizePolicy(sizePolicy6);
+        valueTorque->setMinimumSize(QSize(60, 20));
+        valueTorque->setFont(font1);
+        valueTorque->setStyleSheet(QString::fromUtf8("color: #d95656;"));
+        valueTorque->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        horizontalLayout_Torque->addWidget(lcdTorque);
+        horizontalLayout_Torque->addWidget(valueTorque);
 
 
         verticalLayout_Torque->addLayout(horizontalLayout_Torque);
@@ -564,13 +603,16 @@ public:
 
         horizontalLayout_RPM->addWidget(labelRPM);
 
-        lcdRPM = new QLCDNumber(groupBox_11);
-        lcdRPM->setObjectName("lcdRPM");
-        sizePolicy6.setHeightForWidth(lcdRPM->sizePolicy().hasHeightForWidth());
-        lcdRPM->setSizePolicy(sizePolicy6);
-        lcdRPM->setMinimumSize(QSize(60, 20));
+        valueRPM = new QLabel(groupBox_11);
+        valueRPM->setObjectName("valueRPM");
+        sizePolicy6.setHeightForWidth(valueRPM->sizePolicy().hasHeightForWidth());
+        valueRPM->setSizePolicy(sizePolicy6);
+        valueRPM->setMinimumSize(QSize(60, 20));
+        valueRPM->setFont(font1);
+        valueRPM->setStyleSheet(QString::fromUtf8("color: #ff6400;"));
+        valueRPM->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        horizontalLayout_RPM->addWidget(lcdRPM);
+        horizontalLayout_RPM->addWidget(valueRPM);
 
 
         verticalLayout_RPM->addLayout(horizontalLayout_RPM);
@@ -599,13 +641,16 @@ public:
 
         horizontalLayout_Thrust->addWidget(labelThrust);
 
-        lcdThrust = new QLCDNumber(groupBox_11);
-        lcdThrust->setObjectName("lcdThrust");
-        sizePolicy6.setHeightForWidth(lcdThrust->sizePolicy().hasHeightForWidth());
-        lcdThrust->setSizePolicy(sizePolicy6);
-        lcdThrust->setMinimumSize(QSize(60, 20));
+        valueThrust = new QLabel(groupBox_11);
+        valueThrust->setObjectName("valueThrust");
+        sizePolicy6.setHeightForWidth(valueThrust->sizePolicy().hasHeightForWidth());
+        valueThrust->setSizePolicy(sizePolicy6);
+        valueThrust->setMinimumSize(QSize(60, 20));
+        valueThrust->setFont(font1);
+        valueThrust->setStyleSheet(QString::fromUtf8("color: #0064c8;"));
+        valueThrust->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        horizontalLayout_Thrust->addWidget(lcdThrust);
+        horizontalLayout_Thrust->addWidget(valueThrust);
 
 
         verticalLayout_Thrust->addLayout(horizontalLayout_Thrust);
@@ -634,13 +679,16 @@ public:
 
         horizontalLayout_FuelConsumption->addWidget(labelFuelConsumption);
 
-        lcdFuelConsumption = new QLCDNumber(groupBox_11);
-        lcdFuelConsumption->setObjectName("lcdFuelConsumption");
-        sizePolicy6.setHeightForWidth(lcdFuelConsumption->sizePolicy().hasHeightForWidth());
-        lcdFuelConsumption->setSizePolicy(sizePolicy6);
-        lcdFuelConsumption->setMinimumSize(QSize(60, 20));
+        valueFuelConsumption = new QLabel(groupBox_11);
+        valueFuelConsumption->setObjectName("valueFuelConsumption");
+        sizePolicy6.setHeightForWidth(valueFuelConsumption->sizePolicy().hasHeightForWidth());
+        valueFuelConsumption->setSizePolicy(sizePolicy6);
+        valueFuelConsumption->setMinimumSize(QSize(60, 20));
+        valueFuelConsumption->setFont(font1);
+        valueFuelConsumption->setStyleSheet(QString::fromUtf8("color: #c8b400;"));
+        valueFuelConsumption->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        horizontalLayout_FuelConsumption->addWidget(lcdFuelConsumption);
+        horizontalLayout_FuelConsumption->addWidget(valueFuelConsumption);
 
 
         verticalLayout_FuelConsumption->addLayout(horizontalLayout_FuelConsumption);
@@ -669,13 +717,16 @@ public:
 
         horizontalLayout_SparkPlugTemp->addWidget(labelSparkPlugTemp);
 
-        lcdSparkPlugTemp = new QLCDNumber(groupBox_11);
-        lcdSparkPlugTemp->setObjectName("lcdSparkPlugTemp");
-        sizePolicy6.setHeightForWidth(lcdSparkPlugTemp->sizePolicy().hasHeightForWidth());
-        lcdSparkPlugTemp->setSizePolicy(sizePolicy6);
-        lcdSparkPlugTemp->setMinimumSize(QSize(60, 20));
+        valueSparkPlugTemp = new QLabel(groupBox_11);
+        valueSparkPlugTemp->setObjectName("valueSparkPlugTemp");
+        sizePolicy6.setHeightForWidth(valueSparkPlugTemp->sizePolicy().hasHeightForWidth());
+        valueSparkPlugTemp->setSizePolicy(sizePolicy6);
+        valueSparkPlugTemp->setMinimumSize(QSize(60, 20));
+        valueSparkPlugTemp->setFont(font1);
+        valueSparkPlugTemp->setStyleSheet(QString::fromUtf8("color: #fa3232;"));
+        valueSparkPlugTemp->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        horizontalLayout_SparkPlugTemp->addWidget(lcdSparkPlugTemp);
+        horizontalLayout_SparkPlugTemp->addWidget(valueSparkPlugTemp);
 
 
         verticalLayout_SparkPlugTemp->addLayout(horizontalLayout_SparkPlugTemp);
@@ -704,19 +755,60 @@ public:
 
         horizontalLayout_Power->addWidget(labelPower);
 
-        lcdPower = new QLCDNumber(groupBox_11);
-        lcdPower->setObjectName("lcdPower");
-        sizePolicy6.setHeightForWidth(lcdPower->sizePolicy().hasHeightForWidth());
-        lcdPower->setSizePolicy(sizePolicy6);
-        lcdPower->setMinimumSize(QSize(60, 20));
+        valuePower = new QLabel(groupBox_11);
+        valuePower->setObjectName("valuePower");
+        sizePolicy6.setHeightForWidth(valuePower->sizePolicy().hasHeightForWidth());
+        valuePower->setSizePolicy(sizePolicy6);
+        valuePower->setMinimumSize(QSize(60, 20));
+        valuePower->setFont(font1);
+        valuePower->setStyleSheet(QString::fromUtf8("color: #6432c8;"));
+        valuePower->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        horizontalLayout_Power->addWidget(lcdPower);
+        horizontalLayout_Power->addWidget(valuePower);
 
 
         verticalLayout_Power->addLayout(horizontalLayout_Power);
 
 
         dashboardLayout->addLayout(verticalLayout_Power, 1, 2, 1, 1);
+
+        verticalLayout_Pressure = new QVBoxLayout();
+        verticalLayout_Pressure->setObjectName("verticalLayout_Pressure");
+        dashPressure = new Dashboard(groupBox_11);
+        dashPressure->setObjectName("dashPressure");
+        sizePolicy4.setHeightForWidth(dashPressure->sizePolicy().hasHeightForWidth());
+        dashPressure->setSizePolicy(sizePolicy4);
+        dashPressure->setMinimumSize(QSize(120, 120));
+
+        verticalLayout_Pressure->addWidget(dashPressure);
+
+        horizontalLayout_Pressure = new QHBoxLayout();
+        horizontalLayout_Pressure->setObjectName("horizontalLayout_Pressure");
+        labelPressure = new QLabel(groupBox_11);
+        labelPressure->setObjectName("labelPressure");
+        sizePolicy5.setHeightForWidth(labelPressure->sizePolicy().hasHeightForWidth());
+        labelPressure->setSizePolicy(sizePolicy5);
+        labelPressure->setFont(font1);
+        labelPressure->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
+
+        horizontalLayout_Pressure->addWidget(labelPressure);
+
+        valuePressure = new QLabel(groupBox_11);
+        valuePressure->setObjectName("valuePressure");
+        sizePolicy6.setHeightForWidth(valuePressure->sizePolicy().hasHeightForWidth());
+        valuePressure->setSizePolicy(sizePolicy6);
+        valuePressure->setMinimumSize(QSize(60, 20));
+        valuePressure->setFont(font1);
+        valuePressure->setStyleSheet(QString::fromUtf8("color: #32a852;"));
+        valuePressure->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        horizontalLayout_Pressure->addWidget(valuePressure);
+
+
+        verticalLayout_Pressure->addLayout(horizontalLayout_Pressure);
+
+
+        dashboardLayout->addLayout(verticalLayout_Pressure, 1, 3, 1, 1);
 
 
         monitorLayout->addWidget(groupBox_11);
@@ -739,10 +831,12 @@ public:
         groupBox_5->setObjectName("groupBox_5");
         sizePolicy.setHeightForWidth(groupBox_5->sizePolicy().hasHeightForWidth());
         groupBox_5->setSizePolicy(sizePolicy);
+        groupBox_5->setMinimumSize(QSize(0, 400));
         gridLayout_2 = new QGridLayout(groupBox_5);
         gridLayout_2->setObjectName("gridLayout_2");
         verticalLayout = new QVBoxLayout();
         verticalLayout->setObjectName("verticalLayout");
+        verticalLayout->setSizeConstraint(QLayout::SetMinimumSize);
         labelPort = new QLabel(groupBox_5);
         labelPort->setObjectName("labelPort");
 
@@ -823,6 +917,7 @@ public:
 
         verticalLayout_2 = new QVBoxLayout();
         verticalLayout_2->setObjectName("verticalLayout_2");
+        verticalLayout_2->setSizeConstraint(QLayout::SetMinimumSize);
         labelPort_3 = new QLabel(groupBox_5);
         labelPort_3->setObjectName("labelPort_3");
 
@@ -914,6 +1009,9 @@ public:
 
         plainReceive = new QPlainTextEdit(groupBox_5);
         plainReceive->setObjectName("plainReceive");
+        sizePolicy4.setHeightForWidth(plainReceive->sizePolicy().hasHeightForWidth());
+        plainReceive->setSizePolicy(sizePolicy4);
+        plainReceive->setMinimumSize(QSize(0, 50));
 
         gridLayout_2->addWidget(plainReceive, 6, 0, 1, 4);
 
@@ -1326,35 +1424,6 @@ public:
 
         mainLayout->addLayout(contentLayout);
 
-        bottomLayout = new QHBoxLayout();
-        bottomLayout->setObjectName("bottomLayout");
-        labelWebSocketStatus = new QLabel(centralwidget);
-        labelWebSocketStatus->setObjectName("labelWebSocketStatus");
-        labelWebSocketStatus->setStyleSheet(QString::fromUtf8("color: red; font-weight: bold;"));
-
-        bottomLayout->addWidget(labelWebSocketStatus);
-
-        horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
-
-        bottomLayout->addItem(horizontalSpacer);
-
-        btnTestWebSocket = new QPushButton(centralwidget);
-        btnTestWebSocket->setObjectName("btnTestWebSocket");
-        btnTestWebSocket->setMinimumSize(QSize(150, 35));
-        btnTestWebSocket->setStyleSheet(QString::fromUtf8("background-color: #2c7ec9;"));
-
-        bottomLayout->addWidget(btnTestWebSocket);
-
-        btnWebSocketControl = new QPushButton(centralwidget);
-        btnWebSocketControl->setObjectName("btnWebSocketControl");
-        btnWebSocketControl->setMinimumSize(QSize(180, 35));
-        btnWebSocketControl->setStyleSheet(QString::fromUtf8("background-color: #2d904c;"));
-
-        bottomLayout->addWidget(btnWebSocketControl);
-
-
-        mainLayout->addLayout(bottomLayout);
-
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -1382,15 +1451,27 @@ public:
         btnStartAll->setText(QCoreApplication::translate("MainWindow", "\344\270\200\351\224\256\345\274\200\345\247\213", nullptr));
         btnSaveData->setText(QCoreApplication::translate("MainWindow", "\344\277\235\345\255\230\346\225\260\346\215\256", nullptr));
         btnReadData->setText(QCoreApplication::translate("MainWindow", "\350\257\273\345\217\226\346\225\260\346\215\256", nullptr));
+        labelWebSocketStatus->setText(QCoreApplication::translate("MainWindow", "WS: \347\246\273\347\272\277", nullptr));
+        btnTestWebSocket->setText(QCoreApplication::translate("MainWindow", "\346\265\213\350\257\225WebSocket", nullptr));
+        btnWebSocketControl->setText(QCoreApplication::translate("MainWindow", "\345\220\257\345\212\250WebSocket\346\234\215\345\212\241\345\231\250", nullptr));
         groupBox_10->setTitle(QCoreApplication::translate("MainWindow", "\346\225\260\346\215\256\347\233\221\346\216\247\351\235\242\346\235\277", nullptr));
         groupBox_11->setTitle(QCoreApplication::translate("MainWindow", "\344\273\252\350\241\250\347\233\230", nullptr));
         labelForce->setText(QCoreApplication::translate("MainWindow", "\346\213\211\345\212\233", nullptr));
+        valueForce->setText(QCoreApplication::translate("MainWindow", "0.000", nullptr));
         labelTorque->setText(QCoreApplication::translate("MainWindow", "\346\211\255\347\237\251", nullptr));
+        valueTorque->setText(QCoreApplication::translate("MainWindow", "0.000", nullptr));
         labelRPM->setText(QCoreApplication::translate("MainWindow", "\350\275\254\351\200\237", nullptr));
+        valueRPM->setText(QCoreApplication::translate("MainWindow", "0.000", nullptr));
         labelThrust->setText(QCoreApplication::translate("MainWindow", "\346\216\250\345\212\233", nullptr));
+        valueThrust->setText(QCoreApplication::translate("MainWindow", "0.000", nullptr));
         labelFuelConsumption->setText(QCoreApplication::translate("MainWindow", "\346\262\271\350\200\227", nullptr));
+        valueFuelConsumption->setText(QCoreApplication::translate("MainWindow", "0.000", nullptr));
         labelSparkPlugTemp->setText(QCoreApplication::translate("MainWindow", "\347\201\253\350\212\261\345\241\236\346\270\251\345\272\246", nullptr));
+        valueSparkPlugTemp->setText(QCoreApplication::translate("MainWindow", "0.000", nullptr));
         labelPower->setText(QCoreApplication::translate("MainWindow", "\345\212\237\347\216\207", nullptr));
+        valuePower->setText(QCoreApplication::translate("MainWindow", "0.000", nullptr));
+        labelPressure->setText(QCoreApplication::translate("MainWindow", "\345\216\213\345\212\233", nullptr));
+        valuePressure->setText(QCoreApplication::translate("MainWindow", "0.000", nullptr));
         groupBox_5->setTitle(QCoreApplication::translate("MainWindow", "Modbus\351\200\232\344\277\241\345\217\202\346\225\260\351\205\215\347\275\256", nullptr));
         labelPort->setText(QCoreApplication::translate("MainWindow", "\344\270\262\345\217\243\345\217\267:", nullptr));
         labelBaudRate->setText(QCoreApplication::translate("MainWindow", "\346\263\242\347\211\271\347\216\207:", nullptr));
@@ -1487,9 +1568,6 @@ public:
         groupBox_8->setTitle(QCoreApplication::translate("MainWindow", "DAQ\346\225\260\346\215\256", nullptr));
         groupBox_9->setTitle(QCoreApplication::translate("MainWindow", "ECU\346\225\260\346\215\256", nullptr));
         groupBoxCustomData->setTitle(QCoreApplication::translate("MainWindow", "\350\207\252\345\256\232\344\271\211\345\217\230\351\207\217\346\225\260\346\215\256", nullptr));
-        labelWebSocketStatus->setText(QCoreApplication::translate("MainWindow", "WS: \347\246\273\347\272\277", nullptr));
-        btnTestWebSocket->setText(QCoreApplication::translate("MainWindow", "\346\265\213\350\257\225WebSocket", nullptr));
-        btnWebSocketControl->setText(QCoreApplication::translate("MainWindow", "\345\220\257\345\212\250WebSocket\346\234\215\345\212\241\345\231\250", nullptr));
     } // retranslateUi
 
 };
