@@ -524,6 +524,13 @@ void CalibrationDialog::updateChannelComboBox()
     // Set current index after populating, triggering onChannelChanged if index changes
     if (channelComboBox->count() > 0) {
         channelComboBox->setCurrentIndex(0); // Default to first channel
+
+        // Initialize the calibration table for the selected device type
+        if (isBatchCalibration) {
+            updateMultiChannelCalibrationTable();
+        } else {
+            updateCalibrationTable();
+        }
     } else {
          onChannelChanged(-1); // Handle case with no channels
     }
@@ -636,6 +643,9 @@ void CalibrationDialog::onDeviceChanged(int index)
         } else {
             qDebug() << "[CalibrationDialog] DAQ data is valid, channels:" << latestRawSnapshot.daqData.size();
         }
+
+        // Initialize empty calibration points for the current channel
+        calibrationPoints.clear();
     }
     else if (internalDeviceType == "ECU") {
         // For ECU, use single channel mode by default
@@ -657,9 +667,12 @@ void CalibrationDialog::onDeviceChanged(int index)
         } else {
             qDebug() << "[CalibrationDialog] ECU data is valid, channels:" << latestRawSnapshot.ecuData.size();
         }
+
+        // Initialize empty calibration points for the current channel
+        calibrationPoints.clear();
     }
     else {
-        // For other device types, use single channel mode
+        // For other device types (CustomData), use single channel mode
         isBatchCalibration = false;
 
         // Reset to single graph
@@ -669,6 +682,9 @@ void CalibrationDialog::onDeviceChanged(int index)
         plot->graph(0)->setName(internalDeviceType);
         plot->legend->setVisible(false);
         plot->replot();
+
+        // Initialize empty calibration points for the current channel
+        calibrationPoints.clear();
     }
 
     updateChannelComboBox();
@@ -756,6 +772,9 @@ void CalibrationDialog::onChannelChanged(int index)
 
         // 重置当前值显示
         updateCurrentValueLabel(latestRawValue);
+
+        // 更新校准表格
+        updateCalibrationTable();
     }
 }
 
@@ -1261,30 +1280,138 @@ void CalibrationDialog::onPointCollectionTimerTimeout()
     checkCalibrationButtonState(); // Check confirm button state again
 }
 
-// Update the QTableWidget with current calibration points
+// Update the QTableWidget with current calibration points - using the same format as multi-channel
 void CalibrationDialog::updateCalibrationTable()
 {
-    calibrationTable->setRowCount(0); // Clear existing rows
-    calibrationTable->setRowCount(calibrationPoints.size());
+    // Store the current selection if any
+    int currentRow = calibrationTable->currentRow();
+    int currentCol = calibrationTable->currentColumn();
 
-    for (int i = 0; i < calibrationPoints.size(); ++i) {
-        double rawVal = calibrationPoints[i].first;
-        double stdVal = calibrationPoints[i].second;
-        double error = stdVal - rawVal;
-
-        QTableWidgetItem *itemRaw = new QTableWidgetItem(QString::number(rawVal, 'f', 4));
-        QTableWidgetItem *itemStd = new QTableWidgetItem(QString::number(stdVal, 'f', 4));
-        QTableWidgetItem *itemError = new QTableWidgetItem(QString::number(error, 'f', 4));
-
-        // Center align items
-        itemRaw->setTextAlignment(Qt::AlignCenter);
-        itemStd->setTextAlignment(Qt::AlignCenter);
-        itemError->setTextAlignment(Qt::AlignCenter);
-
-        calibrationTable->setItem(i, 0, itemRaw);
-        calibrationTable->setItem(i, 1, itemStd);
-        calibrationTable->setItem(i, 2, itemError);
+    // Get all unique calibration values
+    QSet<double> calibrationValues;
+    for (const auto& point : calibrationPoints) {
+        calibrationValues.insert(point.second); // Add standard value
     }
+
+    // Convert to sorted list
+    QList<double> sortedCalibValues;
+    for (const double& value : calibrationValues) {
+        sortedCalibValues.append(value);
+    }
+    std::sort(sortedCalibValues.begin(), sortedCalibValues.end());
+
+    // Clear the table completely and reset it
+    calibrationTable->clear();
+    calibrationTable->setRowCount(0);
+    calibrationTable->setColumnCount(0);
+    calibrationTable->clearContents();
+    calibrationTable->clearSpans();
+    calibrationTable->clearSelection();
+    calibrationTable->clearFocus();
+
+    // If no calibration values, return after clearing
+    if (sortedCalibValues.isEmpty()) {
+        return;
+    }
+
+    // Set up table with rows: Header row, Standard values row, and Channel row
+    int totalRows = 3; // Header row, standard values row, and one channel row
+    int totalCols = sortedCalibValues.size() + 1; // +1 for channel ID column
+
+    calibrationTable->setRowCount(totalRows);
+    calibrationTable->setColumnCount(totalCols);
+
+    // Get the appropriate device name
+    QString deviceName = getDeviceInternalName(currentDeviceType);
+
+    // Set the top-left corner cell with the device name
+    QTableWidgetItem *cornerItem = new QTableWidgetItem(QString("(%1) 通道/采集序列").arg(deviceName));
+    cornerItem->setTextAlignment(Qt::AlignCenter);
+    cornerItem->setBackground(QBrush(QColor(240, 240, 240)));
+    calibrationTable->setItem(0, 0, cornerItem);
+
+    // Set column headers with sequence numbers (first row)
+    for (int col = 0; col < sortedCalibValues.size(); ++col) {
+        QTableWidgetItem *headerItem = new QTableWidgetItem(QString::number(col + 1));
+        headerItem->setTextAlignment(Qt::AlignCenter);
+        headerItem->setBackground(QBrush(QColor(240, 240, 240)));
+        // Store the column index for reference
+        headerItem->setData(Qt::UserRole + 1, col + 1);
+        calibrationTable->setItem(0, col + 1, headerItem);
+    }
+
+    // Set standard values row (second row)
+    QTableWidgetItem *stdRowLabel = new QTableWidgetItem(tr("校准值"));
+    stdRowLabel->setTextAlignment(Qt::AlignCenter);
+    stdRowLabel->setBackground(QBrush(QColor(240, 240, 240)));
+    calibrationTable->setItem(1, 0, stdRowLabel);
+
+    // Add standard values in the second row
+    for (int col = 0; col < sortedCalibValues.size(); ++col) {
+        double calibValue = sortedCalibValues[col];
+        QTableWidgetItem *stdValueItem = new QTableWidgetItem(QString::number(calibValue, 'f', 2));
+        stdValueItem->setTextAlignment(Qt::AlignCenter);
+        stdValueItem->setBackground(QBrush(QColor(240, 240, 240)));
+        // Store the standard value as user data for easy access
+        stdValueItem->setData(Qt::UserRole, calibValue);
+        calibrationTable->setItem(1, col + 1, stdValueItem);
+    }
+
+    // Set channel ID in first column of third row
+    QTableWidgetItem *channelItem = new QTableWidgetItem(tr("通道%1").arg(currentChannelIndex));
+    channelItem->setTextAlignment(Qt::AlignCenter);
+    channelItem->setBackground(QBrush(QColor(240, 240, 240)));
+    // Store the channel ID as user data for easy access
+    channelItem->setData(Qt::UserRole, currentChannelIndex);
+    calibrationTable->setItem(2, 0, channelItem);
+
+    // Add raw values for each standard value column
+    for (int colIdx = 0; colIdx < sortedCalibValues.size(); ++colIdx) {
+        double calibValue = sortedCalibValues[colIdx];
+
+        // Find if this channel has a raw value for this calibration value
+        bool found = false;
+        double rawValue = 0.0;
+        for (const auto& point : calibrationPoints) {
+            if (qFuzzyCompare(point.second, calibValue)) {
+                rawValue = point.first;
+                found = true;
+                break;
+            }
+        }
+
+        // Create table item
+        QTableWidgetItem *rawItem;
+        if (found) {
+            rawItem = new QTableWidgetItem(QString::number(rawValue, 'f', 4));
+            rawItem->setForeground(QBrush(QColor(0, 0, 0))); // Black text for valid values
+            // Store both raw and standard values as user data
+            QVariantMap itemData;
+            itemData["raw"] = rawValue;
+            itemData["standard"] = calibValue;
+            itemData["channel"] = currentChannelIndex;
+            itemData["columnIndex"] = colIdx + 1; // Store 1-based column index
+            rawItem->setData(Qt::UserRole, QVariant::fromValue(itemData));
+        } else {
+            rawItem = new QTableWidgetItem("--"); // No data for this channel at this calib value
+            rawItem->setForeground(QBrush(QColor(150, 150, 150))); // Gray text for missing values
+        }
+        rawItem->setTextAlignment(Qt::AlignCenter);
+        calibrationTable->setItem(2, colIdx + 1, rawItem);
+    }
+
+    // Restore selection if possible
+    if (currentRow >= 0 && currentRow < calibrationTable->rowCount() &&
+        currentCol >= 0 && currentCol < calibrationTable->columnCount()) {
+        calibrationTable->setCurrentCell(currentRow, currentCol);
+    }
+
+    // Resize columns to content
+    calibrationTable->resizeColumnsToContents();
+    calibrationTable->resizeRowsToContents();
+
+    // Force a complete repaint to eliminate any visual artifacts
+    calibrationTable->repaint();
 }
 
 // Check and update the enabled state of the confirm button
@@ -1368,17 +1495,45 @@ void CalibrationDialog::onRemovePointClicked()
             updateMultiChannelCalibrationTable();
         }
     } else {
-        // 单通道校准模式
-        int rowToRemove = selectedItems.first()->row();
+        // 单通道校准模式 - 使用与批量校准相同的表格格式
+        QTableWidgetItem *selectedItem = selectedItems.first();
+        int row = selectedItem->row();
+        int col = selectedItem->column();
 
-        if (rowToRemove >= 0 && rowToRemove < calibrationPoints.size()) {
-            // 移除数据结构中的点
-            calibrationPoints.remove(rowToRemove);
+        // 如果选中的是通道列（第一列），则不允许删除
+        if (col == 0) {
+            QMessageBox::warning(this, tr("警告"), tr("请选择数据列！不能删除通道列。"));
+            return;
+        }
 
-            // 移除表格中的行
-            calibrationTable->removeRow(rowToRemove);
+        // 获取标准值（从标准值行）
+        QTableWidgetItem *stdValueItem = calibrationTable->item(1, col);
+        if (!stdValueItem) {
+            QMessageBox::warning(this, tr("警告"), tr("无法获取标准值信息!"));
+            return;
+        }
 
-            qDebug() << "[CalibrationDialog] Removed calibration point at row:" << rowToRemove;
+        double standardValue = stdValueItem->data(Qt::UserRole).toDouble();
+
+        // 确认删除
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, tr("确认"),
+                                    tr("是否要删除标准值 %1 的校准点？")
+                                    .arg(standardValue),
+                                    QMessageBox::Yes | QMessageBox::No);
+
+        if (reply == QMessageBox::Yes) {
+            // 从数据结构中移除该标准值的校准点
+            for (int i = calibrationPoints.size() - 1; i >= 0; --i) {
+                if (qFuzzyCompare(calibrationPoints[i].second, standardValue)) {
+                    calibrationPoints.remove(i);
+                    qDebug() << "[CalibrationDialog] Removed calibration point with standard value" << standardValue;
+                    break;
+                }
+            }
+
+            // 更新表格
+            updateCalibrationTable();
         }
     }
 
@@ -1751,10 +1906,10 @@ bool CalibrationDialog::initializeCalibrationParams()
     // 默认参数字符串 (a=0, b=0, c=1, d=0 => y = x)
     QString defaultCoeffsString = QString("0, 0, 1, 0 ; Timestamp: %1").arg(timeStamp);
 
-    if (isBatchCalibration && getDeviceInternalName(currentDeviceType) == "Modbus") {
-        // 批量模式 - 为所有有效通道初始化
-        QString internalDeviceType = getDeviceInternalName(currentDeviceType);
+    QString internalDeviceType = getDeviceInternalName(currentDeviceType);
 
+    if (isBatchCalibration && internalDeviceType == "Modbus") {
+        // 批量模式 - 为所有有效通道初始化
         for (int ch : validChannels) {
             // 构造键（例如：Modbus/Channel_0）
             QString key = QString("%1/Channel_%2").arg(internalDeviceType).arg(ch);
@@ -1765,14 +1920,19 @@ bool CalibrationDialog::initializeCalibrationParams()
             settings.setValue(key, defaultCoeffsString);
         }
     } else {
-        // 单通道模式
-        QString internalDeviceType = getDeviceInternalName(currentDeviceType);
+        // 单通道模式 - 处理所有设备类型
         QString key = QString("%1/Channel_%2").arg(internalDeviceType).arg(currentChannelIndex);
 
         qDebug() << "[CalibrationDialog] Initializing Key:" << key << "Value:" << defaultCoeffsString;
 
         // 写入值
         settings.setValue(key, defaultCoeffsString);
+
+        // 清除当前通道的校准点
+        calibrationPoints.clear();
+
+        // 更新表格显示
+        updateCalibrationTable();
     }
 
     // 确保数据写入磁盘
