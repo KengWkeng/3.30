@@ -186,7 +186,6 @@ public:
     QPushButton *stopDAQButton;
     QWidget *page_2;
     QVBoxLayout *pageLayout_2;
-    QLabel *labelVisualizer;
     QGroupBox *groupBox_4;
     QVBoxLayout *verticalLayout_6;
     QCustomPlot *modbusCustomPlot;
@@ -836,7 +835,7 @@ public:
         gridLayout_2->setObjectName("gridLayout_2");
         verticalLayout = new QVBoxLayout();
         verticalLayout->setObjectName("verticalLayout");
-        verticalLayout->setSizeConstraint(QLayout::SetMinimumSize);
+        verticalLayout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
         labelPort = new QLabel(groupBox_5);
         labelPort->setObjectName("labelPort");
 
@@ -917,7 +916,7 @@ public:
 
         verticalLayout_2 = new QVBoxLayout();
         verticalLayout_2->setObjectName("verticalLayout_2");
-        verticalLayout_2->setSizeConstraint(QLayout::SetMinimumSize);
+        verticalLayout_2->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
         labelPort_3 = new QLabel(groupBox_5);
         labelPort_3->setObjectName("labelPort_3");
 
@@ -1279,12 +1278,6 @@ public:
         page_2->setObjectName("page_2");
         pageLayout_2 = new QVBoxLayout(page_2);
         pageLayout_2->setObjectName("pageLayout_2");
-        labelVisualizer = new QLabel(page_2);
-        labelVisualizer->setObjectName("labelVisualizer");
-        labelVisualizer->setAlignment(Qt::AlignmentFlag::AlignCenter);
-
-        pageLayout_2->addWidget(labelVisualizer);
-
         groupBox_4 = new QGroupBox(page_2);
         groupBox_4->setObjectName("groupBox_4");
         sizePolicy4.setHeightForWidth(groupBox_4->sizePolicy().hasHeightForWidth());
@@ -1558,7 +1551,6 @@ public:
         sampleRateEdit->setText(QCoreApplication::translate("MainWindow", "10000", nullptr));
         startDAQButton->setText(QCoreApplication::translate("MainWindow", "\345\274\200\345\247\213\351\207\207\351\233\206", nullptr));
         stopDAQButton->setText(QCoreApplication::translate("MainWindow", "\345\201\234\346\255\242\351\207\207\351\233\206", nullptr));
-        labelVisualizer->setText(QCoreApplication::translate("MainWindow", "\346\225\260\346\215\256\345\217\257\350\247\206\345\214\226", nullptr));
         groupBox_4->setTitle(QCoreApplication::translate("MainWindow", "Modbus\345\233\276\350\241\250", nullptr));
         groupBox_6->setTitle(QCoreApplication::translate("MainWindow", "DAQ\345\233\276\350\241\250", nullptr));
         groupBoxECUplot->setTitle(QCoreApplication::translate("MainWindow", "ECU\345\233\276\350\241\250", nullptr));

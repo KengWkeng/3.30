@@ -2642,13 +2642,31 @@ void MainWindow::handleDashboardSettingsChanged(const QString &dashboardName, co
         return;
     }
 
-    DashboardMapping &mapping = dashboardMappings[dashboardName];
-    bool needSave = false;
+    // 获取仪表盘对象
+    Dashboard* dashboard = findChild<Dashboard*>(dashboardName);
+    if (!dashboard) {
+        qDebug() << "错误：仪表盘对象不存在:" << dashboardName;
+        return;
+    }
 
-    // 处理标题/标签变更
+    qDebug() << dashboardName << "设置已变更，更新相关组件...";
+
+    // 1. 更新映射
+    DashboardMapping &mapping = dashboardMappings[dashboardName];
+
+    // 更新数据源类型
+    if (settings.contains("deviceType")) {
+        mapping.sourceType = (DataSourceType)settings["deviceType"].toInt();
+    }
+
+    // 更新通道索引
+    if (settings.contains("channelIndex")) {
+        mapping.channelIndex = settings["channelIndex"].toInt();
+    }
+
+    // 更新标签文本
     if (settings.contains("title")) {
         mapping.labelText = settings["title"].toString();
-        needSave = true;
 
         // 更新对应的QLabel
         QString labelName = "label" + dashboardName.mid(4); // 例如 dashForce -> labelForce
@@ -2658,28 +2676,22 @@ void MainWindow::handleDashboardSettingsChanged(const QString &dashboardName, co
         }
     }
 
-    // 处理单位变更
+    // 更新单位
     if (settings.contains("unit")) {
         mapping.unit = settings["unit"].toString();
-        needSave = true;
     }
 
-    // 处理最小值变更
+    // 更新取值范围
     if (settings.contains("minValue")) {
         mapping.minValue = settings["minValue"].toDouble();
-        needSave = true;
     }
-
-    // 处理最大值变更
     if (settings.contains("maxValue")) {
         mapping.maxValue = settings["maxValue"].toDouble();
-        needSave = true;
     }
 
-    // 处理指针颜色变更
+    // 更新指针颜色
     if (settings.contains("pointerColor")) {
-        mapping.pointerColor = settings["pointerColor"].value<QColor>();
-        needSave = true;
+        mapping.pointerColor = QColor(settings["pointerColor"].toString());
 
         // 更新对应的数值标签颜色
         QString valueLabelName = "value" + dashboardName.mid(4); // 例如 dashForce -> valueForce
@@ -2689,42 +2701,33 @@ void MainWindow::handleDashboardSettingsChanged(const QString &dashboardName, co
         }
     }
 
-    // 处理指针样式变更
+    // 更新指针样式
     if (settings.contains("pointerStyle")) {
-        mapping.pointerStyle = settings["pointerStyle"].toInt();
-        needSave = true;
+        mapping.pointerStyle = (PointerStyle)settings["pointerStyle"].toInt();
     }
 
-    // 处理数据源类型变更
-    if (settings.contains("sourceType")) {
-        mapping.sourceType = (DataSourceType)settings["sourceType"].toInt();
-        needSave = true;
-    }
-
-    // 处理通道索引变更
-    if (settings.contains("channelIndex")) {
-        mapping.channelIndex = settings["channelIndex"].toInt();
-        needSave = true;
-    }
-
-    // 处理变量名变更
+    // 更新变量名称（对自定义变量很重要）
     if (settings.contains("variableName")) {
         mapping.variableName = settings["variableName"].toString();
-        needSave = true;
     }
 
-    // 处理公式变更
+    // 更新公式（对自定义变量很重要）
     if (settings.contains("formula")) {
         mapping.formula = settings["formula"].toString();
-        needSave = true;
     }
 
-    // 如果有设置变更，保存到配置文件
-    if (needSave) {
-        QString settingsFile = QCoreApplication::applicationDirPath() + "/dashboard_settings.ini";
-        QSettings settings(settingsFile, QSettings::IniFormat);
-        saveDashboardMappings(settings);
-        qDebug() << "已保存仪表盘设置变更到:" << settingsFile;
+    qDebug() << dashboardName << "映射已更新: 数据源=" << mapping.sourceType
+             << ", 通道=" << mapping.channelIndex
+             << ", 变量=" << mapping.variableName;
+
+    // 2. 保存映射到配置文件
+    QString settingsFile = QCoreApplication::applicationDirPath() + "/dashboard_settings.ini";
+    QSettings configSettings(settingsFile, QSettings::IniFormat);
+    saveDashboardMappings(configSettings);
+
+    // 3. 如果是dashForce，不在这里处理，因为它有专门的处理函数
+    if (dashboardName == "dashForce") {
+        return;
     }
 }
 
