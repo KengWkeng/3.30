@@ -698,6 +698,84 @@ MainWindow::~MainWindow()
 // DAQ相关实现
 void MainWindow::setupDAQPlot()
 {
+    // 初始化DAQ图表
+    QCustomPlot *daqPlot = ui->daqCustomPlot;
+    if (!daqPlot) {
+        qDebug() << "错误: DAQ图表控件不存在";
+        return;
+    }
+
+    // 清除现有的图表和轴
+    daqPlot->clearGraphs();
+    daqPlot->clearItems();
+
+    // 设置图表样式
+    daqPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    daqPlot->axisRect()->setupFullAxesBox(true);
+    daqPlot->xAxis->setLabel("时间(秒)");
+    daqPlot->yAxis->setLabel("数值");
+
+    // 获取当前的通道数量
+    QString channelStr = ui->channelsEdit->text().trimmed();
+    QStringList parts = channelStr.split('/', Qt::SkipEmptyParts);
+    int numChannels = parts.size();
+
+    if (numChannels <= 0) {
+        numChannels = 1; // 默认至少显示一个通道
+    }
+
+    // 为每个通道创建一个图表线条
+    for (int i = 0; i < numChannels; i++) {
+        daqPlot->addGraph();
+
+        // 使用不同颜色
+        QColor color = QColor::fromHsv((i * 255) / numChannels, 255, 255);
+        daqPlot->graph(i)->setPen(QPen(color, 2)); // 增加线条宽度
+
+        // 设置图例名称 - 使用实际的通道号
+        QString channelName = parts.size() > i ? parts[i].trimmed() : QString::number(i);
+        daqPlot->graph(i)->setName(QString("通道%1").arg(channelName));
+    }
+
+    // 创建图例并移动到坐标轴外部右侧
+    daqPlot->legend->setVisible(true);
+    daqPlot->legend->setBrush(QBrush(QColor(255, 255, 255, 200)));
+    daqPlot->legend->setBorderPen(Qt::NoPen);
+
+    // 启用图例选择框
+    daqPlot->legend->setSelectableParts(QCPLegend::spItems); // 使图例项可选择
+
+    // 设置图例项的选择框样式
+    QFont legendFont = daqPlot->legend->font();
+    legendFont.setPointSize(9); // 调整字体大小
+    daqPlot->legend->setFont(legendFont);
+    daqPlot->legend->setIconSize(QSize(20, 14)); // 调整图标大小
+
+    // 连接图例项的点击事件
+    connect(daqPlot, &QCustomPlot::legendClick, this, [=](QCPLegend* legend, QCPAbstractLegendItem* item, QMouseEvent* event) {
+        // 获取被点击的图例项对应的图表索引
+        QCPPlottableLegendItem* plItem = qobject_cast<QCPPlottableLegendItem*>(item);
+        if (plItem) {
+            QCPAbstractPlottable* plottable = plItem->plottable();
+            // 切换图表的可见性
+            plottable->setVisible(!plottable->visible());
+            // 重绘图表
+            daqPlot->replot();
+        }
+    });
+
+    // 将图例移动到坐标轴外部右侧
+    daqPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignRight|Qt::AlignTop);
+    daqPlot->axisRect()->insetLayout()->setInsetPlacement(0, QCPLayoutInset::ipFree);
+    daqPlot->axisRect()->insetLayout()->setInsetRect(0, QRectF(1.02, 0, 0.2, 0.5)); // 将图例移动到坐标轴外部
+
+    // 设置初始轴范围
+    daqPlot->xAxis->setRange(0, 60); // 初始显示60秒
+    daqPlot->yAxis->setRange(-0.1, 0.1); // 初始范围设置为小范围
+    daqPlot->replot();
+
+    qDebug() << "DAQ图表初始化完成，通道数: " << daqPlot->graphCount();
+
     // 创建DAQ滤波器控制面板
     QGroupBox *daqFilterGroupBox = new QGroupBox("DAQ滤波器设置", ui->groupBoxDAQ);
     QVBoxLayout *daqFilterLayout = new QVBoxLayout(daqFilterGroupBox);
@@ -1124,7 +1202,75 @@ void MainWindow::on_btnSend_clicked()
 //初始化图表
 void MainWindow::myplotInit(QCustomPlot *customPlot)
 {
+    if (!customPlot) {
+        qDebug() << "错误: 图表控件不存在";
+        return;
+    }
 
+    // 清除现有的图表和轴
+    customPlot->clearGraphs();
+    customPlot->clearItems();
+
+    // 设置图表样式
+    customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    customPlot->axisRect()->setupFullAxesBox(true);
+    customPlot->xAxis->setLabel("时间(秒)");
+    customPlot->yAxis->setLabel("数值");
+
+    // 获取当前的通道数量
+    int numChannels = ui->lineSegNum->text().toInt();
+    if (numChannels <= 0) {
+        numChannels = 1; // 默认至少显示一个通道
+    }
+
+    // 为每个通道创建一个图表线条
+    for (int i = 0; i < numChannels; i++) {
+        customPlot->addGraph();
+
+        // 使用不同颜色
+        QColor color = QColor::fromHsv((i * 255) / numChannels, 255, 255);
+        customPlot->graph(i)->setPen(QPen(color, 2)); // 增加线条宽度
+        customPlot->graph(i)->setName(QString("通道%1").arg(i)); // 设置图例名称
+    }
+
+    // 创建图例并移动到坐标轴外部右侧
+    customPlot->legend->setVisible(true);
+    customPlot->legend->setBrush(QBrush(QColor(255, 255, 255, 200)));
+    customPlot->legend->setBorderPen(Qt::NoPen);
+
+    // 启用图例选择框
+    customPlot->legend->setSelectableParts(QCPLegend::spItems); // 使图例项可选择
+
+    // 设置图例项的选择框样式
+    QFont legendFont = customPlot->legend->font();
+    legendFont.setPointSize(9); // 调整字体大小
+    customPlot->legend->setFont(legendFont);
+    customPlot->legend->setIconSize(QSize(20, 14)); // 调整图标大小
+
+    // 连接图例项的点击事件
+    connect(customPlot, &QCustomPlot::legendClick, this, [=](QCPLegend* legend, QCPAbstractLegendItem* item, QMouseEvent* event) {
+        // 获取被点击的图例项对应的图表索引
+        QCPPlottableLegendItem* plItem = qobject_cast<QCPPlottableLegendItem*>(item);
+        if (plItem) {
+            QCPAbstractPlottable* plottable = plItem->plottable();
+            // 切换图表的可见性
+            plottable->setVisible(!plottable->visible());
+            // 重绘图表
+            customPlot->replot();
+        }
+    });
+
+    // 将图例移动到坐标轴外部右侧
+    customPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignRight|Qt::AlignTop);
+    customPlot->axisRect()->insetLayout()->setInsetPlacement(0, QCPLayoutInset::ipFree);
+    customPlot->axisRect()->insetLayout()->setInsetRect(0, QRectF(1.02, 0, 0.2, 0.5)); // 将图例移动到坐标轴外部
+
+    // 设置初始轴范围
+    customPlot->xAxis->setRange(0, 60); // 初始显示60秒
+    customPlot->yAxis->setRange(0, 100); // 初始范围0-100
+    customPlot->replot();
+
+    qDebug() << "Modbus图表初始化完成，通道数: " << customPlot->graphCount();
 }
 
 
@@ -3234,14 +3380,9 @@ void MainWindow::ECUPlotInit()
         return;
     }
 
-    // 清除现有的图表
+    // 清除现有的图表和轴
     ecuPlot->clearGraphs();
     ecuPlot->clearItems();
-
-    // 设置图表标题
-    ecuPlot->plotLayout()->insertRow(0);
-    QCPTextElement *title = new QCPTextElement(ecuPlot, "ECU数据监控", QFont("sans", 12, QFont::Bold));
-    ecuPlot->plotLayout()->addElement(0, 0, title);
 
     // 创建参数名称和颜色映射
     QStringList names = {
@@ -3261,11 +3402,36 @@ void MainWindow::ECUPlotInit()
         "darkBlue", "darkRed", "darkGreen", "darkCyan"
     };
 
+    // 创建转速通道的单独 Y 轴
+    // 添加右侧 Y 轴用于转速
+    QCPAxis *speedAxis = nullptr;
+
+    // 检查是否已经有右侧Y轴，如果没有则创建
+    if (!ecuPlot->axisRect()->axis(QCPAxis::atRight)) {
+        speedAxis = ecuPlot->axisRect()->addAxis(QCPAxis::atRight);
+        qDebug() << "创建了新的转速轴";
+    } else {
+        speedAxis = ecuPlot->axisRect()->axis(QCPAxis::atRight);
+        qDebug() << "使用现有的转速轴";
+    }
+
+    // 设置转速轴属性
+    speedAxis->setLabel("发动机转速 (rpm)");
+    speedAxis->setRange(0, 6000); // 初始范围设置为 0-6000
+    speedAxis->setTickLabelColor(QColor("red")); // 使用与转速曲线相同的颜色
+    speedAxis->setLabelColor(QColor("red"));
+
     // 为每个参数创建一个图表线条
     for (int i = 0; i < names.size(); i++) {
         ecuPlot->addGraph();
         ecuPlot->graph(i)->setPen(QPen(QColor(colors[i % colors.size()]), 2)); // 增加线条宽度
         ecuPlot->graph(i)->setName(names[i]); // 设置图例名称
+
+        // 如果是转速通道（索引 1），则使用右侧 Y 轴
+        if (i == 1) { // 发动机转速通道
+            ecuPlot->graph(i)->setValueAxis(speedAxis);
+            qDebug() << "转速通道已设置为使用单独 Y 轴";
+        }
     }
 
     // 设置图表样式
@@ -3274,21 +3440,41 @@ void MainWindow::ECUPlotInit()
     ecuPlot->xAxis->setLabel("时间(秒)");
     ecuPlot->yAxis->setLabel("数值");
 
-    // 创建图例
+    // 创建图例并移动到坐标轴外部右侧
     ecuPlot->legend->setVisible(true);
     ecuPlot->legend->setBrush(QBrush(QColor(255, 255, 255, 200)));
     ecuPlot->legend->setBorderPen(Qt::NoPen);
-    ecuPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignRight|Qt::AlignTop);
 
-    // 初始化数据容器
-    // 不再在主线程中管理这些变量，已移至SnapshotThread
-    // ecuTimeData.clear();
-    // ecuData.clear();
-    // ecuData.resize(names.size());
+    // 启用图例选择框
+    ecuPlot->legend->setSelectableParts(QCPLegend::spItems); // 使图例项可选择
+
+    // 设置图例项的选择框样式
+    QFont legendFont = ecuPlot->legend->font();
+    legendFont.setPointSize(9); // 调整字体大小
+    ecuPlot->legend->setFont(legendFont);
+    ecuPlot->legend->setIconSize(QSize(20, 14)); // 调整图标大小
+
+    // 连接图例项的点击事件
+    connect(ecuPlot, &QCustomPlot::legendClick, this, [=](QCPLegend* legend, QCPAbstractLegendItem* item, QMouseEvent* event) {
+        // 获取被点击的图例项对应的图表索引
+        QCPPlottableLegendItem* plItem = qobject_cast<QCPPlottableLegendItem*>(item);
+        if (plItem) {
+            QCPAbstractPlottable* plottable = plItem->plottable();
+            // 切换图表的可见性
+            plottable->setVisible(!plottable->visible());
+            // 重绘图表
+            ecuPlot->replot();
+        }
+    });
+
+    // 将图例移动到坐标轴外部右侧
+    ecuPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignRight|Qt::AlignTop);
+    ecuPlot->axisRect()->insetLayout()->setInsetPlacement(0, QCPLayoutInset::ipFree);
+    ecuPlot->axisRect()->insetLayout()->setInsetRect(0, QRectF(1.02, 0, 0.2, 0.5)); // 将图例移动到坐标轴外部
 
     // 设置初始轴范围
     ecuPlot->xAxis->setRange(0, 60); // 初始显示60秒
-    ecuPlot->yAxis->setRange(0, 100); // 初始范围0-100
+    ecuPlot->yAxis->setRange(0, 100); // 其他通道的初始范围
     ecuPlot->replot();
 
     qDebug() << "ECU图表初始化完成，通道数: " << ecuPlot->graphCount();
@@ -3892,11 +4078,8 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
             }
         }
 
-        // Use static variables to maintain history data
-        static QVector<double> customTimeData;
-        static QVector<QVector<double>> customValues;
-
-        // Ensure customValues size matches the number of channels
+        // 使用成员变量保存历史数据
+        // 确保 customValues 大小与通道数量匹配
         int customChannelCount = snapshot.customData.size();
         if (customValues.size() != customChannelCount) {
             customValues.resize(customChannelCount);
@@ -3956,31 +4139,14 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
     if (snapshot.modbusValid && ui->modbusCustomPlot) {
         // 确保Modbus图表已初始化
         if (ui->modbusCustomPlot->graphCount() == 0) {
-            // 初始化Modbus图表
-            ui->modbusCustomPlot->clearGraphs();
-            ui->modbusCustomPlot->legend->setVisible(true);
-
-            // 设置坐标轴
-            ui->modbusCustomPlot->xAxis->setLabel("时间(秒)");
-            ui->modbusCustomPlot->yAxis->setLabel("值");
-
-            // 为每个Modbus通道创建曲线
-            for (int i = 0; i < modbusNumRegs; ++i) {
-                QCPGraph *graph = ui->modbusCustomPlot->addGraph();
-                graph->setName(QString("通道%1").arg(i));
-
-                // 使用不同颜色
-                QColor color = QColor::fromHsv((i * 255) / modbusNumRegs, 255, 255);
-                graph->setPen(QPen(color));
-            }
+            // 使用更新的初始化函数
+            myplotInit(ui->modbusCustomPlot);
+            qDebug() << "初始化Modbus图表，图表数量：" << ui->modbusCustomPlot->graphCount();
         }
 
-        // 使用静态变量来保持历史数据
-        static QVector<double> modbusTimeData;
-        static QVector<QVector<double>> modbusValues;
-
-        // 确保modbusValues大小正确
-        int currentModbusRegs = snapshot.modbusData.size(); // Use actual size from snapshot
+        // 使用成员变量保存历史数据
+        // 确保 modbusValues 大小与通道数量匹配
+        int currentModbusRegs = snapshot.modbusData.size(); // 使用快照中的实际大小
         if (modbusValues.size() != currentModbusRegs) {
             modbusValues.resize(currentModbusRegs);
         }
@@ -4034,43 +4200,17 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
     if (snapshot.daqValid && ui->daqCustomPlot) {
         // 确保DAQ图表已初始化
         if (ui->daqCustomPlot->graphCount() == 0) {
-            // 初始化DAQ图表
-            ui->daqCustomPlot->clearGraphs();
-            ui->daqCustomPlot->legend->setVisible(true);
-
-            // 设置坐标轴
-            ui->daqCustomPlot->xAxis->setLabel("时间(秒)");
-            ui->daqCustomPlot->yAxis->setLabel("值");
-
-            // 确保daqNumChannels不为0
-            int numChannels = qMax(1, daqNumChannels);
-            if (snapshot.daqData.size() > numChannels) {
-                numChannels = snapshot.daqData.size();
-                daqNumChannels = numChannels; // 更新通道数量
-            }
-
-            // 为每个DAQ通道创建曲线
-            for (int i = 0; i < numChannels; ++i) {
-                QCPGraph *graph = ui->daqCustomPlot->addGraph();
-                graph->setName(QString("通道%1").arg(i));
-
-                // 使用不同颜色
-                QColor color = QColor::fromHsv((i * 255) / numChannels, 255, 255);
-                graph->setPen(QPen(color));
-            }
-
-            qDebug() << "DAQ图表初始化完成，通道数：" << ui->daqCustomPlot->graphCount();
+            // 使用更新的初始化函数
+            setupDAQPlot();
+            qDebug() << "初始化DAQ图表，图表数量：" << ui->daqCustomPlot->graphCount();
         }
 
-        // 使用静态变量来保持历史数据
-        static QVector<double> daqTimeData;
-        static QVector<QVector<double>> daqValues;
-
+        // 使用成员变量保存历史数据
         // 获取实际通道数量
         int currentDaqChannels = snapshot.daqData.size();
         if (daqValues.size() != currentDaqChannels) {
             daqValues.resize(currentDaqChannels);
-            // Optional: Clear old graphs if channel count changes drastically?
+            // 可选：如果通道数量变化很大，清除旧图表
         }
 
         // 添加新的时间点
@@ -4127,10 +4267,8 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
 
         // 检查图表是否初始化成功 - 不要限制为9，使用实际的图表数量
         if (ui->ECUCustomPlot->graphCount() > 0) {
-            // 使用静态变量来保持历史数据
-            static QVector<double> ecuTimeData;
-            static QVector<QVector<double>> ecuValues;
-            const int ecuChannelCount = 9; // ECU channels are fixed
+            // 使用成员变量保存历史数据
+            const int ecuChannelCount = 9; // ECU通道数量固定
 
             if (ecuValues.size() != ecuChannelCount) {
                 ecuValues.resize(ecuChannelCount);
@@ -4154,8 +4292,8 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
                         ui->ECUCustomPlot->graph(i)->setData(ecuTimeData, ecuValues[i], true);
                     }
                 }
-                // ui->ECUCustomPlot->xAxis->setRange(snapshot.timestamp - 60, snapshot.timestamp);
-                // Apply the same logic for ECU plot X-axis range
+
+                // 设置X轴范围
                 double latestTimestampEcu = snapshot.timestamp;
                 double displayWindowSecondsEcu = 60.0;
                 if (latestTimestampEcu <= displayWindowSecondsEcu) {
@@ -4163,6 +4301,31 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
                 } else {
                     ui->ECUCustomPlot->xAxis->setRange(latestTimestampEcu - displayWindowSecondsEcu, latestTimestampEcu);
                 }
+
+                // 获取转速通道的最大值（索引 1）
+                double maxSpeed = 0;
+                if (ecuValues.size() > 1 && !ecuValues[1].isEmpty()) {
+                    for (double speed : ecuValues[1]) {
+                        maxSpeed = qMax(maxSpeed, speed);
+                    }
+                }
+
+                // 获取转速轴
+                QCPAxis *speedAxis = ui->ECUCustomPlot->axisRect()->axis(QCPAxis::atRight);
+                if (speedAxis) {
+                    // 动态调整转速轴范围
+                    if (maxSpeed > 6000) {
+                        // 如果超过6000，将范围调整为0到当前值
+                        speedAxis->setRange(0, maxSpeed * 1.1); // 留出10%的空间
+                        qDebug() << "调整转速轴范围为 0 -" << (maxSpeed * 1.1);
+                    } else if (speedAxis->range().upper != 6000) {
+                        // 如果当前范围不是0-6000，则重置为默认值
+                        speedAxis->setRange(0, 6000);
+                        qDebug() << "重置转速轴范围为 0-6000";
+                    }
+                }
+
+                // 仅对主 Y 轴进行自动缩放，转速轴单独处理
                 ui->ECUCustomPlot->yAxis->rescale();
                 ui->ECUCustomPlot->replot(QCustomPlot::rpQueuedReplot);
             } else if (ui->ECUCustomPlot->graphCount() != ecuChannelCount) {
@@ -4350,6 +4513,33 @@ void MainWindow::handleModbusData(QVector<double> resultdata, qint64 readTimeInt
 */
 
 
+// 清除所有图表数据数组
+void MainWindow::clearAllPlotDataArrays()
+{
+    // 清除Modbus图表数据
+    modbusTimeData.clear();
+    modbusValues.clear();
+
+    // 清除DAQ图表数据
+    daqTimeData.clear();
+    daqValues.clear();
+
+    // 清除ECU图表数据
+    ecuTimeData.clear();
+    ecuValues.clear();
+
+    // 清除自定义变量图表数据
+    customTimeData.clear();
+    customValues.clear();
+
+    // 清除dash1plot数据
+    dashForceTimeData.clear();
+    dashForceValueData.clear();
+    dashPlotTimeCounter = 0.0;
+
+    qDebug() << "[MainWindow] All plot data arrays cleared";
+}
+
 void MainWindow::on_btnStartAll_clicked()
 {
     // 检查初始化状态
@@ -4364,6 +4554,58 @@ void MainWindow::on_btnStartAll_clicked()
         // === 启动所有采集任务 (Normal Mode) ===
         currentRunMode = RunMode::Normal; // 设置为正常模式
         qDebug() << "[MainWindow] Starting Normal Run...";
+
+        // --- 清除所有图表和数据 ---
+        // 清除所有数据数组
+        clearAllPlotDataArrays();
+
+        // 重置所有QCustomPlot图表
+        if (ui->modbusCustomPlot) {
+            ui->modbusCustomPlot->clearGraphs();
+            ui->modbusCustomPlot->clearItems();
+            ui->modbusCustomPlot->replot();
+            qDebug() << "[MainWindow] Cleared Modbus plot";
+        }
+
+        if (ui->daqCustomPlot) {
+            ui->daqCustomPlot->clearGraphs();
+            ui->daqCustomPlot->clearItems();
+            ui->daqCustomPlot->replot();
+            qDebug() << "[MainWindow] Cleared DAQ plot";
+        }
+
+        if (ui->ECUCustomPlot) {
+            ui->ECUCustomPlot->clearGraphs();
+            ui->ECUCustomPlot->clearItems();
+            ui->ECUCustomPlot->replot();
+            qDebug() << "[MainWindow] Cleared ECU plot";
+        }
+
+        if (ui->dash1plot) {
+            ui->dash1plot->clearGraphs();
+            ui->dash1plot->clearItems();
+            ui->dash1plot->replot();
+            qDebug() << "[MainWindow] Cleared dash1plot";
+        }
+
+        if (ui->customVarCustomPlot) {
+            ui->customVarCustomPlot->clearGraphs();
+            ui->customVarCustomPlot->clearItems();
+            ui->customVarCustomPlot->replot();
+            qDebug() << "[MainWindow] Cleared customVar plot";
+        }
+
+        // 重新初始化所有图表
+        myplotInit(ui->modbusCustomPlot);
+        setupDAQPlot();
+        ECUPlotInit();
+        setupDash1Plot();
+
+        // 重置所有仪表盘显示
+        QList<Dashboard*> dashboards = getAllDashboards();
+        foreach(Dashboard* dashboard, dashboards) {
+            dashboard->setValue(0);
+        }
 
         // --- Start Modbus ---
         if (ui->btnOpenPort->text() == "打开串口") {
@@ -4414,7 +4656,10 @@ void MainWindow::on_btnStartAll_clicked()
         QStringList daqParts = ui->channelsEdit->text().split('/', Qt::SkipEmptyParts);
         int daqCount = daqParts.size();
         emit sendConfigCounts(modbusCount, daqCount);
+
+        // 重置主计时器 - 确保时间戳从0开始
         QMetaObject::invokeMethod(snpTh, "resetMasterTimer", Qt::QueuedConnection);
+        qDebug() << "[MainWindow] Master timer reset requested";
 
         // +++ Explicitly enable logging for Normal mode +++
         if (snpTh) {

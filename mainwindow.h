@@ -428,6 +428,26 @@ private:
 
     // 标记初始化状态（通过设置初始化或读取初始化文件）
     bool initializationCompleted = false;
+
+    // 图表数据成员变量
+    // Modbus图表数据
+    QVector<double> modbusTimeData;
+    QVector<QVector<double>> modbusValues;
+
+    // DAQ图表数据
+    QVector<double> daqTimeData;
+    QVector<QVector<double>> daqValues;
+
+    // ECU图表数据
+    QVector<double> ecuTimeData;
+    QVector<QVector<double>> ecuValues;
+
+    // 自定义变量图表数据
+    QVector<double> customTimeData;
+    QVector<QVector<double>> customValues;
+
+    // 添加清除所有图表数据数组的函数
+    void clearAllPlotDataArrays();
 };
 
 

@@ -1,0 +1,25 @@
+# ninja log v6
+21	321	7671299003745317	.qt/qml_imports/test1_build.cmake	827a5e3b23aa877f
+21	321	7671299003745317	C:/Users/80911/Documents/QT/vs_test/test1/build/.qt/qml_imports/test1_build.cmake	827a5e3b23aa877f
+322	1614	7671299015831055	test1_autogen/timestamp	f1f2ebffc5e33c31
+322	1614	7671299015831055	test1_autogen/mocs_compilation.cpp	f1f2ebffc5e33c31
+322	1614	7671299015831055	C:/Users/80911/Documents/QT/vs_test/test1/build/test1_autogen/timestamp	f1f2ebffc5e33c31
+322	1614	7671299015831055	C:/Users/80911/Documents/QT/vs_test/test1/build/test1_autogen/mocs_compilation.cpp	f1f2ebffc5e33c31
+1622	1651	7671299017051034	qrc_logo.cpp	279f7d9c637851e8
+1622	1651	7671299017051034	C:/Users/80911/Documents/QT/vs_test/test1/build/qrc_logo.cpp	279f7d9c637851e8
+1688	1796	7671299017461040	CMakeFiles/test1.dir/qrc_logo.cpp.obj	10f2effe28df4d8
+1670	3018	7671299017281048	CMakeFiles/test1.dir/daqthread.cpp.obj	6e4eb948b5b38724
+1667	3124	7671299017251046	CMakeFiles/test1.dir/canthread.cpp.obj	212be7140c4885f
+1659	3245	7671299017171038	CMakeFiles/test1.dir/modbusthread.cpp.obj	f51d281c1ef9a5a
+1672	3254	7671299017301036	CMakeFiles/test1.dir/ecuthread.cpp.obj	89cc410e0799cfc5
+1680	3258	7671299017381039	CMakeFiles/test1.dir/dashboardcalculator.cpp.obj	56be02a1413edb11
+1678	3853	7671299017361039	CMakeFiles/test1.dir/dashboard.cpp.obj	6b58d017575cc46e
+1675	3886	7671299017331033	CMakeFiles/test1.dir/snapshotthread.cpp.obj	e0e8670b6e2e9849
+1683	4023	7671299017411045	CMakeFiles/test1.dir/websocketthread.cpp.obj	1a4e46ff4e7360c7
+1662	6013	7671299017201039	CMakeFiles/test1.dir/plotthread.cpp.obj	facb82304236dd63
+1655	6357	7671299017131035	CMakeFiles/test1.dir/main.cpp.obj	a1adabc3310b629b
+1686	6644	7671299017441027	CMakeFiles/test1.dir/calibrationdialog.cpp.obj	9020298e6b68d1a0
+1657	7563	7671299017151043	CMakeFiles/test1.dir/mainwindow.cpp.obj	b71cd6d5186ed93d
+1665	8298	7671299017231038	CMakeFiles/test1.dir/qcustomplot.cpp.obj	5b2759c7002f8308
+1652	8419	7671299017101040	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	6c90e7cedfae0bd1
+8419	9019	7671299084775554	test1.exe	e25c24577bb4134e
