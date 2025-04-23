@@ -27,7 +27,7 @@
 Dashboard::Dashboard(QWidget *parent) : QWidget(parent),
     m_value(0),
     m_currentValue(0),
-    m_animationStep(0.5),
+    m_animationStep(5.0),  // 增加默认步长以处理大值
     m_minValue(0),
     m_maxValue(100),
     m_precision(0),
@@ -51,6 +51,7 @@ Dashboard::Dashboard(QWidget *parent) : QWidget(parent),
     setMinimumSize(200, 200);
 
     m_timer = new QTimer(this);
+    m_timer->setInterval(20);  // 设置更快的刷新间隔，使动画更流畅
     connect(m_timer, SIGNAL(timeout()), this, SLOT(updateValue()));
 
     // 设置控件尺寸策略和最小尺寸
@@ -142,12 +143,44 @@ void Dashboard::setValue(double value)
         return;
     }
 
+    // 计算新值与当前值的差值
+    double valueDifference = qAbs(value - m_currentValue);
+
+    // 根据仪表盘范围动态调整动画步长
+    // 对于大范围值（如发动机转速），使用更大的步长
+    double range = m_maxValue - m_minValue;
+    if (range > 1000) {
+        // 对于大范围值，步长为范围的1%
+        m_animationStep = range * 0.01;
+
+        // 如果差值很大，进一步增加步长
+        if (valueDifference > range * 0.5) {
+            m_animationStep = range * 0.05; // 差值大时使用更大的步长
+        }
+    } else {
+        // 对于小范围值，使用默认步长
+        m_animationStep = 0.5;
+    }
+
+    // 确保步长至少为0.5
+    m_animationStep = qMax(0.5, m_animationStep);
+
     m_value = value;
     emit valueChanged(value);
 
     // 如果值为最小值，直接设置，不使用动画
     if (m_value == m_minValue) {
         m_currentValue = m_minValue;
+        if (m_timer->isActive()) {
+            m_timer->stop();
+        }
+        update();
+        return;
+    }
+
+    // 如果差值很大，直接跳过动画
+    if (valueDifference > range * 0.7) {
+        m_currentValue = m_value;
         if (m_timer->isActive()) {
             m_timer->stop();
         }
@@ -175,6 +208,19 @@ void Dashboard::setMinValue(double minValue)
     m_minValue = minValue;
     emit rangeChanged();
 
+    // 根据新的范围调整动画步长
+    double range = m_maxValue - m_minValue;
+    if (range > 1000) {
+        // 对于大范围值（如发动机转速），使用更大的步长
+        m_animationStep = range * 0.01; // 设置为范围的1%
+    } else {
+        // 对于小范围值，使用默认步长
+        m_animationStep = 5.0;
+    }
+
+    // 确保步长至少为0.5
+    m_animationStep = qMax(0.5, m_animationStep);
+
     // 确保当前值不小于最小值
     if (m_value < m_minValue) {
         setValue(m_minValue);
@@ -194,6 +240,19 @@ void Dashboard::setMaxValue(double maxValue)
     double oldMaxValue = m_maxValue;
     m_maxValue = maxValue;
     emit rangeChanged();
+
+    // 根据新的范围调整动画步长
+    double range = m_maxValue - m_minValue;
+    if (range > 1000) {
+        // 对于大范围值（如发动机转速），使用更大的步长
+        m_animationStep = range * 0.01; // 设置为范围的1%
+    } else {
+        // 对于小范围值，使用默认步长
+        m_animationStep = 5.0;
+    }
+
+    // 确保步长至少为0.5
+    m_animationStep = qMax(0.5, m_animationStep);
 
     // 确保当前值不大于最大值
     if (m_value > m_maxValue) {
@@ -281,6 +340,24 @@ void Dashboard::updateValue()
         m_timer->stop();
         update();
         return;
+    }
+
+    // 计算当前差值
+    double valueDifference = qAbs(m_value - m_currentValue);
+    double range = m_maxValue - m_minValue;
+
+    // 如果差值很小，直接设置为目标值
+    if (valueDifference < m_animationStep) {
+        m_currentValue = m_value;
+        m_timer->stop();
+        update();
+        return;
+    }
+
+    // 如果差值很大，动态调整步长
+    if (valueDifference > range * 0.3) {
+        // 对于大范围值，增加步长
+        m_animationStep = qMax(m_animationStep, range * 0.03);
     }
 
     if (m_currentValue < m_value) {
@@ -582,8 +659,16 @@ void Dashboard::drawValue(QPainter *painter)
     painter->setFont(font);
     painter->setPen(m_textColor);
 
-    // 创建值文本
-    const QString text = QString::number(m_currentValue, 'f', m_precision);
+    // 创建值文本 - 根据值的大小动态调整格式
+    QString text;
+    if (m_currentValue >= 1000) {
+        // 对于大于1000的值，使用整数格式
+        text = QString::number(qRound(m_currentValue));
+    } else {
+        // 对于小于1000的值，使用浮点数格式
+        text = QString::number(m_currentValue, 'f', m_precision);
+    }
+
     QFontMetricsF fm(font);
     const double textWidth = fm.horizontalAdvance(text);
 

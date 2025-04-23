@@ -1266,6 +1266,24 @@ void MainWindow::on_btnCanInit_clicked()
 void MainWindow::on_btnPagePlot_clicked()
 {
     switchPage();
+
+    // 检查dashPressure是否存在
+    Dashboard* dashPressure = findChild<Dashboard*>("dashPressure");
+    if (dashPressure) {
+        qDebug() << "[btnPagePlot] dashPressure found:" << dashPressure->objectName()
+                 << "with parent:" << (dashPressure->parent() ? dashPressure->parent()->objectName() : "none");
+    } else {
+        qDebug() << "[btnPagePlot] dashPressure NOT found!";
+    }
+
+    // 检查dashPressure是否在映射中
+    if (dashboardMappings.contains("dashPressure")) {
+        const DashboardMapping& mapping = dashboardMappings["dashPressure"];
+        qDebug() << "[btnPagePlot] dashPressure mapping:" << mapping.sourceType
+                 << mapping.channelIndex << mapping.variableName;
+    } else {
+        qDebug() << "[btnPagePlot] dashPressure mapping NOT found!";
+    }
 }
 
 
@@ -2121,11 +2139,22 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
                                        const ECUData &ecuData, // 参数不变
                                        const DataSnapshot &snapshot) // 新增参数：传递完整快照
 {
+    // 确保 dashPressure 映射存在
+    ensureDashPressureMappingExists();
+
     // 添加调试信息：检查传入的 snapshot 中的 customData
     qDebug() << "[updateDashboardByMapping] Received snapshot.customData:" << snapshot.customData;
 
     // 遍历所有仪表盘
     QList<Dashboard*> dashboards = this->getAllDashboards(); // 使用 this-> 调用非静态成员
+
+    // 添加调试信息，列出所有找到的仪表盘
+    qDebug() << "[Debug] Found dashboards:";
+    for (Dashboard* dashboard : dashboards) {
+        qDebug() << "[Debug] Dashboard:" << dashboard->objectName()
+                 << "exists:" << (dashboard != nullptr)
+                 << "in mappings:" << dashboardMappings.contains(dashboard->objectName());
+    }
 
     // 创建变量表，用于计算公式
     static QMap<QString, double> persistentVarMap; // 使用静态变量保持数据持久性
@@ -2183,11 +2212,56 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
     double dashForceValue = 0.0;
     bool dashForceUpdated = false;
 
+    // 特别检查dashPressure是否在映射中
+    if (dashboardMappings.contains("dashPressure")) {
+        const DashboardMapping& pressureMapping = dashboardMappings.value("dashPressure");
+        qDebug() << "[Debug] dashPressure mapping exists with sourceType:" << pressureMapping.sourceType
+                 << ", channelIndex:" << pressureMapping.channelIndex
+                 << ", variableName:" << pressureMapping.variableName;
+
+        // 特别检查dashPressure对象是否存在
+        Dashboard* dashPressure = findChild<Dashboard*>("dashPressure");
+        if (dashPressure) {
+            qDebug() << "[Debug] dashPressure widget found, ensuring it's processed";
+
+            // 直接处理dashPressure
+            double currentValue = 0.0;
+            bool valueUpdated = false;
+
+            // 根据数据源类型更新仪表盘值
+            if (pressureMapping.sourceType == DataSource_Modbus) {
+                if (!modbusData.isEmpty() && pressureMapping.channelIndex < modbusData.size()) {
+                    currentValue = modbusData[pressureMapping.channelIndex];
+                    dashPressure->setValue(currentValue);
+                    valueUpdated = true;
+                    qDebug() << "[Debug] Directly updated dashPressure with Modbus value:" << currentValue;
+                }
+            }
+
+            // 更新对应的数值标签
+            if (valueUpdated) {
+                QLabel* valueLabel = findChild<QLabel*>("valuePressure");
+                if (valueLabel) {
+                    valueLabel->setText(QString::number(currentValue, 'f', 3));
+                }
+            }
+        }
+    } else {
+        qDebug() << "[Debug] dashPressure mapping does NOT exist!";
+    }
+
     // 处理仪表盘更新
     for (Dashboard* dashboard : dashboards) {
+        // 添加特别调试信息用于dashPressure
+        if (dashboard->objectName() == "dashPressure") {
+            qDebug() << "[Debug] Processing dashPressure in the loop";
+        }
+
         // 如果仪表盘名称不在映射中，跳过
-        if (!dashboardMappings.contains(dashboard->objectName()))
+        if (!dashboardMappings.contains(dashboard->objectName())) {
+            qDebug() << "[Debug] Skipping dashboard:" << dashboard->objectName() << "because it's not in mappings";
             continue;
+        }
 
         // 直接访问映射，不再需要引用初始化检查
         const DashboardMapping& mapping = dashboardMappings.value(dashboard->objectName());
@@ -2197,6 +2271,13 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
         double currentValue = 0.0;
         bool valueUpdated = false;
 
+        // 添加特殊调试信息，用于跟踪dashPressure的更新
+        if (dashboard->objectName() == "dashPressure") {
+            qDebug() << "[dashPressure Debug] Processing dashPressure with sourceType:" << mapping.sourceType
+                     << ", channelIndex:" << mapping.channelIndex
+                     << ", modbusData size:" << modbusData.size();
+        }
+
         // 根据数据源类型更新仪表盘值
         switch (mapping.sourceType) {
             case DataSource_Modbus:
@@ -2205,6 +2286,15 @@ void MainWindow::updateDashboardByMapping(const QVector<double> &modbusData,
                     currentValue = modbusData[mapping.channelIndex];
                     dashboard->setValue(currentValue);
                     valueUpdated = true;
+
+                    // 添加特殊调试信息，用于跟踪dashPressure的更新
+                    if (dashboard->objectName() == "dashPressure") {
+                        qDebug() << "[dashPressure Debug] Updated with Modbus value:" << currentValue;
+                    }
+                } else if (dashboard->objectName() == "dashPressure") {
+                    // 添加特殊调试信息，用于跟踪dashPressure的更新失败原因
+                    qDebug() << "[dashPressure Debug] Failed to update: modbusData.isEmpty()=" << modbusData.isEmpty()
+                             << ", channelIndex < modbusData.size()=" << (mapping.channelIndex < modbusData.size());
                 }
                 break;
 
@@ -2413,7 +2503,7 @@ void MainWindow::initDefaultDashboardMappings()
     forceMapping.pointerStyle = PointerStyle_Indicator;
     dashboardMappings["dashForce"] = forceMapping;
 
-    // 初始化转速仪表盘
+    // 初始化转速仪表盘 - 增加最大值以适应高转速
     DashboardMapping rpmMapping;
     rpmMapping.dashboardName = "dashRPM";
     rpmMapping.sourceType = DataSource_Modbus;
@@ -2421,7 +2511,7 @@ void MainWindow::initDefaultDashboardMappings()
     rpmMapping.labelText = "转速";
     rpmMapping.unit = "rpm";
     rpmMapping.minValue = 0;
-    rpmMapping.maxValue = 10000;
+    rpmMapping.maxValue = 12000;  // 增加最大值以适应高转速
     rpmMapping.pointerColor = QColor("#4CAF50");
     rpmMapping.pointerStyle = PointerStyle_Indicator;
     dashboardMappings["dashRPM"] = rpmMapping;
@@ -2496,6 +2586,7 @@ void MainWindow::initDefaultDashboardMappings()
     pressureMapping.dashboardName = "dashPressure";
     pressureMapping.sourceType = DataSource_Modbus;
     pressureMapping.channelIndex = 7;
+    pressureMapping.variableName = "A_7"; // 添加变量名以确保正确初始化
     pressureMapping.labelText = "压力";
     pressureMapping.unit = "MPa";
     pressureMapping.minValue = 0;
@@ -2503,6 +2594,57 @@ void MainWindow::initDefaultDashboardMappings()
     pressureMapping.pointerColor = QColor("#32a852");
     pressureMapping.pointerStyle = PointerStyle_Indicator;
     dashboardMappings["dashPressure"] = pressureMapping;
+
+    // 添加调试信息
+    qDebug() << "[dashPressure Debug] Initialized with: sourceType=" << pressureMapping.sourceType
+             << ", channelIndex=" << pressureMapping.channelIndex
+             << ", variableName=" << pressureMapping.variableName;
+
+    // 初始化ECU发动机转速仪表盘
+    DashboardMapping ecuRPMMapping;
+    ecuRPMMapping.dashboardName = "dashECURPM";
+    ecuRPMMapping.sourceType = DataSource_ECU;
+    ecuRPMMapping.channelIndex = 1;  // ECU发动机转速对应索引为1
+    ecuRPMMapping.variableName = "C_1";
+    ecuRPMMapping.labelText = "转速";
+    ecuRPMMapping.unit = "rpm";
+    ecuRPMMapping.minValue = 0;
+    ecuRPMMapping.maxValue = 12000;  // 设置足够大的最大值
+    ecuRPMMapping.pointerColor = QColor("#32CD32");  // 使用不同的颜色区分
+    ecuRPMMapping.pointerStyle = PointerStyle_Indicator;
+    dashboardMappings["dashECURPM"] = ecuRPMMapping;
+
+    // 特别检查dashPressure对象是否存在
+    Dashboard* dashPressure = findChild<Dashboard*>("dashPressure");
+    if (dashPressure) {
+        qDebug() << "[dashPressure Debug] Widget found, initializing directly";
+        dashPressure->setTitle(pressureMapping.labelText);
+        dashPressure->setUnit(pressureMapping.unit);
+        dashPressure->setMinValue(pressureMapping.minValue);
+        dashPressure->setMaxValue(pressureMapping.maxValue);
+        dashPressure->setPointerColor(pressureMapping.pointerColor);
+        dashPressure->setPointerStyle((PointerStyle)pressureMapping.pointerStyle);
+        dashPressure->setVariableName(pressureMapping.variableName);
+        dashPressure->setInitializationStatus(true);
+    } else {
+        qDebug() << "[dashPressure Debug] Widget NOT found during initialization!";
+    }
+
+    // 特别检查dashECURPM对象是否存在
+    Dashboard* dashECURPM = findChild<Dashboard*>("dashECURPM");
+    if (dashECURPM) {
+        qDebug() << "[dashECURPM Debug] Widget found, initializing directly";
+        dashECURPM->setTitle(ecuRPMMapping.labelText);
+        dashECURPM->setUnit(ecuRPMMapping.unit);
+        dashECURPM->setMinValue(ecuRPMMapping.minValue);
+        dashECURPM->setMaxValue(ecuRPMMapping.maxValue);
+        dashECURPM->setPointerColor(ecuRPMMapping.pointerColor);
+        dashECURPM->setPointerStyle((PointerStyle)ecuRPMMapping.pointerStyle);
+        dashECURPM->setVariableName(ecuRPMMapping.variableName);
+        dashECURPM->setInitializationStatus(true);
+    } else {
+        qDebug() << "[dashECURPM Debug] Widget NOT found during initialization!";
+    }
 
     // 应用初始映射设置到仪表盘
     applyDashboardMappings();
@@ -2537,6 +2679,30 @@ void MainWindow::applyDashboardMappings()
         // 如果是自定义变量，设置自定义变量标志
         if (mapping.sourceType == DataSource_Custom) {
             dashboard->setCustomVariable(true);
+        }
+
+        // 如果变量名为空但有数据源类型，自动生成变量名
+        if (mapping.variableName.isEmpty()) {
+            QString prefix;
+            switch (mapping.sourceType) {
+                case DataSource_Modbus: prefix = "A_"; break;
+                case DataSource_DAQ: prefix = "B_"; break;
+                case DataSource_ECU: prefix = "C_"; break;
+                case DataSource_Custom: prefix = "D_"; break;
+                default: prefix = "A_"; break;
+            }
+            // 创建新的变量名并设置到映射中
+            QString newVarName = prefix + QString::number(mapping.channelIndex);
+            DashboardMapping &mutableMapping = dashboardMappings[dashboardName]; // 获取可变引用
+            mutableMapping.variableName = newVarName;
+            dashboard->setVariableName(newVarName);
+
+            // 添加调试信息
+            if (dashboard->objectName() == "dashPressure") {
+                qDebug() << "[dashPressure Debug] Auto-generated variableName:" << newVarName
+                         << "for sourceType:" << mapping.sourceType
+                         << "and channelIndex:" << mapping.channelIndex;
+            }
         }
 
         // 如果是DAQ类型，设置DAQ通道列表
@@ -2729,6 +2895,13 @@ void MainWindow::handleDashboardSettingsChanged(const QString &dashboardName, co
     if (dashboardName == "dashForce") {
         return;
     }
+
+    // 4. 如果是dashPressure，添加额外的调试信息
+    if (dashboardName == "dashPressure") {
+        qDebug() << "[dashPressure Debug] Settings updated and saved: sourceType=" << mapping.sourceType
+                 << ", channelIndex=" << mapping.channelIndex
+                 << ", variableName=" << mapping.variableName;
+    }
 }
 
 // 保存仪表盘映射关系到配置文件
@@ -2823,11 +2996,114 @@ void MainWindow::loadDashboardMappings(QSettings &settings)
     }
 }
 
+// 确保 dashPressure 映射存在
+void MainWindow::ensureDashPressureMappingExists()
+{
+    // 检查dashPressure是否在映射中
+    if (!dashboardMappings.contains("dashPressure")) {
+        qDebug() << "[ensureDashPressureMappingExists] dashPressure mapping not found, creating it";
+
+        // 创建压力仪表盘映射
+        DashboardMapping pressureMapping;
+        pressureMapping.dashboardName = "dashPressure";
+        pressureMapping.sourceType = DataSource_Modbus;
+        pressureMapping.channelIndex = 7;
+        pressureMapping.variableName = "A_7";
+        pressureMapping.labelText = "压力";
+        pressureMapping.unit = "MPa";
+        pressureMapping.minValue = 0;
+        pressureMapping.maxValue = 10;
+        pressureMapping.pointerColor = QColor("#32a852");
+        pressureMapping.pointerStyle = PointerStyle_Indicator;
+        dashboardMappings["dashPressure"] = pressureMapping;
+
+        qDebug() << "[ensureDashPressureMappingExists] Created dashPressure mapping with sourceType:" << pressureMapping.sourceType
+                 << ", channelIndex:" << pressureMapping.channelIndex
+                 << ", variableName:" << pressureMapping.variableName;
+
+        // 特别检查dashPressure对象是否存在
+        Dashboard* dashPressure = findChild<Dashboard*>("dashPressure");
+        if (dashPressure) {
+            qDebug() << "[ensureDashPressureMappingExists] Widget found, initializing directly";
+            dashPressure->setTitle(pressureMapping.labelText);
+            dashPressure->setUnit(pressureMapping.unit);
+            dashPressure->setMinValue(pressureMapping.minValue);
+            dashPressure->setMaxValue(pressureMapping.maxValue);
+            dashPressure->setPointerColor(pressureMapping.pointerColor);
+            dashPressure->setPointerStyle((PointerStyle)pressureMapping.pointerStyle);
+            dashPressure->setVariableName(pressureMapping.variableName);
+            dashPressure->setInitializationStatus(true);
+        }
+    }
+
+    // 检查ECU转速仪表盘映射是否存在
+    if (!dashboardMappings.contains("dashECURPM")) {
+        qDebug() << "[ensureDashPressureMappingExists] dashECURPM mapping not found, creating it";
+
+        // 创建ECU转速仪表盘映射
+        DashboardMapping ecuRPMMapping;
+        ecuRPMMapping.dashboardName = "dashECURPM";
+        ecuRPMMapping.sourceType = DataSource_ECU;
+        ecuRPMMapping.channelIndex = 1;  // ECU发动机转速对应索引为1
+        ecuRPMMapping.variableName = "C_1";
+        ecuRPMMapping.labelText = "转速";
+        ecuRPMMapping.unit = "rpm";
+        ecuRPMMapping.minValue = 0;
+        ecuRPMMapping.maxValue = 12000;  // 设置足够大的最大值
+        ecuRPMMapping.pointerColor = QColor("#32CD32");
+        ecuRPMMapping.pointerStyle = PointerStyle_Indicator;
+        dashboardMappings["dashECURPM"] = ecuRPMMapping;
+
+        qDebug() << "[ensureDashPressureMappingExists] Created dashECURPM mapping with sourceType:" << ecuRPMMapping.sourceType
+                 << ", channelIndex:" << ecuRPMMapping.channelIndex
+                 << ", variableName:" << ecuRPMMapping.variableName;
+
+        // 特别检查dashECURPM对象是否存在
+        Dashboard* dashECURPM = findChild<Dashboard*>("dashECURPM");
+        if (dashECURPM) {
+            qDebug() << "[ensureDashPressureMappingExists] dashECURPM widget found, initializing directly";
+            dashECURPM->setTitle(ecuRPMMapping.labelText);
+            dashECURPM->setUnit(ecuRPMMapping.unit);
+            dashECURPM->setMinValue(ecuRPMMapping.minValue);
+            dashECURPM->setMaxValue(ecuRPMMapping.maxValue);
+            dashECURPM->setPointerColor(ecuRPMMapping.pointerColor);
+            dashECURPM->setPointerStyle((PointerStyle)ecuRPMMapping.pointerStyle);
+            dashECURPM->setVariableName(ecuRPMMapping.variableName);
+            dashECURPM->setInitializationStatus(true);
+        }
+    }
+}
+
 // 获取所有仪表盘对象
 QList<Dashboard*> MainWindow::getAllDashboards()
 {
+    // 确保 dashPressure 映射存在
+    ensureDashPressureMappingExists();
+
     // 使用findChildren查找所有Dashboard类型的子控件
-    return this->findChildren<Dashboard*>();
+    QList<Dashboard*> dashboards = this->findChildren<Dashboard*>();
+
+    // 添加调试信息
+    qDebug() << "[getAllDashboards] Found" << dashboards.size() << "dashboards:";
+    for (Dashboard* dashboard : dashboards) {
+        qDebug() << "[getAllDashboards] Dashboard:" << dashboard->objectName();
+    }
+
+    // 特别检查dashPressure是否存在
+    Dashboard* dashPressure = this->findChild<Dashboard*>("dashPressure");
+    if (dashPressure) {
+        qDebug() << "[getAllDashboards] dashPressure found directly:" << dashPressure->objectName();
+
+        // 确保 dashPressure 在列表中
+        if (!dashboards.contains(dashPressure)) {
+            qDebug() << "[getAllDashboards] Adding dashPressure to the list!";
+            dashboards.append(dashPressure);
+        }
+    } else {
+        qDebug() << "[getAllDashboards] dashPressure NOT found directly!";
+    }
+
+    return dashboards;
 }
 
 
@@ -2873,6 +3149,33 @@ void MainWindow::updateModbusChannels()
                         DashboardMapping &mapping = dashboardMappings[dashboard->objectName()];
                         mapping.variableName = QString("A_%1").arg(channelNumbers.first());
                         mapping.channelIndex = channelNumbers.first() - startAddress; // 更新索引
+
+                        // 添加特殊调试信息，用于跟踪dashPressure的更新
+                        if (dashboard->objectName() == "dashPressure") {
+                            qDebug() << "[dashPressure Debug] Updating mapping: sourceType=" << mapping.sourceType
+                                     << ", channelIndex=" << mapping.channelIndex
+                                     << ", variableName=" << mapping.variableName;
+                        }
+                    }
+                } else {
+                    // 即使当前通道在新的通道列表中，也需要更新channelIndex
+                    if (dashboardMappings.contains(dashboard->objectName())) {
+                        DashboardMapping &mapping = dashboardMappings[dashboard->objectName()];
+                        // 更新索引以匹配新的起始地址
+                        mapping.channelIndex = currentChannel - startAddress;
+
+                        // 确保索引在有效范围内
+                        if (mapping.channelIndex < 0 || mapping.channelIndex >= registerCount) {
+                            mapping.channelIndex = 0; // 如果超出范围，重置为第一个通道
+                            mapping.variableName = QString("A_%1").arg(channelNumbers.first());
+                        }
+
+                        // 添加特殊调试信息，用于跟踪dashPressure的更新
+                        if (dashboard->objectName() == "dashPressure") {
+                            qDebug() << "[dashPressure Debug] Updating existing channel mapping: sourceType=" << mapping.sourceType
+                                     << ", channelIndex=" << mapping.channelIndex
+                                     << ", variableName=" << mapping.variableName;
+                        }
                     }
                 }
             }
@@ -3792,10 +4095,22 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
 // 更新仪表盘数据（从快照）
 void MainWindow::updateDashboardData(const QVector<double> &timeData, const DataSnapshot &snapshot)
 {
-     // +++ Add check for calibration mode +++
-     if (currentRunMode == RunMode::Calibration) {
-         return; // Don't update dashboards during calibration
-     }
+    // 确保 dashPressure 映射存在
+    ensureDashPressureMappingExists();
+
+    // 特别检查dashPressure是否存在
+    Dashboard* dashPressure = findChild<Dashboard*>("dashPressure");
+    if (dashPressure) {
+        qDebug() << "[updateDashboardData] dashPressure found:" << dashPressure->objectName()
+                 << "parent:" << (dashPressure->parent() ? dashPressure->parent()->objectName() : "none");
+    } else {
+        qDebug() << "[updateDashboardData] dashPressure NOT found!";
+    }
+
+    // +++ Add check for calibration mode +++
+    if (currentRunMode == RunMode::Calibration) {
+        return; // Don't update dashboards during calibration
+    }
     try {
         // 确保有必要的数据才更新仪表盘
         if (snapshot.modbusValid || snapshot.daqValid || snapshot.ecuValid || snapshot.customData.size() > 0) { // 添加对 customData 的检查

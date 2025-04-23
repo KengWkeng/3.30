@@ -27,7 +27,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "Release"
+			"value" : "Debug"
 		},
 		{
 			"name" : "CMAKE_CACHEFILE_DIR",
@@ -39,7 +39,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release"
+			"value" : "c:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -155,7 +155,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "/DWIN32 /D_WINDOWS /GR /EHsc"
+			"value" : "-DQT_QML_DEBUG /DWIN32 /D_WINDOWS /GR /EHsc"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS_DEBUG",
@@ -183,7 +183,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : ""
+			"value" : "-DQT_QML_DEBUG"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS_MINSIZEREL",
@@ -415,7 +415,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/CMakeFiles/pkgRedirects"
+			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -979,7 +979,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/.qtc/package-manager/auto-setup.cmake"
+			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/.qtc/package-manager/auto-setup.cmake"
 		},
 		{
 			"name" : "CMAKE_PROJECT_NAME",
@@ -6719,7 +6719,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/.qt/bin/qt_setup_tool_path.bat"
+			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug/.qt/bin/qt_setup_tool_path.bat"
 		},
 		{
 			"name" : "Qt6Concurrent_DIR",
@@ -7107,7 +7107,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release"
+			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Debug"
 		},
 		{
 			"name" : "test1_IS_TOP_LEVEL",

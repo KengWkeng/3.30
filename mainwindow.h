@@ -381,6 +381,9 @@ private:
     // 新增：获取仪表盘对象列表的辅助函数
     QList<Dashboard*> getAllDashboards();
 
+    // 新增：确保 dashPressure 和 dashECURPM 映射存在
+    void ensureDashPressureMappingExists();
+
     // 新增：仪表盘与数据源映射
     QMap<QString, DashboardMapping> dashboardMappings;
 

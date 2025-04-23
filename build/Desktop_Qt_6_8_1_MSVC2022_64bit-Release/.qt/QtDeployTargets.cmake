@@ -1,3 +1,0 @@
-set(__QT_DEPLOY_TARGET_test1_FILE C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/test1.exe)
-set(__QT_DEPLOY_TARGET_test1_TYPE EXECUTABLE)
-set(__QT_DEPLOY_TARGET_test1_RUNTIME_DLLS D:/Qt/6.8.1/msvc2022_64/bin/Qt6SerialBus.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6PrintSupport.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6WebSockets.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6OpenGL.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6Qml.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6Core5Compat.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6SerialPort.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6Widgets.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6Gui.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6Network.dll;D:/Qt/6.8.1/msvc2022_64/bin/Qt6Core.dll)
