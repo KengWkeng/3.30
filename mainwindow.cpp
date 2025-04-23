@@ -3869,6 +3869,89 @@ void MainWindow::updateAllPlots(const DataSnapshot &snapshot, int snapshotCount)
     }
     const int maxDataPoints = 600; // Increase buffer size to ~60 seconds
 
+    // Update customVarCustomPlot chart
+    if (snapshot.customData.size() > 0 && ui->customVarCustomPlot) {
+        // Initialize customVarCustomPlot if needed
+        if (ui->customVarCustomPlot->graphCount() == 0) {
+            // Clear any existing graphs
+            ui->customVarCustomPlot->clearGraphs();
+            ui->customVarCustomPlot->legend->setVisible(true);
+
+            // Set axis labels
+            ui->customVarCustomPlot->xAxis->setLabel("时间(秒)");
+            ui->customVarCustomPlot->yAxis->setLabel("自定义变量值");
+
+            // Create a graph for each customData channel
+            for (int i = 0; i < snapshot.customData.size(); ++i) {
+                QCPGraph *graph = ui->customVarCustomPlot->addGraph();
+                graph->setName(QString("自定义变量%1").arg(i));
+
+                // Use different colors for each channel
+                QColor color = QColor::fromHsv((i * 255) / snapshot.customData.size(), 255, 255);
+                graph->setPen(QPen(color, 2)); // Make lines thicker (2px)
+            }
+        }
+
+        // Use static variables to maintain history data
+        static QVector<double> customTimeData;
+        static QVector<QVector<double>> customValues;
+
+        // Ensure customValues size matches the number of channels
+        int customChannelCount = snapshot.customData.size();
+        if (customValues.size() != customChannelCount) {
+            customValues.resize(customChannelCount);
+        }
+
+        // Add new time point
+        customTimeData.append(snapshot.timestamp);
+
+        // Add new data points for each channel
+        for (int ch = 0; ch < customChannelCount; ++ch) {
+            customValues[ch].append(snapshot.customData[ch]);
+            // Limit data points
+            while (customValues[ch].size() > maxDataPoints) {
+                customValues[ch].removeFirst();
+            }
+        }
+
+        // Limit time data points
+        while (customTimeData.size() > maxDataPoints) {
+            customTimeData.removeFirst();
+        }
+
+        // Update chart data
+        if (!customTimeData.isEmpty()) {
+            // Ensure graph count matches data size
+            while (ui->customVarCustomPlot->graphCount() < customChannelCount) {
+                QCPGraph *graph = ui->customVarCustomPlot->addGraph();
+                graph->setName(QString("自定义变量%1").arg(ui->customVarCustomPlot->graphCount() - 1));
+                QColor color = QColor::fromHsv(((ui->customVarCustomPlot->graphCount() - 1) * 255) / customChannelCount, 255, 255);
+                graph->setPen(QPen(color, 2));
+            }
+            while (ui->customVarCustomPlot->graphCount() > customChannelCount) {
+                ui->customVarCustomPlot->removeGraph(ui->customVarCustomPlot->graphCount() - 1);
+            }
+
+            // Set data for each graph
+            for (int ch = 0; ch < customChannelCount; ++ch) {
+                ui->customVarCustomPlot->graph(ch)->setData(customTimeData, customValues[ch], true);
+            }
+
+            // Optimize X-axis range
+            double latestTimestampCustom = snapshot.timestamp;
+            double displayWindowSecondsCustom = 60.0;
+            if (latestTimestampCustom <= displayWindowSecondsCustom) {
+                ui->customVarCustomPlot->xAxis->setRange(0, displayWindowSecondsCustom);
+            } else {
+                ui->customVarCustomPlot->xAxis->setRange(latestTimestampCustom - displayWindowSecondsCustom, latestTimestampCustom);
+            }
+
+            // Rescale Y-axis and replot
+            ui->customVarCustomPlot->yAxis->rescale();
+            ui->customVarCustomPlot->replot(QCustomPlot::rpQueuedReplot);
+        }
+    }
+
     // 更新Modbus图表
     if (snapshot.modbusValid && ui->modbusCustomPlot) {
         // 确保Modbus图表已初始化
@@ -4347,6 +4430,14 @@ void MainWindow::on_btnStartAll_clicked()
         allCaptureRunning = true; // Keep this flag for internal logic if needed, but mode is primary
         mainTimer->start(10); // Ensure timer interval is set
         ui->btnStartAll->setText("停止所有采集");
+
+        // Disable Calibrate Sensor menu option during data collection
+        QAction *calibrateSensorAction = findChild<QAction*>("actionCalibrateSensor");
+        if (calibrateSensorAction) {
+            calibrateSensorAction->setEnabled(false);
+            qDebug() << "[MainWindow] Calibrate Sensor action disabled during data collection.";
+        }
+
         statusBar()->showMessage("所有采集任务已启动 (正常模式)", 3000);
         qDebug() << "[MainWindow] All tasks started for Normal Run.";
 
@@ -4485,36 +4576,53 @@ void MainWindow::on_actionCalibrateSensor_triggered()
     }
     qDebug() << "Calibration action triggered.";
 
-    if (!calibrationDialog) {
-        calibrationDialog = new CalibrationDialog(snpTh, this);
-        qDebug() << "Created CalibrationDialog instance.";
-        // +++ Connect calibration signals +++
-        connect(calibrationDialog, &CalibrationDialog::startCalibrationRequested,
-                this, &MainWindow::handleStartCalibrationRequest);
-        connect(calibrationDialog, &CalibrationDialog::stopCalibrationRequested,
-                this, &MainWindow::handleStopCalibrationRequest);
-        // Handle dialog closing potentially needing to stop calibration
-        connect(calibrationDialog, &QDialog::rejected, this, [this](){
-             qDebug() << "Calibration dialog rejected.";
-            if(currentRunMode == RunMode::Calibration) {
-                qDebug() << "-- Stopping calibration run due to dialog rejection.";
-                handleStopCalibrationRequest(); // Stop if calibration is running
-            }
-            // Optional: Clean up dialog pointer if it won't be reused
-            // calibrationDialog->deleteLater();
-            // calibrationDialog = nullptr;
-        });
-         connect(calibrationDialog, &QDialog::accepted, this, [this](){
-             qDebug() << "Calibration dialog accepted (closed via 'Close' button).";
-            if(currentRunMode == RunMode::Calibration) {
-                qDebug() << "-- Stopping calibration run due to dialog acceptance.";
-                handleStopCalibrationRequest(); // Stop if calibration is running
-            }
-            // Optional: Clean up dialog pointer
-            // calibrationDialog->deleteLater();
-            // calibrationDialog = nullptr;
-        });
+    // If dialog already exists, delete it to ensure proper reinitialization
+    if (calibrationDialog) {
+        qDebug() << "Deleting existing calibration dialog to ensure proper reinitialization";
+        delete calibrationDialog;
+        calibrationDialog = nullptr;
     }
+
+    // Create a new dialog instance
+    calibrationDialog = new CalibrationDialog(snpTh, this);
+    qDebug() << "Created new CalibrationDialog instance.";
+
+    // Connect calibration signals
+    connect(calibrationDialog, &CalibrationDialog::startCalibrationRequested,
+            this, &MainWindow::handleStartCalibrationRequest);
+    connect(calibrationDialog, &CalibrationDialog::stopCalibrationRequested,
+            this, &MainWindow::handleStopCalibrationRequest);
+
+    // Handle dialog closing potentially needing to stop calibration
+    connect(calibrationDialog, &QDialog::rejected, this, [this](){
+        qDebug() << "Calibration dialog rejected.";
+        if(currentRunMode == RunMode::Calibration) {
+            qDebug() << "-- Stopping calibration run due to dialog rejection.";
+            handleStopCalibrationRequest(); // Stop if calibration is running
+        }
+
+        // Clean up dialog pointer to ensure resources are released
+        calibrationDialog->deleteLater();
+        calibrationDialog = nullptr;
+        qDebug() << "Calibration dialog resources released after rejection.";
+    });
+
+    connect(calibrationDialog, &QDialog::accepted, this, [this](){
+        qDebug() << "Calibration dialog accepted (closed via 'Close' button).";
+        if(currentRunMode == RunMode::Calibration) {
+            qDebug() << "-- Stopping calibration run due to dialog acceptance.";
+            handleStopCalibrationRequest(); // Stop if calibration is running
+        }
+
+        // Clean up dialog pointer to ensure resources are released
+        calibrationDialog->deleteLater();
+        calibrationDialog = nullptr;
+        qDebug() << "Calibration dialog resources released after acceptance.";
+    });
+
+    // Initialize the dialog's UI components
+    QMetaObject::invokeMethod(calibrationDialog, "initializePlot", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(calibrationDialog, "updateChannelComboBox", Qt::QueuedConnection);
 
     calibrationDialog->show(); // Show non-modally
     calibrationDialog->raise(); // Bring to front
