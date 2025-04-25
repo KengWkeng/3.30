@@ -27,7 +27,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "Debug"
+			"value" : "Release"
 		},
 		{
 			"name" : "CMAKE_CACHEFILE_DIR",
@@ -39,7 +39,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/80911/Documents/QT/vs_test/test1/build"
+			"value" : "c:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -76,6 +76,18 @@
 			],
 			"type" : "INTERNAL",
 			"value" : "3"
+		},
+		{
+			"name" : "CMAKE_COLOR_DIAGNOSTICS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enable colored diagnostics throughout."
+				}
+			],
+			"type" : "BOOL",
+			"value" : "1"
 		},
 		{
 			"name" : "CMAKE_COMMAND",
@@ -126,8 +138,8 @@
 					"value" : "CXX compiler"
 				}
 			],
-			"type" : "FILEPATH",
-			"value" : "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe"
+			"type" : "STRING",
+			"value" : "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/HostX64/x64/cl.exe"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS",
@@ -160,6 +172,18 @@
 			],
 			"type" : "STRING",
 			"value" : "/Zi /Ob0 /Od /RTC1"
+		},
+		{
+			"name" : "CMAKE_CXX_FLAGS_INIT",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS_MINSIZEREL",
@@ -210,6 +234,18 @@
 			"value" : "/Zi /O2 /Ob1 /DNDEBUG"
 		},
 		{
+			"name" : "CMAKE_CXX_OUTPUT_EXTENSION",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "STRING",
+			"value" : ".obj"
+		},
+		{
 			"name" : "CMAKE_CXX_STANDARD_LIBRARIES",
 			"properties" : 
 			[
@@ -224,6 +260,30 @@
 			],
 			"type" : "STRING",
 			"value" : "kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib"
+		},
+		{
+			"name" : "CMAKE_C_COMPILER",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/HostX64/x64/cl.exe"
+		},
+		{
+			"name" : "CMAKE_C_OUTPUT_EXTENSION",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "STRING",
+			"value" : ""
 		},
 		{
 			"name" : "CMAKE_EDIT_COMMAND",
@@ -334,23 +394,15 @@
 			"properties" : 
 			[
 				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
 					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
+					"value" : "Enable/Disable output of compile commands during generation."
 				}
 			],
 			"type" : "BOOL",
-			"value" : "TRUE"
-		},
-		{
-			"name" : "CMAKE_EXTRA_GENERATOR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Name of external makefile project generator."
-				}
-			],
-			"type" : "INTERNAL",
 			"value" : ""
 		},
 		{
@@ -363,7 +415,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/CMakeFiles/pkgRedirects"
+			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -371,10 +423,10 @@
 			[
 				{
 					"name" : "HELPSTRING",
-					"value" : "Name of generator."
+					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "INTERNAL",
+			"type" : "STRING",
 			"value" : "Ninja"
 		},
 		{
@@ -882,6 +934,18 @@
 			"value" : "1"
 		},
 		{
+			"name" : "CMAKE_PREFIX_PATH",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "PATH",
+			"value" : "D:/Qt/6.8.1/msvc2022_64"
+		},
+		{
 			"name" : "CMAKE_PROJECT_DESCRIPTION",
 			"properties" : 
 			[
@@ -904,6 +968,18 @@
 			],
 			"type" : "STATIC",
 			"value" : ""
+		},
+		{
+			"name" : "CMAKE_PROJECT_INCLUDE_BEFORE",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "FILEPATH",
+			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/.qtc/package-manager/auto-setup.cmake"
 		},
 		{
 			"name" : "CMAKE_PROJECT_NAME",
@@ -1302,18 +1378,6 @@
 			"value" : ""
 		},
 		{
-			"name" : "CMAKE_TOOLCHAIN_FILE",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "The CMake toolchain file"
-				}
-			],
-			"type" : "FILEPATH",
-			"value" : "D:/Qt/6.8.1/msvc2022_64/lib/cmake/Qt6/qt.toolchain.cmake"
-		},
-		{
 			"name" : "CMAKE_VERBOSE_MAKEFILE",
 			"properties" : 
 			[
@@ -1388,6 +1452,30 @@
 			],
 			"type" : "STRING",
 			"value" : ""
+		},
+		{
+			"name" : "QT_CREATOR_SKIP_PACKAGE_MANAGER_SETUP",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Skip Qt Creator's package manager auto-setup"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "QT_CREATOR_SOURCE_GROUPS",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Qt Creator source groups extensions"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
 		},
 		{
 			"name" : "QT_FEATURE_abstractbutton",
@@ -6610,19 +6698,7 @@
 			"value" : "OFF"
 		},
 		{
-			"name" : "QT_QMAKE_TARGET_MKSPEC",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : ""
-				}
-			],
-			"type" : "STRING",
-			"value" : "win32-msvc"
-		},
-		{
-			"name" : "QT_QML_GENERATE_QMLLS_INI",
+			"name" : "QT_QMAKE_EXECUTABLE",
 			"properties" : 
 			[
 				{
@@ -6630,8 +6706,8 @@
 					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "STRING",
-			"value" : "ON"
+			"type" : "FILEPATH",
+			"value" : "D:/Qt/6.8.1/msvc2022_64/bin/qmake.exe"
 		},
 		{
 			"name" : "QT_TOOL_COMMAND_WRAPPER_PATH",
@@ -6643,7 +6719,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/.qt/bin/qt_setup_tool_path.bat"
+			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/.qt/bin/qt_setup_tool_path.bat"
 		},
 		{
 			"name" : "Qt6Concurrent_DIR",
@@ -7031,7 +7107,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build"
+			"value" : "C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release"
 		},
 		{
 			"name" : "test1_IS_TOP_LEVEL",

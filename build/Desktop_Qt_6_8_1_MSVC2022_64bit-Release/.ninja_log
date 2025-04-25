@@ -1,0 +1,25 @@
+# ninja log v6
+27	594	7671824702636339	.qt/qml_imports/test1_build.cmake	c599a5ce5873389d
+27	594	7671824702636339	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/.qt/qml_imports/test1_build.cmake	c599a5ce5873389d
+596	2253	7671824718038908	test1_autogen/timestamp	831a2a9a9e318bb9
+596	2253	7671824718038908	test1_autogen/mocs_compilation.cpp	831a2a9a9e318bb9
+596	2253	7671824718038908	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/test1_autogen/timestamp	831a2a9a9e318bb9
+596	2253	7671824718038908	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/test1_autogen/mocs_compilation.cpp	831a2a9a9e318bb9
+2265	2313	7671824719832147	qrc_logo.cpp	78c53069cb39c8ac
+2265	2313	7671824719832147	C:/Users/80911/Documents/QT/vs_test/test1/build/Desktop_Qt_6_8_1_MSVC2022_64bit-Release/qrc_logo.cpp	78c53069cb39c8ac
+2365	2653	7671824720413964	CMakeFiles/test1.dir/qrc_logo.cpp.obj	19c032c78b3fc289
+2339	4309	7671824720154268	CMakeFiles/test1.dir/daqthread.cpp.obj	9d2f1620f776a09b
+2335	4330	7671824720124271	CMakeFiles/test1.dir/canthread.cpp.obj	9072e99b1dc7476f
+2343	4409	7671824720193068	CMakeFiles/test1.dir/ecuthread.cpp.obj	77382cb8c1f44e11
+2324	4533	7671824720004001	CMakeFiles/test1.dir/modbusthread.cpp.obj	74bed5307ec5d45b
+2354	4776	7671824720308292	CMakeFiles/test1.dir/dashboardcalculator.cpp.obj	a37294355edcea49
+2350	5342	7671824720263119	CMakeFiles/test1.dir/dashboard.cpp.obj	53061f77ef66a1b0
+2358	5648	7671824720338853	CMakeFiles/test1.dir/websocketthread.cpp.obj	99fb03cb7009eca2
+2347	5669	7671824720233123	CMakeFiles/test1.dir/snapshotthread.cpp.obj	109ca18cee95e249
+2328	7625	7671824720039091	CMakeFiles/test1.dir/plotthread.cpp.obj	ef555106d3be688e
+2317	8089	7671824719937286	CMakeFiles/test1.dir/main.cpp.obj	fea802324fde9d53
+2361	8939	7671824720378864	CMakeFiles/test1.dir/calibrationdialog.cpp.obj	2b29cd1f356a9af9
+2313	11067	7671824719897292	CMakeFiles/test1.dir/test1_autogen/mocs_compilation.cpp.obj	602c71674c950fdc
+2331	12546	7671824720084140	CMakeFiles/test1.dir/qcustomplot.cpp.obj	6eedf4c4ac895dd9
+2320	13549	7671824719967276	CMakeFiles/test1.dir/mainwindow.cpp.obj	1df946b2022e0628
+13550	13961	7671824832258437	test1.exe	26683190ce99fc66
